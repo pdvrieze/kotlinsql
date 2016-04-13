@@ -18,10 +18,6 @@
  * under the License.
  */
 
-import kotlinsql.builder.GenerateDatabaseBaseKt
-import kotlinsql.builder.GenerateSelectClasses
-import kotlinsql.builder.GenerateStatementsKt
-
 
 ext {
     if (! rootProject.ext.has('kotlin_version') ) { kotlin_version = '1.0.1-2' }
@@ -34,16 +30,21 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "net.devrieze:gradle-codegen:0.5"
     }
 
     repositories {
         jcenter()
+        mavenLocal()
+        maven() {
+            url="https://dl.bintray.com/pdvrieze/maven"
+        }
     }
 }
 
 apply plugin: 'kotlin'
 apply plugin: 'idea'
-apply plugin: 'kotlinsql.builder'
+apply plugin: 'net.devrieze.gradlecodegen'
 
 
 description = 'A utility library for working with databases in kotlin'
