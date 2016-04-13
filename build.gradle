@@ -41,10 +41,6 @@ buildscript {
     }
 }
 
-//sourceCompatibility = JavaVersion.VERSION_1_8
-//targetCompatibility = JavaVersion.VERSION_1_8
-
-
 apply plugin: 'kotlin'
 apply plugin: 'idea'
 apply plugin: 'kotlinsql.builder'
@@ -56,7 +52,6 @@ repositories {
     jcenter()
 }
 
-
 test {
     useTestNG()
 }
@@ -66,30 +61,34 @@ sourceSets {
         generate {
             def depth = 10
             databaseFunctions{
-                output = 'gen/DatabaseMethods.kt'
-                generator = new kotlinsql.builder.GenerateDatabaseBaseKt(depth)
+                output = 'kotlin/gen/DatabaseMethods.kt'
+                generator = "kotlinsql.builder.GenerateDatabaseBaseKt"
+                input = depth
             }
             selects{
-                output = 'gen/selectImpls.kt'
-                generator = new kotlinsql.builder.GenerateSelectClasses(depth)
+                output = 'kotlin/gen/selectImpls.kt'
+                generator = "kotlinsql.builder.GenerateSelectClasses"
+                input = depth
             }
             statements{
-                output = 'gen/statementImpls.kt'
-                generator = new kotlinsql.builder.GenerateStatementsKt(depth)
+                output = 'kotlin/gen/statementImpls.kt'
+                generator = "kotlinsql.builder.GenerateStatementsKt"
+                input = depth
             }
             inserts{
-                output = 'gen/Inserts.kt'
-                generator = new kotlinsql.builder.GenerateInsertsKt(depth)
+                output = 'kotlin/gen/Inserts.kt'
+                generator = "kotlinsql.builder.GenerateInsertsKt"
+                input = depth
             }
-
         }
     }
 }
 
-
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
+    generatorsCompile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     testCompile 'org.testng:testng:6.9.9'
 }

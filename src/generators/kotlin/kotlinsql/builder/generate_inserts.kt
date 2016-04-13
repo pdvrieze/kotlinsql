@@ -20,7 +20,6 @@
 
 package kotlinsql.builder
 
-import org.gradle.api.file.FileCollection
 import java.io.Writer
 
 internal fun indent(n:Int, baseLen:Int) = " ".repeat(when (n) {
@@ -29,8 +28,9 @@ internal fun indent(n:Int, baseLen:Int) = " ".repeat(when (n) {
   else -> baseLen+2
 })
 
-class GenerateInsertsKt(val count:Int):GenerateImpl {
-  override fun doGenerate(output: Writer, input: FileCollection?) {
+class GenerateInsertsKt {
+  fun doGenerate(output: Writer, input: Any) {
+    val count = input as Int
     output.apply {
       appendCopyright()
       appendln()
