@@ -27,6 +27,7 @@ import org.testng.annotations.Test
  * Created by pdvrieze on 02/04/16.
  */
 class testTableDefs {
+  object db:Database( 1)
 
   @Test
   fun testSimpleDefine() {
@@ -52,7 +53,7 @@ class testTableDefs {
       }
     }
 
-    val statement = table.SELECT(table.name).WHERE {  table.index eq 1 }
+    val statement = db.SELECT(table.name).WHERE {  table.index eq 1 }
     assertEquals(statement.toSQL(), "SELECT `name` FROM `TestMakeSQL` WHERE `index` = ?")
 
   }
@@ -78,7 +79,7 @@ class testTableDefs {
       }
     }
 
-    val statement = persons.SELECT(persons.name, emails.email).WHERE { persons.index eq emails.index }
+    val statement = db.SELECT(persons.name, emails.email).WHERE { persons.index eq emails.index }
     assertEquals(statement.toSQL(), "SELECT p.`name`, e.`email` FROM `emails` AS e, `persons` AS p WHERE p.`index` = e.`index`")
 
   }

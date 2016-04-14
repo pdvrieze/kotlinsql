@@ -39,7 +39,7 @@ inline fun <R> DataSource.connection(db: Database, block: (DBConnection) -> R): 
 
 //inline fun <R> DataSource.connection(username: String, password: String, block: (DBConnection) -> R) = getConnection(username, password).use { connection(it, block) }
 
-class DBConnection constructor(private val connection: Connection, val db: Database) {
+class DBConnection constructor(private val connection: Connection, val db: Database?=null) {
 
   @Deprecated(message = "Do not use, this is there just for transitional purposes", level = DeprecationLevel.WARNING)
   fun __getConnection() = connection
