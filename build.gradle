@@ -27,7 +27,7 @@ buildscript {
 
     ext {
         if (! rootProject.ext.has('kotlin_version') ) { kotlin_version = '1.0.1-2' }
-        if (! rootProject.ext.has('codegen_version') ) { codegen_version = '0.5.6' }
+        if (! rootProject.ext.has('codegen_version') ) { codegen_version = '0.5.7' }
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
