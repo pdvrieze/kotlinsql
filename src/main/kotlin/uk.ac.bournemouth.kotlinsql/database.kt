@@ -111,23 +111,32 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
 
   abstract class WhereClause:WhereValue() {
 
-    open fun setParameters(statementHelper: StatementHelper, first:Int=1):Int = first
-
   }
 
   private class WhereCombine(val left:WhereClause, val rel:String, val right:WhereClause):BooleanWhereValue() {
     override fun toSQL(prefixMap: Map<String, String>?): String {
-      return "( $left $rel $right )"
+      return "( ${left.toSQL(prefixMap)} $rel ${right.toSQL(prefixMap)} )"
+    }
+
+    override fun setParameters(statementHelper: StatementHelper, first: Int): Int {
+      val i = left.setParameters(statementHelper)
+      return right.setParameters(statementHelper,i)
     }
   }
 
   private class WhereBooleanUnary(val rel:String, val base:WhereClause):BooleanWhereValue() {
-    override fun toSQL(prefixMap: Map<String, String>?)= "$rel $base"
+    override fun toSQL(prefixMap: Map<String, String>?)= "$rel ${base.toSQL(prefixMap)}"
+
+    override fun setParameters(statementHelper: StatementHelper, first: Int): Int {
+      return base.setParameters(statementHelper, first)
+    }
   }
 
   private class WhereCmpCol<S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>>(val col1:ColumnRef<*,S1,*>, val cmp:SqlComparisons, val col2:ColumnRef<*,S2,*>): BooleanWhereValue() {
 
     override fun toSQL(prefixMap:Map<String,String>?)= "${col1.name(prefixMap)} $cmp ${col2.name(prefixMap)}"
+
+    override fun setParameters(statementHelper: StatementHelper, first: Int) = first
   }
 
   private class WhereCmpParam<T:Any>(val ref:ColumnRef<T,*,*>, val cmp:SqlComparisons, val value: T?): BooleanWhereValue() {
@@ -166,10 +175,13 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
 
     //    fun ISNOT(other:WhereClause):WhereClause = WhereUnary("NOT", other)
 
-    val TRUE:BooleanWhereValue=object:BooleanWhereValue() { override fun toSQL(prefixMap: Map<String, String>?)= "TRUE" }
-    val FALSE:BooleanWhereValue=object:BooleanWhereValue() { override fun toSQL(prefixMap: Map<String, String>?)= "FALSE" }
-    val UNKNOWN:BooleanWhereValue=object:BooleanWhereValue() { override fun toSQL(prefixMap: Map<String, String>?)= "UNKNOWN" }
-    val NULL:RefWhereValue=object:RefWhereValue() { override fun toSQL(prefixMap: Map<String, String>?)= "NULL" }
+    val TRUE:BooleanWhereValue=object:ConstBooleanWhereValue() { override fun toSQL(prefixMap: Map<String, String>?)= "TRUE" }
+    val FALSE:BooleanWhereValue=object:ConstBooleanWhereValue() { override fun toSQL(prefixMap: Map<String, String>?)= "FALSE" }
+    val UNKNOWN:BooleanWhereValue=object:ConstBooleanWhereValue() { override fun toSQL(prefixMap: Map<String, String>?)= "UNKNOWN" }
+    val NULL:RefWhereValue=object:RefWhereValue() {
+      override fun toSQL(prefixMap: Map<String, String>?)= "NULL"
+      override fun setParameters(statementHelper: StatementHelper, first: Int) = first
+    }
   }
 
   interface  Statement {
@@ -186,9 +198,15 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
 
   abstract class WhereValue internal constructor() {
     abstract fun toSQL(prefixMap: Map<String, String>?):String
+    abstract fun setParameters(statementHelper: StatementHelper, first:Int=1):Int
   }
 
-  abstract class BooleanWhereValue:WhereClause()
+  abstract class BooleanWhereValue:WhereClause() {
+  }
+
+  abstract class ConstBooleanWhereValue:BooleanWhereValue() {
+    override fun setParameters(statementHelper: StatementHelper, first:Int) = first
+  }
 
   abstract class RefWhereValue:WhereValue()
 
@@ -248,6 +266,7 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
      */
     fun execute(connection: DBConnection):Int {
       return connection.prepareStatement(toSQL()) {
+        setParams(this)
         executeUpdate()
       }
     }
@@ -283,6 +302,9 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
 
   class WhereEq(val left:ColumnRef<*,*,*>, val rel:String, val right:RefWhereValue):BooleanWhereValue() {
     override fun toSQL(prefixMap: Map<String, String>?)="$left $rel $right"
+    override fun setParameters(statementHelper: StatementHelper, first: Int): Int {
+      return right.setParameters(statementHelper, first)
+    }
   }
 
   interface Select: SelectStatement {
@@ -376,7 +398,7 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
 
   class _Delete internal constructor(table:TableRef): _UpdateBase(table) {
     override fun toSQL(): String {
-      return "DELETE_FROM ${table._name}"
+      return "DELETE FROM ${table._name}"
     }
   }
 
