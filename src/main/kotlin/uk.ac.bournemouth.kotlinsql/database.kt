@@ -97,14 +97,17 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
   }
 
   inline fun <R> connect(datasource: DataSource, block: DBConnection.()->R): R {
-    datasource.connection(this) { connection ->
+    val connection = datasource.connection
+    try {
       connection.autoCommit=false
-      try {
-        return connection.block().apply { connection.commit() }
-      } catch (e:Exception) {
-        connection.rollback()
-        throw e
-      }
+      val result = DBConnection(connection, this).block()
+      connection.commit()
+      return result
+    } catch (e:Exception) {
+      connection.rollback()
+      throw e
+    } finally {
+      connection.close()
     }
   }
 
