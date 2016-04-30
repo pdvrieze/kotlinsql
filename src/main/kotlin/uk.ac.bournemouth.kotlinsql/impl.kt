@@ -25,6 +25,7 @@ import uk.ac.bournemouth.kotlinsql.ColumnType.*
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.*
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.*
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.*
+import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import java.math.BigDecimal
 
 
@@ -267,9 +268,36 @@ abstract class AbstractTable: Table {
     _extra?.let { appendable.append(' ').append(_extra)}
     appendable.append(';')
   }
+
+  override fun createTransitive(connection: DBConnection, ifNotExists: Boolean) {
+    if (ifNotExists && connection.hasTable(this)) return // Make sure to check first to prevent loops
+
+    val db = connection.db ?: throw IllegalStateException("Transitive table creation requires a non-null database")
+    val neededTables = (_cols.asSequence().mapNotNull { col -> col.references?.table } +
+          _foreignKeys.asSequence().mapNotNull { fk -> fk.toTable }).map { db.get(it._name) }.toSet()
+
+    neededTables.forEach { if (it!=this) it.createTransitive(connection, true) }
+
+    connection.prepareStatement(buildString { appendDDL(this) }) {
+      execute()
+    }
+  }
+
+  override fun dropTransitive(connection: DBConnection, ifExists: Boolean) {
+    fun tableReferencesThis(table:Table): Boolean {
+      return table._foreignKeys.any { fk -> fk.toTable._name == _name }
+    }
+
+    if (ifExists && ! connection.hasTable(this)) return
+    val db = connection.db ?: throw IllegalStateException("Transitive table dropping requires a non-null database")
+
+    db._tables.filter(::tableReferencesThis).forEach { it.dropTransitive(connection, true) }
+
+    connection.prepareStatement("DROP TABLE $_name") { execute() }
+  }
 }
 
 
 internal fun toDDL(first:CharSequence, cols: List<ColumnRef<*,*,*>>):CharSequence {
-  return StringBuilder(first).append(" (`").apply { cols.joinTo(this, "`, `", transform = {it.name}) }.append("`)")
+  return cols.joinToString("`, `", "$first (`","`)") { it.name }
 }

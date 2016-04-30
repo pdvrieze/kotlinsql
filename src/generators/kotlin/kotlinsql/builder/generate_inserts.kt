@@ -56,14 +56,14 @@ class GenerateInsertsKt {
         appendln(") {")
         appendln()
         append("  fun VALUES(")
-        (1..n).joinTo(output) { m -> "col$m: T$m"}
+        (1..n).joinTo(output) { m -> "col$m: T$m?"}
         appendln(") =")
         append("    _InsertValues$n(")
         (1..n).joinTo(output) { m -> "col$m"}
         appendln(")")
 
         append("  inner class _InsertValues$n(")
-        (1..n).joinTo(output) { m -> "col$m: T$m"}
+        (1..n).joinTo(output) { m -> "col$m: T$m?"}
         append("):_BaseInsertValues(")
         (1..n).joinTo(output) { m -> "col$m" }
         append(")")

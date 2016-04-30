@@ -20,6 +20,7 @@
 
 package uk.ac.bournemouth.kotlinsql
 
+import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.DatabaseMethods
 import java.util.*
 
@@ -55,6 +56,11 @@ interface Table:TableRef {
   }
 
   fun appendDDL(appendable: Appendable)
+
+  /** Create the table if it does not exist yet. */
+  fun createTransitive(connection: DBConnection, ifNotExists: Boolean = false)
+
+  fun dropTransitive(connection: DBConnection, ifExists: Boolean = false)
 
 }
 

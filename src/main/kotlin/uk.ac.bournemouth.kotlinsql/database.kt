@@ -142,23 +142,23 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
     override fun setParameters(statementHelper: StatementHelper, first: Int) = first
   }
 
-  private class WhereCmpParam<T:Any>(val ref:ColumnRef<T,*,*>, val cmp:SqlComparisons, val value: T?): BooleanWhereValue() {
+  private class WhereCmpParam<T:Any, S: IColumnType<T, S, *>>(val ref:ColumnRef<T,S,*>, val cmp:SqlComparisons, val value: T?): BooleanWhereValue() {
     override fun toSQL(prefixMap:Map<String,String>?) = "`${ref.name}` $cmp ?"
 
     override fun setParameters(statementHelper: StatementHelper, first: Int):Int {
-      statementHelper.setParam_(first, value)
+      ref.type.setParam(statementHelper, first, value)
       return first+1
     }
   }
 
   class _Where {
 
-    infix fun <T : Any> ColumnRef<T, *, *>.eq(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.eq, value)
-    infix fun <T : Any> ColumnRef<T, *, *>.ne(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.ne, value)
-    infix fun <T : Any> ColumnRef<T, *, *>.lt(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.lt, value)
-    infix fun <T : Any> ColumnRef<T, *, *>.le(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.le, value)
-    infix fun <T : Any> ColumnRef<T, *, *>.gt(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.gt, value)
-    infix fun <T : Any> ColumnRef<T, *, *>.ge(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.ge, value)
+    infix fun <T:Any, S: IColumnType<T, S, *>> ColumnRef<T, S, *>.eq(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.eq, value)
+    infix fun <T:Any, S: IColumnType<T, S, *>> ColumnRef<T, S, *>.ne(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.ne, value)
+    infix fun <T:Any, S: IColumnType<T, S, *>> ColumnRef<T, S, *>.lt(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.lt, value)
+    infix fun <T:Any, S: IColumnType<T, S, *>> ColumnRef<T, S, *>.le(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.le, value)
+    infix fun <T:Any, S: IColumnType<T, S, *>> ColumnRef<T, S, *>.gt(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.gt, value)
+    infix fun <T:Any, S: IColumnType<T, S, *>> ColumnRef<T, S, *>.ge(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.ge, value)
 
     infix fun <S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>> ColumnRef<*, S1, *>.eq(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.eq, other)
     infix fun <S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>> ColumnRef<*, S1, *>.ne(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.ne, other)
@@ -258,7 +258,8 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
     }
 
     override fun setParams(statementHelper: StatementHelper, first: Int):Int {
-      return where.setParameters(statementHelper, first)
+      val next = update.setParams(statementHelper, first)
+      return where.setParameters(statementHelper, next)
     }
 
     /**
@@ -390,6 +391,19 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
 
     override fun setParams(statementHelper: StatementHelper, first: Int) = first
 
+    /**
+     * Execute the statement.
+     * @param The connection object to use for the query
+     * @return The amount of rows changed
+     * @see java.sql.PreparedStatement.executeUpdate
+     */
+    fun execute(connection: DBConnection):Boolean {
+      return connection.prepareStatement(toSQL()) {
+        setParams(this)
+        execute()
+      }
+    }
+
   }
 
   abstract class _UpdateBase internal constructor(val table:TableRef): Statement {
@@ -405,6 +419,36 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
     }
   }
 
+  class _Update internal constructor(val sets:List<_Set<*,*,*>>, table:TableRef): _UpdateBase(table) {
+    override fun toSQL(): String {
+      return sets.joinToString(", ", "UPDATE ${table._name} SET ") { set -> "${set.column.name} = ?"}
+    }
+
+    override fun setParams(statementHelper: StatementHelper, first: Int): Int {
+      sets.forEachIndexed { i, set ->
+        set.setParam(statementHelper, first+i)
+      }
+      return first+sets.size
+    }
+  }
+
+  class _Set<T:Any, S: IColumnType<T,S,C>, C:Column<T,S,C>>(val column:ColumnRef<T,S,C>, val value:T?) {
+    fun setParam(statementHelper: StatementHelper, pos:Int) {
+      column.type.setParam(statementHelper, pos, value)
+    }
+  }
+
+  class _UpdateBuilder internal constructor() {
+    internal val sets = mutableListOf<_Set<*,*,*>>()
+
+    fun <T:Any, S: IColumnType<T,S,C>, C:Column<T,S,C>> SET(column:ColumnRef<T,S,C>, value:T?) {
+      sets.add(_Set(column, value))
+    }
+
+    fun build() = _Update(sets, sets.first().column.table)
+  }
+
+
   interface Insert {
     fun toSQL():String
   }
@@ -413,18 +457,35 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
     override fun toSQL() =
           columns.joinToString(", ", "INSERT INTO ${columns[1].table._name} (", ")") { col -> col.name }
 
-    abstract inner class _BaseInsertValues(vararg val values:Any): Statement {
+    abstract inner class _BaseInsertValues(vararg val values:Any?): Statement {
       override fun toSQL(): String {
-        return (1..values.size).joinToString { "?" }
+        return buildString {
+          append(this@_BaseInsert.toSQL())
+          append(" VALUES (")
+          (1..values.size).joinTo(this) { "?" }
+          append(')')
+        }
       }
 
       override fun setParams(statementHelper: StatementHelper, first: Int):Int {
         for(i in columns.indices) {
-          val col = columns[i]
-          val value = col.type.maybeCast(values[i])
-          statementHelper.setParam_(first+i, value)
+          columns[i].type.castSetParam(statementHelper, first+i, values[i])
         }
         return first+columns.size
+      }
+
+
+      /**
+       * Execute the statement.
+       * @param connection The connection object to use for the query
+       * @return The amount of rows changed
+       * @see java.sql.PreparedStatement.executeUpdate
+       */
+      fun execute(connection: DBConnection):Int {
+        return connection.prepareStatement(toSQL()) {
+          setParams(this)
+          executeUpdate()
+        }
       }
     }
 
@@ -432,7 +493,7 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
 
   fun DELETE_FROM(table: Table) = _Delete(table)
 
-
+  fun UPDATE(config:_UpdateBuilder.()->Unit)= _UpdateBuilder().apply(config).build()
 
 
 }

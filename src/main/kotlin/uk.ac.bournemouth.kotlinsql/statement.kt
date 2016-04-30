@@ -21,12 +21,13 @@
 package uk.ac.bournemouth.util.kotlin.sql
 
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.sql.*
 import java.util.*
 import java.util.concurrent.Executor
 import javax.sql.DataSource
 
-class StatementHelper constructor(val statement: PreparedStatement) : PreparedStatement by statement {
+class StatementHelper constructor(val statement: PreparedStatement, val queryString:String) : PreparedStatement by statement {
   inline fun <R> raw(block: (PreparedStatement) -> R): R = block(statement)
 
   @Deprecated("Use withResultSet")
@@ -57,7 +58,9 @@ class StatementHelper constructor(val statement: PreparedStatement) : PreparedSt
     }
 
 
+  @Deprecated("Use the columntype instead. This doesn't do nulls", level = DeprecationLevel.ERROR)
   fun <T> setParam_(index: Int, value: T) = when (value) {
+    null -> setNull(index, Types.NULL)
     is Int -> setParam(index, value)
     is Long -> setParam(index, value)
     is String -> setParam(index, value)
@@ -66,13 +69,13 @@ class StatementHelper constructor(val statement: PreparedStatement) : PreparedSt
     is Short -> setParam(index, value)
     is BigDecimal -> setBigDecimal(index, value)
     is ByteArray -> statement.setBytes(index,value)
-    else -> throw UnsupportedOperationException("Not possible to set this value")
+    else -> throw UnsupportedOperationException("Not possible to set this value (${value}) of type ${(value as Any).javaClass.simpleName}")
   }
 
 
   fun setParam(index: Int, value: Int?) = if (value == null) setNull(index, Types.INTEGER) else setInt(index, value)
   fun setParam(index: Int, value: Long?) = if (value == null) setNull(index, Types.BIGINT) else setLong(index, value)
-  fun setParam(index: Int, value: String?) = if (value == null) setNull(index, Types.VARCHAR) else setString(index, value)
+  fun setParam(index: Int, value: CharSequence?) = if (value == null) setNull(index, Types.VARCHAR) else setString(index, value?.toString())
   fun setParam(index: Int, value: Boolean?) = if (value == null) setNull(index, Types.BOOLEAN) else setBoolean(index, value)
   fun setParam(index: Int, value: Byte?) = if (value == null) setNull(index, Types.TINYINT) else setByte(index, value)
   fun setParam(index: Int, value: Short?) = if (value == null) setNull(index, Types.SMALLINT) else setShort(index, value)
@@ -97,6 +100,46 @@ class StatementHelper constructor(val statement: PreparedStatement) : PreparedSt
   }
 
 //  inline fun <R> params(block: ParamHelper_.() -> R) = ParamHelper_(this).block()
+
+  fun setByte(pos:Int, value: Byte?) {
+    if (value ==null) statement.setNull(pos, Types.TINYINT) else statement.setByte(pos, value)
+  }
+
+  fun setShort(pos:Int, value: Short?) {
+    if (value ==null) statement.setNull(pos, Types.SMALLINT) else statement.setShort(pos, value)
+  }
+
+  fun setInt(pos:Int, value: Int?) {
+    if (value ==null) statement.setNull(pos, Types.INTEGER) else statement.setInt(pos, value)
+  }
+
+  fun setLong(pos:Int, value: Long?) {
+    if (value ==null) statement.setNull(pos, Types.BIGINT) else statement.setLong(pos, value)
+  }
+
+  fun setFloat(pos:Int, value: Float?) {
+    if (value ==null) statement.setNull(pos, Types.FLOAT) else statement.setFloat(pos, value)
+  }
+
+  fun setDouble(pos:Int, value: Double?) {
+    if (value ==null) statement.setNull(pos, Types.DOUBLE) else statement.setDouble(pos, value)
+  }
+
+  fun setBoolean(pos:Int, value: Boolean?) {
+    if (value ==null) statement.setNull(pos, Types.BOOLEAN) else statement.setBoolean(pos, value)
+  }
+
+  fun setDecimal(pos:Int, value: BigDecimal?) {
+    if (value ==null) statement.setNull(pos, Types.DECIMAL) else statement.setBigDecimal(pos, value)
+  }
+
+  fun setNumeric(pos:Int, value: BigDecimal?) {
+    if (value ==null) statement.setNull(pos, Types.NUMERIC) else statement.setBigDecimal(pos, value)
+  }
+
+  fun setArray(pos:Int, value: BooleanArray?) {
+    throw UnsupportedOperationException("Setting bit arrays is not yet supported")
+  }
 
   inline fun params(value:Int?):ParamHelper_ { setParam(1, value); return ParamHelper_(this) }
   inline fun params(value:Long?):ParamHelper_ { setParam(1, value); return ParamHelper_(this) }
@@ -127,6 +170,22 @@ class StatementHelper constructor(val statement: PreparedStatement) : PreparedSt
   }
 
   inline fun executeHasRows(): Boolean = execute() && withResultSet { it.next() }
+
+  override fun execute(): Boolean {
+    try {
+      return statement.execute()
+    } catch (e:SQLException) {
+      throw SQLException("Error executing statement: ${queryString}", e)
+    }
+  }
+
+  override fun executeUpdate(): Int {
+    try {
+      return statement.executeUpdate()
+    } catch (e:SQLException) {
+      throw SQLException("Error executing statement: ${queryString}", e)
+    }
+  }
 }
 
 public inline fun <T : Statement, R> T.use(block: (T) -> R) = useHelper({ it.close() }, block)
