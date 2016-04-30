@@ -313,7 +313,7 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
       if (prefixMap!=null) {
         return toSQLMultipleTables(prefixMap)
       } else {
-        return columns.joinToString("`, `", "SELECT `", "`") { it.name }
+        return columns.joinToString("`, `", "SELECT `", "` FROM ${columns[0].table._name}") { it.name }
       }
     }
 
