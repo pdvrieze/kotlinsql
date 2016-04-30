@@ -96,7 +96,7 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
     return _tables.find { it._name==key } ?: throw NoSuchElementException("There is no table with the key ${key}")
   }
 
-  inline fun <R> connect(datasource: DataSource, block: DBConnection.()->R): R {
+  fun <R> connect(datasource: DataSource, block: DBConnection.()->R): R {
     val connection = datasource.connection
     try {
       connection.autoCommit=false
@@ -174,7 +174,7 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
     fun NOT(other:WhereClause):WhereClause = WhereBooleanUnary("NOT", other)
 
     infix fun ColumnRef<*,*,*>.IS(ref:RefWhereValue) = WhereEq(this,"IS",ref)
-    infix fun ColumnRef<*,*,*>.IS_NOT(ref:RefWhereValue) = WhereEq(this,"NOT",ref)
+    infix fun ColumnRef<*,*,*>.IS_NOT(ref:RefWhereValue) = WhereEq(this,"IS NOT",ref)
 
     //    fun ISNOT(other:WhereClause):WhereClause = WhereUnary("NOT", other)
 
@@ -286,26 +286,10 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
     override fun setParams(statementHelper: StatementHelper, first: Int) =
           where.setParameters(statementHelper, first)
 
-    protected fun <T> executeHelper(connection: DBConnection, block: T, invokeHelper:(ResultSet, T)->Unit):Boolean {
-      return connection.prepareStatement(toSQL()) {
-        setParams(this)
-        execute { rs ->
-          if (rs.next()) {
-            do {
-              invokeHelper(rs, block)
-            } while (rs.next())
-            true
-          } else {
-            false
-          }
-        }
-      }
-    }
-
   }
 
   class WhereEq(val left:ColumnRef<*,*,*>, val rel:String, val right:RefWhereValue):BooleanWhereValue() {
-    override fun toSQL(prefixMap: Map<String, String>?)="$left $rel $right"
+    override fun toSQL(prefixMap: Map<String, String>?)="${left.name(prefixMap)} $rel ${right.toSQL(prefixMap)}"
     override fun setParameters(statementHelper: StatementHelper, first: Int): Int {
       return right.setParameters(statementHelper, first)
     }
@@ -374,6 +358,18 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
       }
     }
 
+    /**
+     * Execute the statement.
+     * @param The connection object to use for the query
+     * @return The amount of rows changed
+     * @see java.sql.PreparedStatement.executeUpdate
+     */
+    fun execute(connection: DBConnection):Boolean {
+      return connection.prepareStatement(toSQL()) {
+        setParams(this)
+        execute()
+      }
+    }
 
   }
 
@@ -402,6 +398,18 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
         setParams(this)
         execute()
       }
+    }
+
+    fun execute(connection:DBConnection, block: (T1?)->Unit):Boolean {
+      return executeHelper(connection, block) { rs, block ->
+        block(col1.type.fromResultSet(rs, 1))
+      }
+    }
+
+    fun <R>getList(connection: DBConnection, factory:(T1?)->R): List<R> {
+      val result=mutableListOf<R>()
+      execute(connection) { p1 -> result.add(factory(p1)) }
+      return result
     }
 
   }
@@ -496,6 +504,22 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
   fun UPDATE(config:_UpdateBuilder.()->Unit)= _UpdateBuilder().apply(config).build()
 
 
+}
+
+internal fun <T> Database.SelectStatement.executeHelper(connection: DBConnection, block: T, invokeHelper:(ResultSet, T)->Unit):Boolean {
+  return connection.prepareStatement(toSQL()) {
+    setParams(this)
+    execute { rs ->
+      if (rs.next()) {
+        do {
+          invokeHelper(rs, block)
+        } while (rs.next())
+        true
+      } else {
+        false
+      }
+    }
+  }
 }
 
 enum class SqlComparisons(val str:String) {

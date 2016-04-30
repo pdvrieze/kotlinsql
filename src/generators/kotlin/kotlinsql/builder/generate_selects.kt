@@ -38,6 +38,8 @@ class GenerateSelectClasses {
       appendln("import uk.ac.bournemouth.kotlinsql.Database")
       appendln("import uk.ac.bournemouth.kotlinsql.Database.*")
       appendln("import uk.ac.bournemouth.kotlinsql.IColumnType")
+      appendln("import uk.ac.bournemouth.util.kotlin.sql.DBConnection")
+      appendln("import uk.ac.bournemouth.kotlinsql.executeHelper")
       for (n in 2..count) {
         appendln()
         appendln("@Suppress(\"UNCHECKED_CAST\")")
@@ -51,6 +53,36 @@ class GenerateSelectClasses {
         appendln("){")
         appendln("    override fun WHERE(config: _Where.() -> WhereClause) =")
         appendln("        _Statement$n(this, _Where().config())")
+
+        appendln()
+        append("    fun execute(connection:DBConnection, block: (")
+        (1..n).joinToString(",") {m -> "T$m?"}.apply { append(this) }
+        appendln(")->Unit):Boolean {")
+        appendln("        return executeHelper(connection, block) { rs, block ->")
+        append("            block(")
+        (1..n).joinToString(",\n${" ".repeat(12)}") { m -> "col$m.type.fromResultSet(rs, $m)" }.apply { append(this) }
+//        if (n==1) {
+//          append("select.col1.type.fromResultSet(rs, 1)")
+//        } else {
+//        }
+        appendln(')')
+        appendln("        }")
+        appendln("    }")
+
+        appendln()
+        append("    fun <R>getList(connection: DBConnection, factory:")
+        appendFactorySignature(n)
+        appendln("): List<R> {")
+        appendln("        val result=mutableListOf<R>()")
+        append("        execute(connection) { ")
+        (1..n).joinToString { "p$it" }.apply { append(this) }
+        append(" -> result.add(factory(")
+        (1..n).joinToString { "p$it" }.apply { append(this) }
+        appendln(")) }")
+        appendln("        return result")
+        appendln("    }")
+
+
         appendln()
         for(m in 1..n) {
           appendln("    val col$m: C$m get() = columns[$m] as C$m")

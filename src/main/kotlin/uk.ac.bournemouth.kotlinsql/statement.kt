@@ -152,7 +152,7 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
 
   inline fun <R> withGeneratedKeys(block: (ResultSet) -> R) = statement.generatedKeys.use(block)
 
-  inline fun <R> execute(block: (ResultSet) -> R) = statement.executeQuery().use(block)
+  inline fun <R> execute(block: (ResultSet) -> R) = executeQuery().use(block)
 
   inline fun <R> executeEach(block: (ResultSet) -> R): List<R> = execute { resultSet ->
     ArrayList<R>().apply {
@@ -182,6 +182,14 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
   override fun executeUpdate(): Int {
     try {
       return statement.executeUpdate()
+    } catch (e:SQLException) {
+      throw SQLException("Error executing statement: ${queryString}", e)
+    }
+  }
+
+  override fun executeQuery(): ResultSet {
+    try {
+      return statement.executeQuery()
     } catch (e:SQLException) {
       throw SQLException("Error executing statement: ${queryString}", e)
     }

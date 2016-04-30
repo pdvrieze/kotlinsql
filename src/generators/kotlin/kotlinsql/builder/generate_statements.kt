@@ -36,6 +36,7 @@ class GenerateStatementsKt {
       appendln("package uk.ac.bournemouth.util.kotlin.sql.impl.gen")
       appendln()
       appendln("import uk.ac.bournemouth.kotlinsql.Column")
+      appendln("import uk.ac.bournemouth.kotlinsql.executeHelper")
 //      appendln("import uk.ac.bournemouth.kotlinsql.Database")
       appendln("import uk.ac.bournemouth.kotlinsql.Database.*")
       appendln("import uk.ac.bournemouth.kotlinsql.IColumnType")
@@ -124,9 +125,10 @@ class GenerateStatementsKt {
     }
   }
 
-  private fun Appendable.appendFactorySignature(n: Int) {
-    append("(")
-    (1..n).joinToString(",") { "T$it?" }.apply { append(this) }
-    append(")->R")
-  }
+}
+
+internal fun Appendable.appendFactorySignature(n: Int) {
+  append("(")
+  (1..n).joinToString(",") { "T$it?" }.apply { append(this) }
+  append(")->R")
 }

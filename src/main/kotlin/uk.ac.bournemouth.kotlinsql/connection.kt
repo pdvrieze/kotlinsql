@@ -55,10 +55,11 @@ class DBConnection constructor(private val connection: Connection, val db: Datab
 
   fun <R> transaction(block: (DBConnection) -> R):R {
     connection.autoCommit=false
+    val savePoint = connection.setSavepoint()
     try {
       return block(this).apply { commit() }
     } catch (e:Exception) {
-      connection.rollback()
+      connection.rollback(savePoint)
       throw e
     }
   }
@@ -67,7 +68,9 @@ class DBConnection constructor(private val connection: Connection, val db: Datab
   /**
    * @see [Connection.prepareStatement]
    */
-  fun <R> prepareStatement(sql: String, block: StatementHelper.() -> R): R = connection.prepareStatement(sql).use { block(StatementHelper(it, sql)) }
+  fun <R> prepareStatement(sql: String, block: StatementHelper.() -> R): R = connection.prepareStatement(sql).use {
+    block(StatementHelper(it, sql))
+  }
 
 
   /**
