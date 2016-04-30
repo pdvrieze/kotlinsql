@@ -412,6 +412,12 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
       return result
     }
 
+    fun getList(connection: DBConnection): List<T1?> {
+      val result=mutableListOf<T1?>()
+      execute(connection) { p1 -> result.add(p1) }
+      return result
+    }
+
   }
 
   abstract class _UpdateBase internal constructor(val table:TableRef): Statement {
