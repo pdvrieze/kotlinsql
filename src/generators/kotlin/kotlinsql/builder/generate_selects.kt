@@ -60,7 +60,7 @@ class GenerateSelectClasses {
         appendln(")->Unit):Boolean {")
         appendln("        return executeHelper(connection, block) { rs, block ->")
         append("            block(")
-        (1..n).joinToString(",\n${" ".repeat(12)}") { m -> "col$m.type.fromResultSet(rs, $m)" }.apply { append(this) }
+        (1..n).joinToString(",\n${" ".repeat(18)}") { m -> "col$m.type.fromResultSet(rs, $m)" }.apply { append(this) }
 //        if (n==1) {
 //          append("select.col1.type.fromResultSet(rs, 1)")
 //        } else {
@@ -85,7 +85,7 @@ class GenerateSelectClasses {
 
         appendln()
         for(m in 1..n) {
-          appendln("    val col$m: C$m get() = columns[$m] as C$m")
+          appendln("    val col$m: C$m get() = columns[${m-1}] as C$m")
         }
 
         appendln("}")
