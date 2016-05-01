@@ -96,17 +96,17 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
     return _tables.find { it._name==key } ?: throw NoSuchElementException("There is no table with the key ${key}")
   }
 
-  fun <R> connect(datasource: DataSource, block: DBConnection.()->R): R {
+  inline fun <R> connect(datasource: DataSource, block: DBConnection.()->R): R {
     val connection = datasource.connection
+    var doCommit = true
     try {
-      connection.autoCommit=false
-      val result = DBConnection(connection, this).block()
-      connection.commit()
-      return result
+      return DBConnection(connection, this).block()
     } catch (e:Exception) {
       connection.rollback()
+      doCommit = false
       throw e
     } finally {
+      if (doCommit) connection.commit()
       connection.close()
     }
   }
