@@ -100,7 +100,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
   }
 
   override fun maybeCast(value: Any?): T? {
-    return if (value!=null) type.java.cast(value) else null
+    return if (value!=null) type.javaObjectType.cast(value) else null
   }
 
   override fun castSetParam(statementHelper: StatementHelper, pos: Int, value: Any?) {
