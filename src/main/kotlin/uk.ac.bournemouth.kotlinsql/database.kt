@@ -102,8 +102,12 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
     try {
       return DBConnection(connection, this).block()
     } catch (e:Exception) {
-      connection.rollback()
-      doCommit = false
+      try {
+        connection.rollback()
+      } finally {
+        connection.close()
+        doCommit = false
+      }
       throw e
     } finally {
       if (doCommit) connection.commit()
