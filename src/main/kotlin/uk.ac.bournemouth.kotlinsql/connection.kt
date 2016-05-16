@@ -75,7 +75,7 @@ class DBConnection constructor(private val connection: Connection, val db: Datab
    */
   fun commit() = connection.commit()
 
-  fun getMetaData() = connection.getMetaData()
+  fun getMetaData() = ConnectionMetadata(this, connection.metaData)
 
   private inline fun prepareCall(sql: String) = connection.prepareCall(sql)
 
@@ -149,16 +149,7 @@ class DBConnection constructor(private val connection: Connection, val db: Datab
    * *
    * @see SQLWarning
    */
-  val warningsIt: Iterator<SQLWarning> get() = object : AbstractIterator<SQLWarning>() {
-    override fun computeNext() {
-      val w = connection.warnings
-      if (w != null) {
-        setNext(w)
-      } else {
-        done()
-      }
-    }
-  }
+  val warningsIt: Iterator<SQLWarning> get() = WarningIterator(connection.warnings)
 
   val warnings: Sequence<SQLWarning> get() = object: Sequence<SQLWarning> {
     override fun iterator(): Iterator<SQLWarning> = warningsIt

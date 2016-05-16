@@ -62,6 +62,8 @@ interface Table:TableRef {
 
   fun dropTransitive(connection: DBConnection, ifExists: Boolean = false)
 
+  fun ensureTable(connection: DBConnection, retainExtraColumns: Boolean = true)
+
 }
 
 operator fun Table.get(name:String) = this.column(name) ?: throw NoSuchElementException("The column with the name ${name} does not exist")

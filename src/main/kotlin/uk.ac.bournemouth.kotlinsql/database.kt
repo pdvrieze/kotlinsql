@@ -25,12 +25,18 @@ import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
 import uk.ac.bournemouth.util.kotlin.sql.connection
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.DatabaseMethods
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen._Statement1
+import uk.ac.bournemouth.util.kotlin.sql.use
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.util.*
 import javax.sql.DataSource
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
+import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.jvm.javaField
+import kotlin.reflect.jvm.javaGetter
+import kotlin.reflect.jvm.properties
+import kotlin.reflect.memberProperties
 
 /**
  * Created by pdvrieze on 03/04/16.
@@ -43,28 +49,34 @@ import kotlin.reflect.KProperty
  * @property _tables The actual tables defined in the database
  */
 
-abstract class Database private constructor(val _version:Int, val _tables:List<Table>): DatabaseMethods() {
+abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
   companion object {
     private fun tablesFromObjects(container: KClass<out Database>): List<Table> {
       return container.nestedClasses.map { it.objectInstance as? Table }.filterNotNull()
     }
+
+
+    private fun tablesFromProperties(db: Database): List<Table> {
+
+      fun isTable(property:KProperty<*>): Boolean {
+        return Table::class.java.isAssignableFrom(property.javaGetter?.returnType ?: property.javaField?.type)
+      }
+
+      return db.javaClass.kotlin.memberProperties.asSequence()
+            .filter (::isTable)
+            .map { property -> (property.get(db)) as Table }
+            .toList()
+    }
   }
 
-  /**
-   * Constructor for creating a new Database implementation.
-   *
-   * @param version The version of the database configuration.
-   * @param block The configuration block where the database tables are added.
-   */
-  constructor(version:Int, block:DatabaseConfiguration.()->Unit):this(version, DatabaseConfiguration().apply(block))
-
-  private constructor(version:Int, config:DatabaseConfiguration): this(version, config.tables)
-
-  constructor(version:Int): this(version, mutableListOf()) {
-    // This has to be initialised here as the class object is not avaiable before the super constructor is called.
-    // The cast is needed as we know it is actually a mutable list.
-    (_tables as MutableList<Table>).addAll(tablesFromObjects(javaClass.kotlin))
+  val _tables:List<Table> by lazy {
+    val result = ArrayList<Table>()
+    result.addAll(tablesFromObjects(this.javaClass.kotlin))
+    tablesFromProperties(this)
+          .filter { table -> ! result.any { table._name == it._name} }
+          .forEach { result.add(it) }
+    result
   }
 
   /**
@@ -115,6 +127,25 @@ abstract class Database private constructor(val _version:Int, val _tables:List<T
     }
   }
 
+  fun ensureTables(connection:DBConnection, retainExtraColumns: Boolean = true) {
+    val missingTables = _tables.map { it._name }.toMutableSet()
+    val tablesToVerify = ArrayList<String>()
+    connection.getMetaData().getTables(null, null, null, arrayOf("TABLE")).use { rs ->
+      while (rs.next()) {
+        val tableName = rs.tableName
+        missingTables.remove(tableName)
+        tablesToVerify.add(tableName)
+      }
+    }
+
+    for(tableName in tablesToVerify) {
+      get(tableName).ensureTable(connection, retainExtraColumns)
+    }
+
+    for(tableName in missingTables) {
+      get(tableName).createTransitive(connection, true)
+    }
+  }
 
   abstract class WhereClause:WhereValue() {
 

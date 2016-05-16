@@ -26,7 +26,11 @@ import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.*
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.*
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.*
 import uk.ac.bournemouth.util.kotlin.sql.DBConnection
+import uk.ac.bournemouth.util.kotlin.sql.use
 import java.math.BigDecimal
+import java.sql.SQLException
+import java.sql.SQLWarning
+import java.util.*
 
 
 internal val LINE_SEPARATOR: String by lazy { System.getProperty("line.separator")!! }
@@ -92,6 +96,80 @@ internal abstract class ColumnImpl<T:Any, S: ColumnType<T, S,C>, C:Column<T,S,C>
 
     return result
   }
+
+  override fun toString(): String {
+    return "${javaClass.simpleName}: ${toDDL()}"
+  }
+
+  override fun matches(typeName: String,
+                       size: Int,
+                       notNull: Boolean?,
+                       autoincrement: Boolean?,
+                       default: String?,
+                       comment: String?): Boolean {
+    return this.type.typeName==typeName &&
+          (this.length<0 || this.length==size) &&
+          this.notnull==notNull &&
+          this.autoincrement == autoincrement &&
+          this.default == default &&
+          this.comment == comment
+  }
+
+  override fun equals(other: Any?): Boolean{
+    if (this === other) return true
+    if (other?.javaClass != javaClass) return false
+
+    other as ColumnImpl<*, *, *>
+
+    if (table != other.table) return false
+    if (type != other.type) return false
+    if (name != other.name) return false
+    if (notnull != other.notnull) return false
+    if (unique != other.unique) return false
+    if (autoincrement != other.autoincrement) return false
+    if (default != other.default) return false
+    if (comment != other.comment) return false
+    if (columnFormat != other.columnFormat) return false
+    if (storageFormat != other.storageFormat) return false
+    if (references != other.references) return false
+    if (unsigned != other.unsigned) return false
+    if (zerofill != other.zerofill) return false
+    if (displayLength != other.displayLength) return false
+    if (precision != other.precision) return false
+    if (scale != other.scale) return false
+    if (charset != other.charset) return false
+    if (collation != other.collation) return false
+    if (binary != other.binary) return false
+    if (length != other.length) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int{
+    var result = table.hashCode()
+    result = 31 * result + type.hashCode()
+    result = 31 * result + name.hashCode()
+    result = 31 * result + (notnull?.hashCode() ?: 0)
+    result = 31 * result + unique.hashCode()
+    result = 31 * result + autoincrement.hashCode()
+    result = 31 * result + (default?.hashCode() ?: 0)
+    result = 31 * result + (comment?.hashCode() ?: 0)
+    result = 31 * result + (columnFormat?.hashCode() ?: 0)
+    result = 31 * result + (storageFormat?.hashCode() ?: 0)
+    result = 31 * result + (references?.hashCode() ?: 0)
+    result = 31 * result + unsigned.hashCode()
+    result = 31 * result + zerofill.hashCode()
+    result = 31 * result + displayLength
+    result = 31 * result + precision
+    result = 31 * result + scale
+    result = 31 * result + (charset?.hashCode() ?: 0)
+    result = 31 * result + (collation?.hashCode() ?: 0)
+    result = 31 * result + binary.hashCode()
+    result = 31 * result + length
+    return result
+  }
+
+
 }
 
 internal class NormalColumnImpl<T:Any, S: SimpleColumnType<T, S>>(name:String, configuration: NormalColumnConfiguration<T, S>):
@@ -295,9 +373,60 @@ abstract class AbstractTable: Table {
 
     connection.prepareStatement("DROP TABLE $_name") { execute() }
   }
+
+  override fun ensureTable(connection: DBConnection, retainExtraColumns: Boolean) {
+    val extraColumns = ArrayList<String>()
+    val missingColumns = HashSet<Column<*,*,*>>(_cols)
+
+
+    connection.getMetaData().getColumns(null, null, _name, null).use { rs ->
+      while (rs.next()) {
+        val colName = rs.columnName
+        val col = column(colName)
+        missingColumns.remove(col)
+        if (col!=null) {
+          val columnCorrect = col.matches(rs.typeName, rs.columnSize, rs.isNullable?.not(), rs.isAutoIncrement, rs.columnDefault, rs.remarks)
+          if (columnCorrect == false) {
+            connection.prepareStatement("ALTER TABLE $_name MODIFY COLUMN ${col.toDDL()}") {
+              executeUpdate()
+            }
+          }
+        } else {
+          extraColumns.add(colName)
+        }
+      }
+    }
+
+    if (! retainExtraColumns) {
+      for (extraColumn in extraColumns) {
+        connection.prepareStatement("ALTER TABLE $_name DROP COLUMN `$extraColumn`") {
+          executeUpdate()
+        }
+      }
+    }
+
+    for(missingColumn in missingColumns) {
+      connection.prepareStatement("ALTER TABLE $_name ADD COLUMN ${missingColumn.toDDL()}") {
+        executeUpdate()
+      }
+    }
+  }
 }
 
 
 internal fun toDDL(first:CharSequence, cols: List<ColumnRef<*,*,*>>):CharSequence {
   return cols.joinToString("`, `", "$first (`","`)") { it.name }
+}
+
+class WarningIterator(initial: SQLWarning?) :AbstractIterator<SQLWarning>() {
+  var current = initial
+  override fun computeNext() {
+    val w = current
+    if (w != null) {
+      setNext(w)
+      current = w.nextWarning
+    } else {
+      done()
+    }
+  }
 }

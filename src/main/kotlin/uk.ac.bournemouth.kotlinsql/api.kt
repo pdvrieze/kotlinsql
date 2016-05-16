@@ -67,6 +67,34 @@ interface BoundedType {
   val maxLen:Int
 }
 
+fun columnType(sqlType:Int): IColumnType<*,*,*> {
+  return when (sqlType) {
+    Types.BIGINT                  -> BIGINT_T
+    Types.BINARY                  -> BINARY_T
+    Types.BIT                     -> BIT_T
+    Types.TINYINT                 -> TINYINT_T
+    Types.SMALLINT                -> SMALLINT_T
+    Types.INTEGER                 -> INT_T
+    Types.BIGINT                  -> BIGINT_T
+    Types.FLOAT                   -> FLOAT_T
+    Types.DOUBLE                  -> DOUBLE_T
+    Types.NUMERIC                 -> NUMERIC_T
+    Types.DECIMAL                 -> DECIMAL_T
+    Types.CHAR                    -> CHAR_T
+    Types.VARCHAR                 -> VARCHAR_T
+    Types.LONGVARCHAR             -> TEXT_T
+    Types.DATE                    -> DATE_T
+    Types.TIME                    -> TIME_T
+    Types.TIMESTAMP               -> TIMESTAMP_T
+    Types.BINARY                  -> BINARY_T
+    Types.VARBINARY               -> VARBINARY_T
+    Types.BLOB                    -> BLOB_T
+    Types.CLOB                    -> BLOB_T
+    Types.BOOLEAN                 -> BIT_T
+    else                          -> throw SQLException("Unsupported column type")
+  }
+}
+
 interface IColumnType<T:Any, S: IColumnType<T, S, C>, C:Column<T,S,C>> {
   val typeName:String
   val type: KClass<T>
@@ -320,6 +348,8 @@ interface Column<T:Any, S: IColumnType<T, S,C>, C:Column<T,S,C>>: ColumnRef<T,S,
   fun toDDL(): CharSequence
 
   fun copyConfiguration(newName:String? = null, owner: Table): AbstractColumnConfiguration<T,S,C, Any>
+
+  fun matches(typeName: String, size: Int, notNull:Boolean?, autoincrement:Boolean?, default:String?, comment:String?): Boolean
 }
 
 interface SimpleColumn<T:Any, S: SimpleColumnType<T, S>>: Column<T,S, SimpleColumn<T,S>> {
