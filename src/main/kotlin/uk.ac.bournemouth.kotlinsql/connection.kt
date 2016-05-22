@@ -39,31 +39,31 @@ inline fun <R> DataSource.connection(db: Database, block: (DBConnection) -> R): 
 
 //inline fun <R> DataSource.connection(username: String, password: String, block: (DBConnection) -> R) = getConnection(username, password).use { connection(it, block) }
 
-class DBConnection constructor(private val connection: Connection, val db: Database) {
+open class DBConnection constructor(val rawConnection: Connection, val db: Database) {
 
   init {
-    connection.autoCommit = false
+    rawConnection.autoCommit = false
   }
 
-  @Deprecated(message = "Do not use, this is there just for transitional purposes", level = DeprecationLevel.WARNING)
-  fun __getConnection() = connection
+  @Deprecated(message = "Do not use, this is there just for transitional purposes", replaceWith = ReplaceWith("rawConnection"), level = DeprecationLevel.ERROR)
+  fun __getConnection() = rawConnection
 
   //    init {
   //        connection.autoCommit = false
   //    }
 
-  fun <R> raw(block: (Connection) -> R): R = block(connection)
-  fun <R> use(block: (DBConnection) -> R): R = useHelper({ it.connection.close() }) {
+  fun <R> raw(block: (Connection) -> R): R = block(rawConnection)
+  fun <R> use(block: (DBConnection) -> R): R = useHelper({ it.rawConnection.close() }) {
     return transaction(block)
   }
 
   fun <R> transaction(block: (DBConnection) -> R):R {
-    connection.autoCommit=false
-    val savePoint = connection.setSavepoint()
+    rawConnection.autoCommit=false
+    val savePoint = rawConnection.setSavepoint()
     try {
       return block(this).apply { commit() }
     } catch (e:Exception) {
-      connection.rollback(savePoint)
+      rawConnection.rollback(savePoint)
       throw e
     }
   }
@@ -73,37 +73,37 @@ class DBConnection constructor(private val connection: Connection, val db: Datab
   /**
    * @see [Connection.commit]
    */
-  fun commit() = connection.commit()
+  fun commit() = rawConnection.commit()
 
-  fun getMetaData() = ConnectionMetadata(this, connection.metaData)
+  fun getMetaData() = ConnectionMetadata(this, rawConnection.metaData)
 
-  private inline fun prepareCall(sql: String) = connection.prepareCall(sql)
+  private inline fun prepareCall(sql: String) = rawConnection.prepareCall(sql)
 
   /** @see [Connection.autoCommit] */
   var autoCommit: Boolean
-    get() = connection.autoCommit
-    set(value) { connection.autoCommit = value }
+    get() = rawConnection.autoCommit
+    set(value) { rawConnection.autoCommit = value }
 
   @Throws(SQLException::class)
-  fun rollback() = connection.rollback()
+  fun rollback() = rawConnection.rollback()
 
   @Throws(SQLException::class)
-  fun isClosed(): Boolean = connection.isClosed
+  fun isClosed(): Boolean = rawConnection.isClosed
 
   //======================================================================
   // Advanced features:
 
   @Throws(SQLException::class)
-  fun setReadOnly(readOnly: Boolean) = connection.setReadOnly(readOnly)
+  fun setReadOnly(readOnly: Boolean) = rawConnection.setReadOnly(readOnly)
 
   @Throws(SQLException::class)
-  fun isReadOnly(): Boolean = connection.isReadOnly()
+  fun isReadOnly(): Boolean = rawConnection.isReadOnly()
 
   @Throws(SQLException::class)
-  fun setCatalog(catalog: String) = connection.setCatalog(catalog)
+  fun setCatalog(catalog: String) = rawConnection.setCatalog(catalog)
 
   @Throws(SQLException::class)
-  fun getCatalog(): String = connection.getCatalog()
+  fun getCatalog(): String = rawConnection.getCatalog()
 
   @Deprecated("Don't use this, just use Connection's version", replaceWith = ReplaceWith("Connection.TRANSACTION_NONE", "java.sql.Connection"))
   val TRANSACTION_NONE = Connection.TRANSACTION_NONE
@@ -121,10 +121,10 @@ class DBConnection constructor(private val connection: Connection, val db: Datab
   val TRANSACTION_SERIALIZABLE = Connection.TRANSACTION_SERIALIZABLE
 
   @Throws(SQLException::class)
-  fun setTransactionIsolation(level: Int) = connection.setTransactionIsolation(level)
+  fun setTransactionIsolation(level: Int) = rawConnection.setTransactionIsolation(level)
 
   @Throws(SQLException::class)
-  fun getTransactionIsolation(): Int = connection.transactionIsolation
+  fun getTransactionIsolation(): Int = rawConnection.transactionIsolation
 
   /**
    * Retrieves the first warning reported by calls on this
@@ -149,7 +149,7 @@ class DBConnection constructor(private val connection: Connection, val db: Datab
    * *
    * @see SQLWarning
    */
-  val warningsIt: Iterator<SQLWarning> get() = WarningIterator(connection.warnings)
+  val warningsIt: Iterator<SQLWarning> get() = WarningIterator(rawConnection.warnings)
 
   val warnings: Sequence<SQLWarning> get() = object: Sequence<SQLWarning> {
     override fun iterator(): Iterator<SQLWarning> = warningsIt
@@ -165,16 +165,16 @@ class DBConnection constructor(private val connection: Connection, val db: Datab
    * * or this method is called on a closed connection
    */
   @Throws(SQLException::class)
-  fun clearWarnings() = connection.clearWarnings()
+  fun clearWarnings() = rawConnection.clearWarnings()
 
 
   //--------------------------JDBC 2.0-----------------------------
 
   @Throws(SQLException::class)
-  fun getTypeMap() = connection.typeMap
+  fun getTypeMap() = rawConnection.typeMap
 
   @Throws(SQLException::class)
-  fun setTypeMap(map: Map<String, Class<*>>) = connection.setTypeMap(map)
+  fun setTypeMap(map: Map<String, Class<*>>) = rawConnection.setTypeMap(map)
 
   //--------------------------JDBC 3.0-----------------------------
 
@@ -187,121 +187,121 @@ class DBConnection constructor(private val connection: Connection, val db: Datab
    * @see [Connection.getHoldability]
    */
   var holdability:Holdability
-    get() = when (connection.holdability) {
+    get() = when (rawConnection.holdability) {
       ResultSet.HOLD_CURSORS_OVER_COMMIT -> Holdability.HOLD_CURSORS_OVER_COMMIT
       ResultSet.CLOSE_CURSORS_AT_COMMIT -> Holdability.CLOSE_CURSORS_AT_COMMIT
       else -> throw IllegalArgumentException()
     }
-    set(value) { connection.holdability = value.jdbc }
+    set(value) { rawConnection.holdability = value.jdbc }
 
   @Throws(SQLException::class)
-  fun setHoldability(holdability: Int) = connection.setHoldability(holdability)
+  fun setHoldability(holdability: Int) = rawConnection.setHoldability(holdability)
 
   @Throws(SQLException::class)
-  fun getHoldability() = connection.holdability
+  fun getHoldability() = rawConnection.holdability
 
   @Throws(SQLException::class)
-  fun setSavepoint(): Savepoint = connection.setSavepoint()
+  fun setSavepoint(): Savepoint = rawConnection.setSavepoint()
 
   @Throws(SQLException::class)
-  fun setSavepoint(name: String): Savepoint = connection.setSavepoint(name)
+  fun setSavepoint(name: String): Savepoint = rawConnection.setSavepoint(name)
 
   @Throws(SQLException::class)
-  fun rollback(savepoint: Savepoint) = connection.rollback(savepoint)
+  fun rollback(savepoint: Savepoint) = rawConnection.rollback(savepoint)
 
   @Throws(SQLException::class)
-  fun releaseSavepoint(savepoint: Savepoint) = connection.releaseSavepoint(savepoint)
+  fun releaseSavepoint(savepoint: Savepoint) = rawConnection.releaseSavepoint(savepoint)
 
   /**
    * @see [Connection.prepareStatement]
    */
-  fun <R> prepareStatement(sql: String, block: StatementHelper.() -> R) = connection.prepareStatement(sql).use {
+  fun <R> prepareStatement(sql: String, block: StatementHelper.() -> R) = rawConnection.prepareStatement(sql).use {
     StatementHelper(it, sql).block()
   }
 
   @Throws(SQLException::class)
   fun <R> prepareStatement(sql: String, resultSetType: Int,
                            resultSetConcurrency: Int, block: StatementHelper.() -> R): R {
-    return connection.prepareStatement(sql, resultSetType, resultSetConcurrency).use { StatementHelper(it, sql).block() }
+    return rawConnection.prepareStatement(sql, resultSetType, resultSetConcurrency).use { StatementHelper(it, sql).block() }
   }
 
   @Throws(SQLException::class)
   fun <R> prepareStatement(sql: String, resultSetType: Int,
                                   resultSetConcurrency: Int, resultSetHoldability: Int, block: StatementHelper.() -> R): R {
-    return connection.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability).use { StatementHelper(it, sql).block() }
+    return rawConnection.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability).use { StatementHelper(it, sql).block() }
   }
 
   @Throws(SQLException::class)
-  fun <R> prepareStatement(sql: String, autoGeneratedKeys: Boolean, block: StatementHelper.() -> R): R {
+  inline fun <R> prepareStatement(sql: String, autoGeneratedKeys: Boolean, block: StatementHelper.() -> R): R {
     val autoGeneratedKeysFlag = if (autoGeneratedKeys) Statement.RETURN_GENERATED_KEYS else Statement.NO_GENERATED_KEYS
-    return connection.prepareStatement(sql, autoGeneratedKeysFlag).use { StatementHelper(it, sql).block() }
+    return rawConnection.prepareStatement(sql, autoGeneratedKeysFlag).use { StatementHelper(it, sql).block() }
   }
 
   @Throws(SQLException::class)
-  fun <R> prepareStatement(sql: String, autoGeneratedKeys: Int, block: StatementHelper.() -> R): R {
-    return connection.prepareStatement(sql, autoGeneratedKeys).use { StatementHelper(it, sql).block() }
+  inline fun <R> prepareStatement(sql: String, autoGeneratedKeys: Int, block: StatementHelper.() -> R): R {
+    return rawConnection.prepareStatement(sql, autoGeneratedKeys).use { StatementHelper(it, sql).block() }
   }
 
   @Throws(SQLException::class)
   fun <R> prepareStatement(sql: String, columnIndexes: IntArray, block: StatementHelper.() -> R): R {
-    return connection.prepareStatement(sql, columnIndexes).use { StatementHelper(it, sql).block() }
+    return rawConnection.prepareStatement(sql, columnIndexes).use { StatementHelper(it, sql).block() }
   }
 
   @Throws(SQLException::class)
   fun <R> prepareStatement(sql: String, columnNames: Array<out String>, block: StatementHelper.() -> R): R {
-    return connection.prepareStatement(sql, columnNames).use { StatementHelper(it, sql).block() }
+    return rawConnection.prepareStatement(sql, columnNames).use { StatementHelper(it, sql).block() }
   }
 
   @Throws(SQLException::class)
-  fun createClob(): Clob = connection.createClob()
+  fun createClob(): Clob = rawConnection.createClob()
 
   @Throws(SQLException::class)
-  fun createBlob(): Blob = connection.createBlob()
+  fun createBlob(): Blob = rawConnection.createBlob()
 
   @Throws(SQLException::class)
-  fun createNClob(): NClob = connection.createNClob()
+  fun createNClob(): NClob = rawConnection.createNClob()
 
   @Throws(SQLException::class)
-  fun createSQLXML(): SQLXML = connection.createSQLXML()
+  fun createSQLXML(): SQLXML = rawConnection.createSQLXML()
 
   @Throws(SQLException::class)
-  fun isValid(timeout: Int): Boolean = connection.isValid(timeout)
+  fun isValid(timeout: Int): Boolean = rawConnection.isValid(timeout)
 
   @Throws(SQLClientInfoException::class)
-  fun setClientInfo(name: String, value: String) = connection.setClientInfo(name, value)
+  fun setClientInfo(name: String, value: String) = rawConnection.setClientInfo(name, value)
 
   @Throws(SQLClientInfoException::class)
-  fun setClientInfo(properties: Properties) = connection.setClientInfo(properties)
+  fun setClientInfo(properties: Properties) = rawConnection.setClientInfo(properties)
 
   @Throws(SQLException::class)
-  fun getClientInfo(name: String): String = connection.getClientInfo(name)
+  fun getClientInfo(name: String): String = rawConnection.getClientInfo(name)
 
   @Throws(SQLException::class)
-  fun getClientInfo() = connection.clientInfo
+  fun getClientInfo() = rawConnection.clientInfo
 
   @Throws(SQLException::class)
-  fun createArrayOf(typeName: String, elements: Array<Any>) = connection.createArrayOf(typeName, elements)
+  fun createArrayOf(typeName: String, elements: Array<Any>) = rawConnection.createArrayOf(typeName, elements)
 
   @Throws(SQLException::class)
-  fun createStruct(typeName: String, attributes: Array<Any>): Struct = connection.createStruct(typeName, attributes)
+  fun createStruct(typeName: String, attributes: Array<Any>): Struct = rawConnection.createStruct(typeName, attributes)
 
   //--------------------------JDBC 4.1 -----------------------------
 
   @Throws(SQLException::class)
-  fun setSchema(schema: String) = connection.setSchema(schema)
+  fun setSchema(schema: String) = rawConnection.setSchema(schema)
 
   @Throws(SQLException::class)
-  fun getSchema(): String = connection.schema
+  fun getSchema(): String = rawConnection.schema
 
   @Throws(SQLException::class)
-  fun abort(executor: Executor) = connection.abort(executor)
+  fun abort(executor: Executor) = rawConnection.abort(executor)
 
   @Throws(SQLException::class)
-  fun setNetworkTimeout(executor: Executor, milliseconds: Int) = connection.setNetworkTimeout(executor, milliseconds)
+  fun setNetworkTimeout(executor: Executor, milliseconds: Int) = rawConnection.setNetworkTimeout(executor, milliseconds)
 
 
   @Throws(SQLException::class)
-  fun getNetworkTimeout(): Int = connection.networkTimeout
+  fun getNetworkTimeout(): Int = rawConnection.networkTimeout
 
   fun hasTable(tableRef: TableRef): Boolean {
     return getMetaData().getTables(null, null, tableRef._name, null).use { rs->
