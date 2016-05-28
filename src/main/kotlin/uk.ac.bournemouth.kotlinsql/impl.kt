@@ -281,7 +281,41 @@ internal class DecimalColumnImpl<S: DecimalColumnType<S>>(name:String, configura
   override fun copyConfiguration(newName:String?, owner: Table) = DecimalColumnConfiguration(owner, newName ?: name, type, precision, scale)
 }
 
+class CountColumn(val colRef:ColumnRef<*,*,*>): NumericColumn<Int, NumericColumnType.INT_T> {
+  override val table: TableRef
+    get() = colRef.table
+  override val name: String
+    get() = "COUNT( ${colRef.name} )"
+  override val type: NumericColumnType.INT_T
+    get() = NumericColumnType.INT_T
+  override val notnull: Boolean? get() = null
+  override val unique: Boolean get() = false
+  override val autoincrement: Boolean get() = false
+  override val default: Int? get() = null
+  override val comment: String? get() = null
+  override val columnFormat: ColumnFormat? get() = null
+  override val storageFormat: StorageFormat? get() = null
+  override val references: ColsetRef? get() = null
+  override val unsigned: Boolean get() = true
+  override val zerofill: Boolean get() = false
+  override val displayLength: Int get() = 11
 
+  override fun copyConfiguration(newName: String?, owner: Table): NumberColumnConfiguration<Int, NumericColumnType.INT_T> {
+    throw UnsupportedOperationException()
+  }
+
+  override fun ref(): ColumnRef<Int, NumericColumnType.INT_T, NumericColumn<Int, NumericColumnType.INT_T>> {
+    throw UnsupportedOperationException()
+  }
+
+  override fun toDDL(): CharSequence {
+    throw UnsupportedOperationException()
+  }
+
+  override fun matches(typeName: String, size: Int, notNull: Boolean?, autoincrement: Boolean?, default: String?, comment: String?): Boolean {
+    return false
+  }
+}
 
 class TableRefImpl(override val _name: String) : TableRef {}
 

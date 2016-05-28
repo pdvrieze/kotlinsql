@@ -215,7 +215,7 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
   /**
    * @see [Connection.prepareStatement]
    */
-  fun <R> prepareStatement(sql: String, block: StatementHelper.() -> R) = rawConnection.prepareStatement(sql).use {
+  inline fun <R> prepareStatement(sql: String, block: StatementHelper.() -> R) = rawConnection.prepareStatement(sql).use {
     StatementHelper(it, sql).block()
   }
 

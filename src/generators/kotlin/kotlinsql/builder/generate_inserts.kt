@@ -58,9 +58,10 @@ class GenerateInsertsKt {
         append("  fun VALUES(")
         (1..n).joinTo(output) { m -> "col$m: T$m?"}
         appendln(") =")
-        append("    _InsertValues$n(")
+        append("    this.apply{batch.add(_InsertValues$n(")
         (1..n).joinTo(output) { m -> "col$m"}
-        appendln(")")
+        appendln("))}")
+        appendln()
 
         append("  inner class _InsertValues$n(")
         (1..n).joinTo(output) { m -> "col$m: T$m?"}

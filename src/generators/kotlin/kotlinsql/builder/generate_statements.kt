@@ -48,11 +48,16 @@ class GenerateStatementsKt {
         append("class _Statement$n<")
         (1..n).joinToString(",\n                  ") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }.apply { append(this) }
         append(">(${if (n==1) "" else "override val "}select:_Select$n<")
-        (1..n).joinToString(",") { m -> "T$m,S$m,C$m" }.apply { append(this) }
+        (1..n).joinTo(this, ",") { m -> "T$m,S$m,C$m" }
+        appendln(">, where:WhereClause):")
+        append("                      ")
         when(n) {
-          1    -> appendln(">, where:WhereClause):_Statement1Base<T1,S1,C1>(select,where) {")
-          else -> appendln(">, where:WhereClause):_StatementBase(where) {")
+          1    -> appendln("_Statement1Base<T1,S1,C1>(select,where),")
+          else -> appendln("_StatementBase(where),")
         }
+        append("                      Select$n<")
+        (1..n).joinTo(this, ",") { m -> "T$m,S$m,C$m" }
+        appendln("> {")
         if (n>1) {
           appendln()
           append("  data class Result<")
@@ -63,7 +68,7 @@ class GenerateStatementsKt {
         }
 
         appendln()
-        append("  fun execute(connection:DBConnection, block: (")
+        append("  override fun execute(connection:DBConnection, block: (")
         (1..n).joinToString(",") {m -> "T$m?"}.apply { append(this) }
         appendln(")->Unit):Boolean {")
         appendln("    return executeHelper(connection, block) { rs, block ->")
@@ -79,7 +84,7 @@ class GenerateStatementsKt {
 
         if (n>1) {
           appendln()
-          append("  fun getSingle(connection:DBConnection)")
+          append("  override fun getSingle(connection:DBConnection)")
           append(" = getSingle(connection) { ")
           (1..n).joinTo(this,",") { "p$it" }
           append(" -> Result(")
@@ -87,7 +92,7 @@ class GenerateStatementsKt {
           appendln(")}")
 
           appendln()
-          append("  fun <R>getSingle(connection:DBConnection, factory:")
+          append("  override fun <R> getSingle(connection:DBConnection, factory:")
           appendFactorySignature(n)
           appendln("):R? {")
           appendln("    return connection.prepareStatement(toSQL()) {")
@@ -106,15 +111,25 @@ class GenerateStatementsKt {
         }
 
         appendln()
-        append("  fun <R>getList(connection: DBConnection, factory:")
-        appendFactorySignature(n)
-        appendln("): List<R> {")
-        appendln("    val result=mutableListOf<R>()")
-        append("    execute(connection) { ")
-        (1..n).joinToString { "p$it" }.apply { append(this) }
-        append(" -> result.add(factory(")
-        (1..n).joinToString { "p$it" }.apply { append(this) }
-        appendln(")) }")
+        if (n==1) {
+          appendln("  override fun getList(connection: DBConnection): List<T1?> {")
+          appendln("    val result=mutableListOf<T1?>()")
+          append("    execute(connection) { ")
+          (1..n).joinToString { "p$it" }.apply { append(this) }
+          append(" -> result.add(")
+          (1..n).joinToString { "p$it" }.apply { append(this) }
+          appendln(") }")
+        } else {
+          append("  override fun <R> getList(connection: DBConnection, factory:")
+          appendFactorySignature(n)
+          appendln("): List<R> {")
+          appendln("    val result=mutableListOf<R>()")
+          append("    execute(connection) { ")
+          (1..n).joinToString { "p$it" }.apply { append(this) }
+          append(" -> result.add(factory(")
+          (1..n).joinToString { "p$it" }.apply { append(this) }
+          appendln(")) }")
+        }
         appendln("    return result")
         appendln("  }")
 

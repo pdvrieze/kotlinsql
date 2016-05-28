@@ -20,22 +20,20 @@
 
 package uk.ac.bournemouth.kotlinsql
 
+import uk.ac.bournemouth.kotlinsql.ColumnType.NumericColumnType.INT_T
 import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
-import uk.ac.bournemouth.util.kotlin.sql.connection
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.DatabaseMethods
+import uk.ac.bournemouth.util.kotlin.sql.impl.gen._Select3
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen._Statement1
-import uk.ac.bournemouth.util.kotlin.sql.use
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.util.*
 import javax.sql.DataSource
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
-import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaGetter
-import kotlin.reflect.jvm.properties
 import kotlin.reflect.memberProperties
 
 /**
@@ -52,10 +50,38 @@ import kotlin.reflect.memberProperties
 abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
   companion object {
+
+    fun createUpdateStatement(update: _UpdateBase, where:WhereClause?):UpdatingStatement =
+          if (where==null) update else _UpdateStatement(update, where)
+
     private fun tablesFromObjects(container: KClass<out Database>): List<Table> {
       return container.nestedClasses.map { it.objectInstance as? Table }.filterNotNull()
     }
 
+
+    internal fun createTablePrefixMap(tableNames: SortedSet<String>): Map<String, String>? {
+
+      fun uniquePrefix(string:String, usedPrefixes:Set<String>):String {
+        for(i in 1..(string.length-1)) {
+          string.substring(0,i).let {
+            if (it !in usedPrefixes) return it
+          }
+        }
+        for(i in 1..Int.MAX_VALUE) {
+          (string + i.toString()).let {
+            if (it !in usedPrefixes) return it
+          }
+        }
+        throw IllegalArgumentException("No unique prefix could be found")
+      }
+
+      if (tableNames.size<=1) return null
+
+      return tableNames.let {
+        val seen = mutableSetOf<String>()
+        it.associateTo(sortedMapOf<String,String>()) { name -> name to uniquePrefix(name, seen).apply { seen.add(this) } }
+      }
+    }
 
     private fun tablesFromProperties(db: Database): List<Table> {
 
@@ -202,7 +228,15 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     infix fun <S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>> ColumnRef<*, S1, *>.gt(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.gt, other)
     infix fun <S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>> ColumnRef<*, S1, *>.ge(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.ge, other)
 
-    infix fun WhereClause.AND(other:WhereClause):WhereClause = WhereCombine(this, "AND", other)
+    infix fun WhereClause?.AND(other:WhereClause?):WhereClause? {
+      return if (this==null) {
+        other
+      } else if (other==null) {
+        this
+      } else {
+        WhereCombine(this, "AND", other)
+      }
+    }
     infix fun WhereClause.OR(other:WhereClause):WhereClause = WhereCombine(this, "OR", other)
     infix fun WhereClause.XOR(other:WhereClause):WhereClause = WhereCombine(this, "XOR", other)
 
@@ -222,16 +256,41 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     }
   }
 
-  interface  Statement {
-    /** Generate the SQL corresponding to the statement.*/
-    fun toSQL(): String
-
-    /** Set the parameter values */
-    fun setParams(statementHelper: StatementHelper, first: Int =1): Int
+  interface Statement {
+    fun createTablePrefixMap(): Map<String, String>?
+    fun toSQL(prefixMap: Map<String, String>?):String
   }
 
-  interface SelectStatement:Statement {
+  interface ParameterizedStatement: Statement {
+
+    /** Set the parameter values */
+    fun setParams(statementHelper: StatementHelper, first: Int = 1): Int
+
+  }
+
+  interface OldStatement2 {
+    /** Generate the SQL corresponding to the statement.*/
+    fun toSQL(): String
+  }
+
+  interface Query:Statement {}
+
+  interface ParameterizedQuery: Query, ParameterizedStatement
+
+  interface UpdatingStatement:Statement {
+    fun executeUpdate(connection: DBConnection):Int
+  }
+
+
+  interface SelectStatement: ParameterizedQuery /*, OldStatement*/ {
     val select:Select
+
+    fun toSQL():String
+
+    fun executeList(connection: DBConnection,
+                resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit): Boolean
+
+    fun <R> getSingleList(connection: DBConnection, resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R):R
   }
 
   abstract class WhereValue internal constructor() {
@@ -267,16 +326,6 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
       }
     }
 
-    /**
-     * Get a list of all values from the query. This can include null values.
-     */
-    fun getList(connection:DBConnection): List<T1?> {
-      val result=mutableListOf<T1?>()
-      executeHelper(connection, Unit) {rs, b -> result.add(select.col1.type.fromResultSet(rs,1))}
-      return result
-
-    }
-
     /** Get a list of all non-null values resulting from the query.*/
     fun getSafeList(connection:DBConnection): List<T1> {
       val result=mutableListOf<T1>()
@@ -287,9 +336,15 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
   }
 
-  class _UpdateStatement(val update: _UpdateBase, val where: WhereClause): Statement {
-    override fun toSQL(): String {
-      return "${update.toSQL()} WHERE ${where.toSQL(null)}"
+  class _UpdateStatement(val update: _UpdateBase, val where: WhereClause): UpdatingStatement, ParameterizedStatement {
+    fun toSQL(): String {
+      return toSQL(createTablePrefixMap())
+    }
+
+    override fun createTablePrefixMap() = null
+
+    override fun toSQL(prefixMap: Map<String, String>?): String {
+      return "${update.toSQL(prefixMap)} WHERE ${where.toSQL(prefixMap)}"
     }
 
     override fun setParams(statementHelper: StatementHelper, first: Int):Int {
@@ -303,7 +358,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
      * @return The amount of rows changed
      * @see java.sql.PreparedStatement.executeUpdate
      */
-    fun execute(connection: DBConnection):Int {
+    override fun executeUpdate(connection: DBConnection):Int {
       return connection.prepareStatement(toSQL()) {
         setParams(this)
         executeUpdate()
@@ -312,14 +367,42 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
   }
 
-  abstract class _StatementBase(val where:WhereClause): SelectStatement {
-    override fun toSQL(): String {
-      val prefixMap = select.createTablePrefixMap()
+  abstract class _StatementBase(val where:WhereClause): SelectStatement, ParameterizedStatement {
+    override fun toSQL() = toSQL(createTablePrefixMap())
+
+    override fun createTablePrefixMap() = select.createTablePrefixMap()
+
+    override fun toSQL(prefixMap: Map<String, String>?): String {
       return "${select.toSQL(prefixMap)} WHERE ${where.toSQL(prefixMap)}"
     }
 
     override fun setParams(statementHelper: StatementHelper, first: Int) =
           where.setParameters(statementHelper, first)
+
+    override fun executeList(connection:DBConnection, block: (List<Column<*,*,*>>,List<Any?>)->Unit):Boolean {
+      return executeHelper(connection, block) { rs, block ->
+        val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i+1) }
+        block(select.columns.asList(), data)
+      }
+    }
+
+    override fun <R> getSingleList(connection: DBConnection, resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R): R {
+      connection.prepareStatement(toSQL()) {
+        setParams(this)
+        execute { rs ->
+          if(!rs.next()) throw NoSuchElementException()
+
+          val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i + 1) }
+          val result = resultHandler(select.columns.toList(), data)
+          if (rs.next()) throw SQLException("More results than expected")
+          return result
+        }
+      }
+    }
+  }
+
+  class _ListSelectStatement(override val select: _ListSelect, where: WhereClause): _StatementBase(where) {
+
 
   }
 
@@ -331,12 +414,17 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
   }
 
   interface Select: SelectStatement {
-    fun createTablePrefixMap(): Map<String, String>?
-    fun toSQL(prefixMap:Map<String,String>?): String
-    fun WHERE(config: _Where.() -> WhereClause): SelectStatement
+    val columns:Array<out Column<*,*,*>>
+    fun WHERE(config: _Where.() -> WhereClause?): SelectStatement
   }
 
-  abstract class _BaseSelect(vararg val columns:Column<*,*,*>):Select {
+  class _ListSelect(columns:List<Column<*,*,*>>):_BaseSelect(*columns.toTypedArray()) {
+    override fun WHERE(config: _Where.() -> WhereClause?): SelectStatement {
+      return _Where().config()?.let {_ListSelectStatement(this, it) } ?: this
+    }
+  }
+
+  abstract class _BaseSelect(vararg override val columns:Column<*,*,*>):SelectStatement, Select {
     override val select: Select get() = this
 
     override fun toSQL(): String {
@@ -369,29 +457,29 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
     override fun createTablePrefixMap() = createTablePrefixMap(tableNames())
 
-    private fun createTablePrefixMap(tableNames: SortedSet<String>): Map<String, String>? {
-
-      fun uniquePrefix(string:String, usedPrefixes:Set<String>):String {
-        for(i in 1..(string.length-1)) {
-          string.substring(0,i).let {
-            if (it !in usedPrefixes) return it
-          }
-        }
-        for(i in 1..Int.MAX_VALUE) {
-          (string + i.toString()).let {
-            if (it !in usedPrefixes) return it
-          }
-        }
-        throw IllegalArgumentException("No unique prefix could be found")
-      }
-
-      if (tableNames.size<=1) return null
-
-      return tableNames.let {
-        val seen = mutableSetOf<String>()
-        it.associateTo(sortedMapOf<String,String>()) { name -> name to uniquePrefix(name, seen).apply { seen.add(this) } }
+    override fun executeList(connection: DBConnection,
+                         resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit):Boolean {
+      return executeHelper(connection, resultHandler) { rs, block ->
+        val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i+1) }
+        block(select.columns.asList(), data)
       }
     }
+
+    override fun <R> getSingleList(connection: DBConnection,
+                         resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R):R {
+      connection.prepareStatement(toSQL()) {
+        setParams(this)
+        execute { rs ->
+          if(!rs.next()) throw NoSuchElementException()
+
+          val data = columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i + 1) }
+          val result = resultHandler(columns.toList(), data)
+          if (rs.next()) throw SQLException("More results than expected")
+          return result
+        }
+      }
+    }
+
 
     /**
      * Execute the statement.
@@ -400,19 +488,36 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
      * @see java.sql.PreparedStatement.executeUpdate
      */
     fun execute(connection: DBConnection):Boolean {
-      return connection.prepareStatement(toSQL()) {
+      connection.prepareStatement(toSQL()) {
         setParams(this)
-        execute()
+        return execute()
       }
     }
 
   }
 
-  class _Select1<T1:Any, S1:IColumnType<T1,S1,C1>, C1: Column<T1, S1,C1>>(val col1:C1):Select {
-    override val select: Select get() = this
 
-    override fun WHERE(config: _Where.() -> WhereClause): _Statement1<T1, S1, C1> {
-      return _Statement1(this, _Where().config())
+  interface Select1<T1:Any, S1:IColumnType<T1,S1,C1>, C1: Column<T1, S1, C1>>:SelectStatement {
+    override val select: _Select1<T1, S1, C1>
+
+    fun getSingle(connection: DBConnection): T1?
+    fun getList(connection: DBConnection): List<T1?>
+
+    @Deprecated("This can be done outside the function", ReplaceWith("getList(connection).filterNotNull()"), DeprecationLevel.ERROR)
+    fun getSafeList(connection: DBConnection): List<T1>
+
+    fun execute(connection:DBConnection, block: (T1?)->Unit):Boolean
+
+  }
+
+
+  class _Select1<T1:Any, S1:IColumnType<T1,S1,C1>, C1: Column<T1, S1,C1>>(val col1:C1):Select, Select1<T1,S1,C1> {
+    override val select: _Select1<T1,S1,C1> get() = this
+
+    override val columns: Array<out Column<*, *, *>> get() = arrayOf<Column<*,*,*>>(col1)
+
+    override fun WHERE(config: _Where.() -> WhereClause?): Select1<T1, S1, C1> {
+      return _Where().config()?.let { _Statement1(this, it) } ?: this
     }
 
     override fun createTablePrefixMap(): Map<String, String>? = null
@@ -435,9 +540,42 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
       }
     }
 
-    fun execute(connection:DBConnection, block: (T1?)->Unit):Boolean {
+    override fun execute(connection:DBConnection, block: (T1?)->Unit):Boolean {
       return executeHelper(connection, block) { rs, block ->
         block(col1.type.fromResultSet(rs, 1))
+      }
+    }
+
+    override fun getSingle(connection: DBConnection): T1? {
+      return connection.prepareStatement(toSQL()) {
+        setParams(this)
+        execute { rs ->
+          if (rs.next()) {
+            if (!rs.isLast()) throw SQLException("Multiple results found, where only one or none expected")
+            select.col1.type.fromResultSet(rs, 1)
+          } else {
+            null
+          }
+        }
+      }
+    }
+
+    override fun executeList(connection: DBConnection, resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit):Boolean {
+      return executeHelper(connection, resultHandler) { rs, block ->
+        val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i+1) }
+        block(select.columns.asList(), data)
+      }
+    }
+
+    override fun <R> getSingleList(connection: DBConnection, resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R): R {
+      connection.prepareStatement(toSQL()) {
+        setParams(this)
+        execute { rs ->
+          if (!rs.next()) throw NoSuchElementException()
+          val result = resultHandler(listOf(col1), listOf(col1.type.fromResultSet(rs, 1)))
+          if (rs.next()) throw IllegalStateException("More than one element")
+          return result
+        }
       }
     }
 
@@ -447,29 +585,40 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
       return result
     }
 
-    fun getList(connection: DBConnection): List<T1?> {
+    override fun getList(connection: DBConnection): List<T1?> {
       val result=mutableListOf<T1?>()
       execute(connection) { p1 -> result.add(p1) }
       return result
     }
 
+    override fun getSafeList(connection: DBConnection): List<T1> {
+      return getList(connection).filterNotNull()
+    }
   }
 
-  abstract class _UpdateBase internal constructor(val table:TableRef): Statement {
-    fun WHERE(config: _Where.() -> WhereClause) = _UpdateStatement(this, _Where().config())
+  abstract class _UpdateBase internal constructor(val table:TableRef): UpdatingStatement, ParameterizedStatement {
+    override fun createTablePrefixMap() = null
 
+    fun WHERE(config: _Where.() -> WhereClause?) = createUpdateStatement(this, _Where().config())
 
     override fun setParams(statementHelper: StatementHelper, first: Int) = first
   }
 
   class _Delete internal constructor(table:TableRef): _UpdateBase(table) {
-    override fun toSQL(): String {
+
+    override fun toSQL(prefixMap: Map<String, String>?): String {
       return "DELETE FROM ${table._name}"
+    }
+
+    override fun executeUpdate(connection: DBConnection):Int {
+      connection.prepareStatement(toSQL(createTablePrefixMap())) {
+        return executeUpdate()
+      }
     }
   }
 
   class _Update internal constructor(val sets:List<_Set<*,*,*>>, table:TableRef): _UpdateBase(table) {
-    override fun toSQL(): String {
+    override fun toSQL(prefixMap: Map<String, String>?): String {
       return sets.joinToString(", ", "UPDATE ${table._name} SET ") { set -> "${set.column.name} = ?"}
     }
 
@@ -478,6 +627,10 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
         set.setParam(statementHelper, first+i)
       }
       return first+sets.size
+    }
+
+    override fun executeUpdate(connection: DBConnection): Int {
+      throw UnsupportedOperationException()
     }
   }
 
@@ -497,17 +650,32 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     fun build() = _Update(sets, sets.first().column.table)
   }
 
-
-  interface Insert {
+  interface Insert:UpdatingStatement {
     fun toSQL():String
+
+    fun <T:Any, S:IColumnType<T, S, *>, R> execute(connection: DBConnection, key: Column<T,S,*>, autogeneratedKeys: (T?) -> R): List<R>
+    fun <T:Any, S:IColumnType<T, S, *>> execute(connection: DBConnection, key: Column<T,S,*>):List<T?>
   }
 
   abstract class _BaseInsert(vararg val columns:ColumnRef<*,*,*>):Insert {
-    override fun toSQL() =
-          columns.joinToString(", ", "INSERT INTO ${columns[1].table._name} (", ")") { col -> col.name }
+    override fun createTablePrefixMap(): Map<String, String>? {
+      return null
+    }
 
-    abstract inner class _BaseInsertValues(vararg val values:Any?): Statement {
-      override fun toSQL(): String {
+    protected val batch = mutableListOf<_BaseInsertValues>()
+
+    override fun toSQL() =
+          toSQL(createTablePrefixMap())
+
+    override fun toSQL(prefixMap: Map<String, String>?) =
+          columns.joinToString(", ", "INSERT INTO ${columns[1].table.name(prefixMap)} (", ")") { col -> col.name(prefixMap) }
+
+    abstract inner class _BaseInsertValues(vararg val values:Any?): ParameterizedStatement {
+      override fun createTablePrefixMap(): Map<String, String>? {
+        return null
+      }
+
+      override fun toSQL(prefixMap: Map<String, String>?): String {
         return buildString {
           append(this@_BaseInsert.toSQL())
           append(" VALUES (")
@@ -523,48 +691,95 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
         return first+columns.size
       }
 
+    }
 
-      /**
-       * Execute the statement. If the table has an  autoincrement column and no autoincrement column was specified,
-       * the generated values will be recorded, otherwise not.
-       * @param connection The connection object to use for the query
-       * @return The amount of rows changed
-       * @see java.sql.PreparedStatement.executeUpdate
-       */
-      fun execute(connection: DBConnection):Int {
-        return connection.prepareStatement(toSQL()) {
-          setParams(this)
-          executeUpdate()
+    /**
+     * Execute the statement. If the table has an  autoincrement column and no autoincrement column was specified,
+     * the generated values will be recorded, otherwise not.
+     * @param connection The connection object to use for the query
+     * @return The amount of rows changed
+     * @see java.sql.PreparedStatement.executeUpdate
+     */
+    override fun executeUpdate(connection: DBConnection):Int {
+      if (batch.isEmpty()) { return 0 }
+      connection.prepareStatement(toSQL()) {
+        for(valueSet in batch) {
+          valueSet.setParams(this)
+          addBatch()
         }
+        return executeBatch().filter { it>=0 }.sum()
       }
+    }
 
-      /**
-       * Execute the statement.
-       * @param connection The connection object to use for the query
-       * @return The amount of rows changed
-       * @see java.sql.PreparedStatement.executeUpdate
-       */
-      fun <R> execute(connection: DBConnection, autoGeneratedKeys: (Int, ResultSet)->R):R {
-        return connection.prepareStatement(toSQL(), true) {
-          setParams(this)
-          val count = executeUpdate()
-          withGeneratedKeys { rs -> autoGeneratedKeys(count, rs) }
+    /**
+     * Execute the statement.
+     * @param connection The connection object to use for the query
+     * @return The amount of rows changed
+     * @see java.sql.PreparedStatement.executeUpdate
+     * @todo wrap the resultset into a typed wrapper
+     */
+    override fun <T:Any, S:IColumnType<T, S, *>, R> execute(connection: DBConnection, key: Column<T,S,*>, autoGeneratedKeys: (T?)->R):List<R> {
+      if (batch.isEmpty()) { throw IllegalStateException("There are no values to add") }
+      connection.prepareStatement(toSQL()) {
+        for(valueSet in batch) {
+          valueSet.setParams(this)
+          addBatch()
+        }
+        withGeneratedKeys { rs ->
+          var i =0
+          return mutableListOf<R>().apply {
+            while (rs.next()) {
+              add(autoGeneratedKeys(key.type.fromResultSet(rs, 1)))
+            }
+          }
+
         }
       }
     }
 
+    /**
+     * Execute the statement.
+     * @param connection The connection object to use for the query
+     * @return The amount of rows changed
+     * @see java.sql.PreparedStatement.executeUpdate
+     * @todo wrap the resultset into a typed wrapper
+     */
+    override fun <T:Any, S:IColumnType<T, S, *>> execute(connection: DBConnection, key: Column<T,S,*>):List<T> {
+      if (batch.isEmpty()) { throw IllegalStateException("There are no values to add") }
+      connection.prepareStatement(toSQL()) {
+        for(valueSet in batch) {
+          valueSet.setParams(this)
+          addBatch()
+        }
+        withGeneratedKeys { rs ->
+          var i =0
+          return mutableListOf<T>().apply {
+            while (rs.next()) {
+              add(key.type.fromResultSet(rs, 1)!!)
+            }
+          }
+
+        }
+      }
+    }
   }
 
   fun DELETE_FROM(table: Table) = _Delete(table)
 
   fun UPDATE(config:_UpdateBuilder.()->Unit)= _UpdateBuilder().apply(config).build()
 
+  fun COUNT(col:ColumnRef<*,*,*>): NumericColumn<Int, INT_T> {
+    return CountColumn(col)
+  }
+
+  fun SELECT(columns: List<Column<*,*,*>>) = _ListSelect(columns)
 
 }
 
 internal fun <T> Database.SelectStatement.executeHelper(connection: DBConnection, block: T, invokeHelper:(ResultSet, T)->Unit):Boolean {
   return connection.prepareStatement(toSQL()) {
-    setParams(this)
+    val select: Database.SelectStatement = this@executeHelper
+    select.setParams(this)
     execute { rs ->
       if (rs.next()) {
         do {
@@ -591,6 +806,14 @@ enum class SqlComparisons(val str:String) {
 
 private fun ColumnRef<*,*,*>.name(prefixMap: Map<String, String>?) : String {
   return prefixMap?.let { prefixMap[table._name]?.let { "${it}.`${name}`" } } ?: "`${name}`"
+}
+
+private fun TableRef.name(prefixMap: Map<String, String>?) : String {
+  return prefixMap?.let { prefixMap[this._name]?.let { "`${_name}` AS $it" } } ?: "`$_name`"
+}
+
+private fun TableRef.shortRef(prefixMap: Map<String, String>?) : String {
+  return prefixMap?.let { prefixMap[this._name] } ?: "`$_name`"
 }
 
 /** A reference to a table. */
