@@ -136,7 +136,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
   }
 
   override fun cast(value:Any): T {
-    return type.java.cast(value)
+    return type.javaObjectType.cast(value)
   }
 
   // @formatter:off
