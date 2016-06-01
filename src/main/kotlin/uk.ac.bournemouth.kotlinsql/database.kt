@@ -196,6 +196,17 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     }
   }
 
+  private class WhereLike<C : ICharColumn<String,*,C>>(val col:ColumnRef<*,*,C>, val predicate:String): BooleanWhereValue() {
+
+    override fun toSQL(prefixMap:Map<String,String>?)= "${col.name(prefixMap)} LIKE ?"
+
+    override fun setParameters(statementHelper: StatementHelper, first: Int): Int {
+      statementHelper.setString(first, predicate)
+      return first+1
+    }
+
+  }
+
   private class WhereCmpCol<S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>>(val col1:ColumnRef<*,S1,*>, val cmp:SqlComparisons, val col2:ColumnRef<*,S2,*>): BooleanWhereValue() {
 
     override fun toSQL(prefixMap:Map<String,String>?)= "${col1.name(prefixMap)} $cmp ${col2.name(prefixMap)}"
@@ -239,6 +250,10 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     }
     infix fun WhereClause.OR(other:WhereClause):WhereClause = WhereCombine(this, "OR", other)
     infix fun WhereClause.XOR(other:WhereClause):WhereClause = WhereCombine(this, "XOR", other)
+
+    infix fun <C:ICharColumn<String,*,C>> ColumnRef<*, *, C>.LIKE(pred:String):WhereClause {
+      return WhereLike(this, pred)
+    }
 
     fun NOT(other:WhereClause):WhereClause = WhereBooleanUnary("NOT", other)
 
