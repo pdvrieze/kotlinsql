@@ -717,12 +717,22 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
      */
     override fun executeUpdate(connection: DBConnection):Int {
       if (batch.isEmpty()) { return 0 }
-      connection.prepareStatement(toSQL()) {
-        for(valueSet in batch) {
-          valueSet.setParams(this)
-          addBatch()
+      val firstValues = batch.firstOrNull()
+      if (firstValues!=null) {
+        val query = firstValues.toSQL(createTablePrefixMap())
+        try {
+          connection.prepareStatement(query) {
+            for (valueSet in batch) {
+              valueSet.setParams(this)
+              addBatch()
+            }
+            return executeBatch().filter { it >= 0 }.sum()
+          }
+        } catch (e: SQLException) {
+          throw SQLException("Failure to update:\n  QUERY: $query", e)
         }
-        return executeBatch().filter { it>=0 }.sum()
+      } else {
+        return 0
       }
     }
 
