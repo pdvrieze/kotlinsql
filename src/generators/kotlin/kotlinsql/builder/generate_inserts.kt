@@ -39,6 +39,7 @@ class GenerateInsertsKt {
 
         import uk.ac.bournemouth.kotlinsql.Column
         import uk.ac.bournemouth.kotlinsql.ColumnRef
+        import uk.ac.bournemouth.kotlinsql.Table
         import uk.ac.bournemouth.kotlinsql.Database
         import uk.ac.bournemouth.kotlinsql.Database._BaseInsert
         import uk.ac.bournemouth.kotlinsql.IColumnType
@@ -49,9 +50,9 @@ class GenerateInsertsKt {
         append("class _Insert$n<")
         (1..n).joinTo(output, ",\n${indent(n,15)}") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }
         appendln(">")
-        append("      internal constructor(")
+        append("      internal constructor(table: Table, update:Boolean, ")
         (1..n).joinTo(output, ",\n${indent(1,27)}") { m -> "col$m: ColumnRef<T$m,S$m,C$m>" }
-        append("): _BaseInsert(")
+        append("): _BaseInsert(table, update, ")
         (1..n).joinTo(output, ",") { m -> "col$m" }
         appendln(") {")
         appendln()

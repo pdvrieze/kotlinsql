@@ -38,12 +38,17 @@ class GenerateDatabaseBaseKt() {
       appendln("import uk.ac.bournemouth.kotlinsql.Column")
       appendln("import uk.ac.bournemouth.kotlinsql.IColumnType")
       appendln("import uk.ac.bournemouth.kotlinsql.Database")
+      appendln("import uk.ac.bournemouth.kotlinsql.TableRef")
+      appendln("import uk.ac.bournemouth.kotlinsql.Table")
       appendln()
-      appendln("open class DatabaseMethods {")
+      appendln("abstract open class DatabaseMethods {")
 //      appendln("  companion object {")
+
+      appendln("abstract operator fun get(key:TableRef):Table")
 
       appendFunctionGroup("SELECT","_Select", count)
       appendFunctionGroup("INSERT","_Insert", count)
+      appendFunctionGroup("INSERT_OR_UPDATE","_Insert", count)
 
 //      appendln("  }")
       appendln("}")
@@ -65,7 +70,10 @@ class GenerateDatabaseBaseKt() {
       append("> ${funName}(")
       (1..n).joinToString { m -> "col$m: C$m" }.apply { append(this) }
       appendln(")=")
-      if (n == 1 && funName=="SELECT") {
+      if (className=="_Insert") {
+        val update = funName=="INSERT_OR_UPDATE"
+        append("            $className$n(get(col1.table), $update, ")
+      } else if (n == 1 && funName=="SELECT") {
         append("            Database.$className$n(")
       } else {
         append("            $className$n(")
