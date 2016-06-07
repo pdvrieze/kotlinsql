@@ -306,8 +306,6 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
     fun executeList(connection: DBConnection,
                 resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit): Boolean
-
-    fun <R> getSingleList(connection: DBConnection, resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R):R
   }
 
   abstract class WhereValue internal constructor() {
@@ -324,12 +322,12 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
   abstract class RefWhereValue:WhereValue()
 
-  abstract class _Statement1Base<T1:Any, S1:IColumnType<T1,S1,C1>, C1: Column<T1, S1, C1>>(override val select:_Select1<T1,S1,C1>, where:WhereClause):_StatementBase(where) {
+  abstract class _Statement1Base<T1:Any, S1:IColumnType<T1,S1,C1>, C1: Column<T1, S1, C1>>(override val select:_Select1<T1,S1,C1>, where:WhereClause):_StatementBase(where), Select1<T1,S1,C1> {
 
     /**
      * Get a single (optional) result
      */
-    fun getSingle(connection:DBConnection): T1? {
+    override fun getSingleOrNull(connection:DBConnection): T1? {
       return connection.prepareStatement(toSQL()) {
         setParams(this)
         execute { rs ->
@@ -343,8 +341,12 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
       }
     }
 
+    override fun getSingle(connection: DBConnection): T1 {
+      return getSingleOrNull(connection) ?: throw NoSuchElementException()
+    }
+
     /** Get a list of all non-null values resulting from the query.*/
-    fun getSafeList(connection:DBConnection): List<T1> {
+    override fun getSafeList(connection:DBConnection): List<T1> {
       val result=mutableListOf<T1>()
       executeHelper(connection, Unit) {rs, b -> select.col1.type.fromResultSet(rs,1)?.let { result.add(it) } }
       return result
@@ -400,20 +402,6 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
       return executeHelper(connection, block) { rs, block ->
         val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i+1) }
         block(select.columns.asList(), data)
-      }
-    }
-
-    override fun <R> getSingleList(connection: DBConnection, resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R): R {
-      connection.prepareStatement(toSQL()) {
-        setParams(this)
-        execute { rs ->
-          if(!rs.next()) throw NoSuchElementException()
-
-          val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i + 1) }
-          val result = resultHandler(select.columns.toList(), data)
-          if (rs.next()) throw SQLException("More results than expected")
-          return result
-        }
       }
     }
   }
@@ -482,22 +470,6 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
       }
     }
 
-    override fun <R> getSingleList(connection: DBConnection,
-                         resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R):R {
-      connection.prepareStatement(toSQL()) {
-        setParams(this)
-        execute { rs ->
-          if(!rs.next()) throw NoSuchElementException()
-
-          val data = columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i + 1) }
-          val result = resultHandler(columns.toList(), data)
-          if (rs.next()) throw SQLException("More results than expected")
-          return result
-        }
-      }
-    }
-
-
     /**
      * Execute the statement.
      * @param The connection object to use for the query
@@ -517,7 +489,8 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
   interface Select1<T1:Any, S1:IColumnType<T1,S1,C1>, C1: Column<T1, S1, C1>>:SelectStatement {
     override val select: _Select1<T1, S1, C1>
 
-    fun getSingle(connection: DBConnection): T1?
+    fun getSingle(connection: DBConnection): T1
+    fun getSingleOrNull(connection: DBConnection): T1?
     fun getList(connection: DBConnection): List<T1?>
 
     @Deprecated("This can be done outside the function", ReplaceWith("getList(connection).filterNotNull()"), DeprecationLevel.ERROR)
@@ -563,7 +536,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
       }
     }
 
-    override fun getSingle(connection: DBConnection): T1? {
+    override fun getSingleOrNull(connection: DBConnection): T1? {
       return connection.prepareStatement(toSQL()) {
         setParams(this)
         execute { rs ->
@@ -577,22 +550,14 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
       }
     }
 
+    override fun getSingle(connection: DBConnection): T1 {
+      return getSingleOrNull(connection) ?: throw NoSuchElementException()
+    }
+
     override fun executeList(connection: DBConnection, resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit):Boolean {
       return executeHelper(connection, resultHandler) { rs, block ->
         val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i+1) }
         block(select.columns.asList(), data)
-      }
-    }
-
-    override fun <R> getSingleList(connection: DBConnection, resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R): R {
-      connection.prepareStatement(toSQL()) {
-        setParams(this)
-        execute { rs ->
-          if (!rs.next()) throw NoSuchElementException()
-          val result = resultHandler(listOf(col1), listOf(col1.type.fromResultSet(rs, 1)))
-          if (rs.next()) throw IllegalStateException("More than one element")
-          return result
-        }
       }
     }
 
@@ -831,6 +796,28 @@ enum class SqlComparisons(val str:String) {
 
   override fun toString() = str
 }
+
+fun <R> Database.SelectStatement.getSingleListOrNull(connection: DBConnection,
+                                                     resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R):R? {
+  connection.prepareStatement(toSQL()) {
+    setParams(this)
+    execute { rs ->
+      if(!rs.next()) return null
+      val columns = select.columns
+
+      val data = columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i + 1) }
+      val result = resultHandler(columns.toList(), data)
+      if (rs.next()) throw SQLException("More results than expected")
+      return result
+    }
+  }
+}
+
+fun <R> Database.SelectStatement.getSingleList(connection: DBConnection,
+                                               resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R):R {
+  return getSingleListOrNull(connection, resultHandler) ?: throw NoSuchElementException()
+}
+
 
 private fun ColumnRef<*,*,*>.name(prefixMap: Map<String, String>?) : String {
   return prefixMap?.let { prefixMap[table._name]?.let { "${it}.`${name}`" } } ?: "`${name}`"
