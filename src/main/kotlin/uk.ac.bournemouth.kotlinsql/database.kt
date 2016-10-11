@@ -655,9 +655,11 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
         (1..columns.size).joinTo(this, prefix= " VALUES (", postfix=")") { "?" }
         if (update) {
           val primaryKey = table._primaryKey
+          val updateColumns = columns.asSequence()
+                .filter { primaryKey?.let { pk -> it !in pk } ?: true }.toList()
+          if (updateColumns.isEmpty()) { throw UnsupportedOperationException("An insert that only touches the primary key cannot be an update."); }
           append(" ON DUPLICATE KEY UPDATE ")
-          columns.asSequence()
-                .filter { primaryKey?.let{ pk-> it !in pk } ?: true }
+          updateColumns.asSequence()
                 .map { it.name(prefixMap)}
                 .joinTo(this) { "${it} = VALUES(${it})" }
         }
