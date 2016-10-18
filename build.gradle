@@ -89,7 +89,7 @@ dependencies {
 
     generatorsCompile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    testCompile 'org.testng:testng:6.9.9'
+    testCompile 'org.testng:testng:6.9.13.8'
 }
 
 idea{
