@@ -34,32 +34,25 @@ import uk.ac.bournemouth.kotlinsql.ColumnType.LengthCharColumnType.VARCHAR_T
 import uk.ac.bournemouth.kotlinsql.ColumnType.LengthColumnType.*
 import uk.ac.bournemouth.kotlinsql.ColumnType.NumericColumnType.*
 import uk.ac.bournemouth.kotlinsql.ColumnType.SimpleColumnType.*
-import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
-import uk.ac.bournemouth.util.kotlin.sql.connection
 import java.io.ByteArrayInputStream
 import java.math.BigDecimal
 import java.sql.*
-import java.sql.Date
-import java.util.*
-import javax.sql.DataSource
 import kotlin.reflect.KClass
-import kotlin.reflect.KProperty
 
 /**
  * A reference to a column.
- *
- * @param table The table the column is a part of
- * @param name The name of the column
- * @param type The [IColumnType] of the column.
  */
 interface ColumnRef<T:Any, S: IColumnType<T, S, C>, C:Column<T,S,C>> {
+  /** The table the column is a part of */
   val table: TableRef
+  /** The name of the column */
   val name:String
+  /** The [IColumnType] of the column. */
   val type: S
 }
 
-class ColsetRef(val table:TableRef, val columns:List<out ColumnRef<*,*,*>>) {
+class ColsetRef(val table:TableRef, val columns:List<ColumnRef<*,*,*>>) {
   constructor(table:TableRef, col1: ColumnRef<*,*,*>, vararg cols:ColumnRef<*,*,*>): this(table, mutableListOf(col1).apply { addAll(cols) })
 }
 
@@ -75,7 +68,6 @@ fun columnType(sqlType:Int): IColumnType<*,*,*> {
     Types.TINYINT                 -> TINYINT_T
     Types.SMALLINT                -> SMALLINT_T
     Types.INTEGER                 -> INT_T
-    Types.BIGINT                  -> BIGINT_T
     Types.FLOAT                   -> FLOAT_T
     Types.DOUBLE                  -> DOUBLE_T
     Types.NUMERIC                 -> NUMERIC_T
@@ -86,7 +78,6 @@ fun columnType(sqlType:Int): IColumnType<*,*,*> {
     Types.DATE                    -> DATE_T
     Types.TIME                    -> TIME_T
     Types.TIMESTAMP               -> TIMESTAMP_T
-    Types.BINARY                  -> BINARY_T
     Types.VARBINARY               -> VARBINARY_T
     Types.BLOB                    -> BLOB_T
     Types.CLOB                    -> BLOB_T
@@ -107,7 +98,7 @@ interface IColumnType<T:Any, S: IColumnType<T, S, C>, C:Column<T,S,C>> {
    */
   fun maybeCast(value: Any?): T?
 
-  fun newConfiguration(owner: Table, refColumn: C): AbstractColumnConfiguration<T,S, C, out Any>
+  fun newConfiguration(owner: Table, refColumn: C): AbstractColumnConfiguration<T,S, C, Any>
 
   fun fromResultSet(rs: ResultSet, pos: Int): T?
 
@@ -138,6 +129,9 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
   override fun cast(value:Any): T {
     return type.javaObjectType.cast(value)
   }
+
+  @Suppress("UNCHECKED_CAST")
+  fun asS() = this as S
 
   // @formatter:off
   interface INumericColumnType<T:Any, S:INumericColumnType<T,S,C>, C:INumericColumn<T,S,C>>: IColumnType<T,S,C>
@@ -174,11 +168,11 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     }
 
     override fun newConfiguration(owner: Table, refColumn: NumericColumn<T,S>)=
-          NumberColumnConfiguration(owner, refColumn.name, this as S)
+          NumberColumnConfiguration(owner, refColumn.name, asS())
 
   }
 
-  sealed class DecimalColumnType<S:DecimalColumnType<S>>(typeName: String, type: KClass<BigDecimal>, javaType:Int):ColumnType<BigDecimal,S, DecimalColumn<S>>(typeName, type), INumericColumnType<BigDecimal,S, DecimalColumn<S>> {
+  sealed class DecimalColumnType<S:DecimalColumnType<S>>(typeName: String, type: KClass<BigDecimal>, val javaType:Int):ColumnType<BigDecimal,S, DecimalColumn<S>>(typeName, type), INumericColumnType<BigDecimal,S, DecimalColumn<S>> {
     override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getBigDecimal(pos)
 
     object DECIMAL_T   : DecimalColumnType<DECIMAL_T>("DECIMAL", BigDecimal::class, Types.DECIMAL) {
@@ -189,8 +183,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     }
 
     override fun newConfiguration(owner: Table, refColumn: DecimalColumn<S>):DecimalColumnConfiguration<S> {
-      refColumn as DecimalColumn<S>
-      return DecimalColumnConfiguration(owner, refColumn.name, this as S, refColumn.precision, refColumn.scale)
+      return DecimalColumnConfiguration(owner, refColumn.name, asS(), refColumn.precision, refColumn.scale)
     }
   }
 
@@ -253,7 +246,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     }
 
     override fun newConfiguration(owner: Table, refColumn: SimpleColumn<T,S>) =
-          NormalColumnConfiguration(owner, refColumn.name, this as S)
+          NormalColumnConfiguration(owner, refColumn.name, asS())
 
   }
 
@@ -281,7 +274,8 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
   sealed class LengthColumnType<T:Any, S:LengthColumnType<T,S>>(typeName: String, type: KClass<T>):ColumnType<T,S, LengthColumn<T,S>>(typeName, type), ILengthColumnType<T,S, LengthColumn<T,S>> {
 
     object BITFIELD_T  : LengthColumnType<BooleanArray, BITFIELD_T>("BIT", BooleanArray::class) {
-      override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getArray(pos) as BooleanArray
+      @Suppress("UNCHECKED_CAST")
+      override fun fromResultSet(rs: ResultSet, pos: Int) = (rs.getArray(pos).array as Array<Any>).let { array -> BooleanArray(array.size) { i -> array[i] as Boolean } }
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: BooleanArray?) {
         statementHelper.setArray(pos, value)
       }
@@ -313,7 +307,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     object VARCHAR_T   : LengthCharColumnType<VARCHAR_T>("VARCHAR", String::class), BoundedType { override val maxLen:Int get() = 0xffff }
 
     override fun newConfiguration(owner: Table, refColumn: LengthCharColumn<S>) =
-          LengthCharColumnConfiguration(owner, refColumn.name, this as S, (refColumn as LengthCharColumn).length)
+          LengthCharColumnConfiguration(owner, refColumn.name, asS(), refColumn.length)
 
     override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getString(pos)
 
@@ -601,6 +595,7 @@ class DatabaseConfiguration {
     return __AnonymousTable(name, extra, block)
   }
 
+  @Suppress("NOTHING_TO_INLINE")
   inline fun table(t: ImmutableTable):TableRef {
     tables.add(t); return t.ref()
   }

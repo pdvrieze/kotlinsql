@@ -398,8 +398,8 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     override fun setParams(statementHelper: StatementHelper, first: Int) =
           where.setParameters(statementHelper, first)
 
-    override fun executeList(connection:DBConnection, block: (List<Column<*,*,*>>,List<Any?>)->Unit):Boolean {
-      return executeHelper(connection, block) { rs, block ->
+    override fun executeList(connection:DBConnection, resultHandler: (List<Column<*,*,*>>, List<Any?>)->Unit):Boolean {
+      return executeHelper(connection, resultHandler) { rs, block ->
         val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i+1) }
         block(select.columns.asList(), data)
       }
