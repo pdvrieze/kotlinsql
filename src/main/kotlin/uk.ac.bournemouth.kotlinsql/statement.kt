@@ -21,11 +21,8 @@
 package uk.ac.bournemouth.util.kotlin.sql
 
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.sql.*
 import java.util.*
-import java.util.concurrent.Executor
-import javax.sql.DataSource
 
 class StatementHelper constructor(val statement: PreparedStatement, val queryString:String) : PreparedStatement by statement {
   inline fun <R> raw(block: (PreparedStatement) -> R): R = block(statement)
@@ -57,8 +54,7 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
       }
     }
 
-
-  @Deprecated("Use the columntype instead. This doesn't do nulls", level = DeprecationLevel.ERROR)
+  @Deprecated("Use the columntype instead. This doesn't do nulls", ReplaceWith("ColumnType::setParam(this, index, value)"), level = DeprecationLevel.ERROR)
   fun <T> setParam_(index: Int, value: T) = when (value) {
     null -> setNull(index, Types.NULL)
     is Int -> setParam(index, value)
@@ -69,13 +65,13 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
     is Short -> setParam(index, value)
     is BigDecimal -> setBigDecimal(index, value)
     is ByteArray -> statement.setBytes(index,value)
-    else -> throw UnsupportedOperationException("Not possible to set this value (${value}) of type ${(value as Any).javaClass.simpleName}")
+    else -> throw UnsupportedOperationException("Not possible to set this value ($value) of type ${(value as Any).javaClass.simpleName}")
   }
 
 
   fun setParam(index: Int, value: Int?) = if (value == null) setNull(index, Types.INTEGER) else setInt(index, value)
   fun setParam(index: Int, value: Long?) = if (value == null) setNull(index, Types.BIGINT) else setLong(index, value)
-  fun setParam(index: Int, value: CharSequence?) = if (value == null) setNull(index, Types.VARCHAR) else setString(index, value?.toString())
+  fun setParam(index: Int, value: CharSequence?) = if (value == null) setNull(index, Types.VARCHAR) else setString(index, value.toString())
   fun setParam(index: Int, value: Boolean?) = if (value == null) setNull(index, Types.BOOLEAN) else setBoolean(index, value)
   fun setParam(index: Int, value: Byte?) = if (value == null) setNull(index, Types.TINYINT) else setByte(index, value)
   fun setParam(index: Int, value: Short?) = if (value == null) setNull(index, Types.SMALLINT) else setShort(index, value)
@@ -148,7 +144,7 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
   inline fun params(value:Byte?):ParamHelper_ { setParam(1, value); return ParamHelper_(this) }
   inline fun params(value:Short?):ParamHelper_ { setParam(1, value); return ParamHelper_(this) }
 
-  inline fun <R> withResultSet(block: (ResultSet) -> R) = statement.getResultSet().use(block)
+  inline fun <R> withResultSet(block: (ResultSet) -> R) = statement.resultSet.use(block)
 
   inline fun <R> withGeneratedKeys(block: (ResultSet) -> R) = statement.generatedKeys.use(block)
 
@@ -175,7 +171,7 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
     try {
       return statement.execute()
     } catch (e:SQLException) {
-      throw SQLException("Error executing statement: ${queryString}", e)
+      throw SQLException("Error executing statement: $queryString", e)
     }
   }
 
@@ -183,7 +179,7 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
     try {
       return statement.executeUpdate()
     } catch (e:SQLException) {
-      throw SQLException("Error executing statement: ${queryString}", e)
+      throw SQLException("Error executing statement: $queryString", e)
     }
   }
 
@@ -191,10 +187,10 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
     try {
       return statement.executeQuery()
     } catch (e:SQLException) {
-      throw SQLException("Error executing statement: ${queryString}", e)
+      throw SQLException("Error executing statement: $queryString", e)
     }
   }
 }
 
-public inline fun <T : Statement, R> T.use(block: (T) -> R) = useHelper({ it.close() }, block)
-public inline fun <T : ResultSet, R> T.use(block: (T) -> R) = useHelper({ it.close() }, block)
+inline fun <T : Statement, R> T.use(block: (T) -> R) = useHelper({ it.close() }, block)
+inline fun <T : ResultSet, R> T.use(block: (T) -> R) = useHelper({ it.close() }, block)

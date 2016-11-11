@@ -60,22 +60,22 @@ sourceSets {
         generate {
             def depth = 10
             databaseFunctions{
-                output = 'kotlin/gen/DatabaseMethods.kt'
+                output = 'uk/ac/bournemouth/util/kotlin/sql/impl/gen/DatabaseMethods.kt'
                 generator = "kotlinsql.builder.GenerateDatabaseBaseKt"
                 input = depth
             }
             selects{
-                output = 'kotlin/gen/selectImpls.kt'
+                output = 'uk/ac/bournemouth/util/kotlin/sql/impl/gen/selectImpls.kt'
                 generator = "kotlinsql.builder.GenerateSelectClasses"
                 input = depth
             }
             statements{
-                output = 'kotlin/gen/statementImpls.kt'
+                output = 'uk/ac/bournemouth/util/kotlin/sql/impl/gen/statementImpls.kt'
                 generator = "kotlinsql.builder.GenerateStatementsKt"
                 input = depth
             }
             inserts{
-                output = 'kotlin/gen/Inserts.kt'
+                output = 'uk/ac/bournemouth/util/kotlin/sql/impl/gen/Inserts.kt'
                 generator = "kotlinsql.builder.GenerateInsertsKt"
                 input = depth
             }

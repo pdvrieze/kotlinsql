@@ -37,7 +37,6 @@ class GenerateSelectClasses {
       appendln("import java.sql.SQLException")
       appendln()
       appendln("import uk.ac.bournemouth.kotlinsql.Column")
-      appendln("import uk.ac.bournemouth.kotlinsql.Database")
       appendln("import uk.ac.bournemouth.kotlinsql.Database.*")
       appendln("import uk.ac.bournemouth.kotlinsql.IColumnType")
       appendln("import uk.ac.bournemouth.util.kotlin.sql.DBConnection")
@@ -144,7 +143,7 @@ class GenerateSelectClasses {
           appendln("        setParams(this)")
           appendln("        execute { rs ->")
           appendln("          if (rs.next()) {")
-          appendln("            if (!rs.isLast()) throw SQLException(\"Multiple results found, where only one or none expected\")")
+          appendln("            if (!rs.isLast) throw SQLException(\"Multiple results found, where only one or none expected\")")
           append("            factory(")
           (1..n).joinTo(this,",\n${" ".repeat(18)}") { m -> "select.col$m.type.fromResultSet(rs, $m)" }
           appendln(")")

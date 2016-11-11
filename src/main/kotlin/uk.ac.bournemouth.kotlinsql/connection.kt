@@ -20,19 +20,20 @@
 
 package uk.ac.bournemouth.util.kotlin.sql
 
-import uk.ac.bournemouth.kotlinsql.*
-import uk.ac.bournemouth.util.kotlin.sql.impl.gen._Statement1
+import uk.ac.bournemouth.kotlinsql.ConnectionMetadata
+import uk.ac.bournemouth.kotlinsql.Database
+import uk.ac.bournemouth.kotlinsql.TableRef
+import uk.ac.bournemouth.kotlinsql.WarningIterator
 import java.sql.*
 import java.util.*
 import java.util.concurrent.Executor
 import javax.sql.DataSource
 
 /**
- * Created by pdvrieze on 13/03/16.
+ * Create a new connection to the database and execute the block body on that connection. Close it after use.
  */
-
 inline fun <R> DataSource.connection(db: Database, block: (DBConnection) -> R): R =
-    this.getConnection().use {
+    this.connection.use {
       return DBConnection(connection, db).let(block)
     }
 
@@ -44,13 +45,6 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
   init {
     rawConnection.autoCommit = false
   }
-
-  @Deprecated(message = "Do not use, this is there just for transitional purposes", replaceWith = ReplaceWith("rawConnection"), level = DeprecationLevel.ERROR)
-  fun __getConnection() = rawConnection
-
-  //    init {
-  //        connection.autoCommit = false
-  //    }
 
   fun <R> raw(block: (Connection) -> R): R = block(rawConnection)
   fun <R> use(block: (DBConnection) -> R): R = useHelper({ it.rawConnection.close() }) {
@@ -75,11 +69,11 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
    */
   fun commit() = rawConnection.commit()
 
-  fun getMetaData() = ConnectionMetadata(this, rawConnection.metaData)
+  fun getMetaData() = ConnectionMetadata(rawConnection.metaData)
 
   private inline fun prepareCall(sql: String) = rawConnection.prepareCall(sql)
 
-  /** @see [Connection.autoCommit] */
+  /** @see [Connection.getAutoCommit] */
   var autoCommit: Boolean
     get() = rawConnection.autoCommit
     set(value) { rawConnection.autoCommit = value }
@@ -94,16 +88,20 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
   // Advanced features:
 
   @Throws(SQLException::class)
-  fun setReadOnly(readOnly: Boolean) = rawConnection.setReadOnly(readOnly)
+  fun setReadOnly(readOnly: Boolean) {
+    rawConnection.isReadOnly = readOnly
+  }
 
   @Throws(SQLException::class)
-  fun isReadOnly(): Boolean = rawConnection.isReadOnly()
+  fun isReadOnly(): Boolean = rawConnection.isReadOnly
 
   @Throws(SQLException::class)
-  fun setCatalog(catalog: String) = rawConnection.setCatalog(catalog)
+  fun setCatalog(catalog: String) {
+    rawConnection.catalog = catalog
+  }
 
   @Throws(SQLException::class)
-  fun getCatalog(): String = rawConnection.getCatalog()
+  fun getCatalog(): String = rawConnection.catalog
 
   @Deprecated("Don't use this, just use Connection's version", replaceWith = ReplaceWith("Connection.TRANSACTION_NONE", "java.sql.Connection"))
   val TRANSACTION_NONE = Connection.TRANSACTION_NONE
@@ -120,11 +118,21 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
   @Deprecated("Don't use this, just use Connection's version", replaceWith = ReplaceWith("Connection.TRANSACTION_SERIALIZABLE", "java.sql.Connection"))
   val TRANSACTION_SERIALIZABLE = Connection.TRANSACTION_SERIALIZABLE
 
-  @Throws(SQLException::class)
-  fun setTransactionIsolation(level: Int) = rawConnection.setTransactionIsolation(level)
+  fun TransactionIsolation(jdbcValue:Int):TransactionIsolation {
+    return DBConnection.TransactionIsolation.values().first { it.intValue==jdbcValue }
+  }
 
-  @Throws(SQLException::class)
-  fun getTransactionIsolation(): Int = rawConnection.transactionIsolation
+  enum class TransactionIsolation constructor(val intValue: Int, dummy:Unit) {
+    TRANSACTION_NONE(Connection.TRANSACTION_NONE, Unit),
+    TRANSACTION_READ_UNCOMMITTED(Connection.TRANSACTION_READ_UNCOMMITTED, Unit),
+    TRANSACTION_READ_COMMITTED(Connection.TRANSACTION_READ_COMMITTED, Unit),
+    TRANSACTION_REPEATABLE_READ(Connection.TRANSACTION_REPEATABLE_READ, Unit),
+    TRANSACTION_SERIALIZABLE(Connection.TRANSACTION_SERIALIZABLE, Unit),
+  }
+
+  var transactionIsolation: TransactionIsolation
+    get() = TransactionIsolation(rawConnection.transactionIsolation)
+    set(value) { rawConnection.transactionIsolation = value.intValue }
 
   /**
    * Retrieves the first warning reported by calls on this
@@ -169,18 +177,23 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
 
 
   //--------------------------JDBC 2.0-----------------------------
-
-  @Throws(SQLException::class)
-  fun getTypeMap() = rawConnection.typeMap
-
-  @Throws(SQLException::class)
-  fun setTypeMap(map: Map<String, Class<*>>) = rawConnection.setTypeMap(map)
+  /**
+   * Retrieves the Map object associated with this Connection object.
+   * @see [Connection.getTypeMap]
+   */
+  var typeMap: Map<String, Class<*>>
+    get() = rawConnection.typeMap
+    set(value) { rawConnection.typeMap = value}
 
   //--------------------------JDBC 3.0-----------------------------
 
-  enum class Holdability(internal val jdbc:Int) {
-    HOLD_CURSORS_OVER_COMMIT(ResultSet.HOLD_CURSORS_OVER_COMMIT),
-    CLOSE_CURSORS_AT_COMMIT(ResultSet.CLOSE_CURSORS_AT_COMMIT);
+  fun Holdability(jdbc:Int):Holdability {
+    return Holdability.values().first { it.jdbc == jdbc }
+  }
+
+  enum class Holdability(val jdbc: Int, dummy: Unit) {
+    HOLD_CURSORS_OVER_COMMIT(ResultSet.HOLD_CURSORS_OVER_COMMIT, Unit),
+    CLOSE_CURSORS_AT_COMMIT(ResultSet.CLOSE_CURSORS_AT_COMMIT, Unit);
   }
 
   /**
@@ -195,9 +208,13 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
     set(value) { rawConnection.holdability = value.jdbc }
 
   @Throws(SQLException::class)
-  fun setHoldability(holdability: Int) = rawConnection.setHoldability(holdability)
+  @Deprecated("Use the typed version", ReplaceWith("this.holdability = Holdability(holdability)"))
+  fun setHoldability(holdability: Int) {
+    rawConnection.holdability = holdability
+  }
 
   @Throws(SQLException::class)
+  @Deprecated("Use the typed version", ReplaceWith("this.holdability.jdbc"))
   fun getHoldability() = rawConnection.holdability
 
   @Throws(SQLException::class)
@@ -271,16 +288,18 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
   fun setClientInfo(name: String, value: String) = rawConnection.setClientInfo(name, value)
 
   @Throws(SQLClientInfoException::class)
-  fun setClientInfo(properties: Properties) = rawConnection.setClientInfo(properties)
+  fun setClientInfo(properties: Properties) {
+    rawConnection.clientInfo = properties
+  }
 
   @Throws(SQLException::class)
   fun getClientInfo(name: String): String = rawConnection.getClientInfo(name)
 
   @Throws(SQLException::class)
-  fun getClientInfo() = rawConnection.clientInfo
+  fun getClientInfo(): Properties? = rawConnection.clientInfo
 
   @Throws(SQLException::class)
-  fun createArrayOf(typeName: String, elements: Array<Any>) = rawConnection.createArrayOf(typeName, elements)
+  fun createArrayOf(typeName: String, elements: Array<Any>): java.sql.Array? = rawConnection.createArrayOf(typeName, elements)
 
   @Throws(SQLException::class)
   fun createStruct(typeName: String, attributes: Array<Any>): Struct = rawConnection.createStruct(typeName, attributes)
@@ -288,7 +307,9 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
   //--------------------------JDBC 4.1 -----------------------------
 
   @Throws(SQLException::class)
-  fun setSchema(schema: String) = rawConnection.setSchema(schema)
+  fun setSchema(schema: String) {
+    rawConnection.schema = schema
+  }
 
   @Throws(SQLException::class)
   fun getSchema(): String = rawConnection.schema
@@ -318,9 +339,9 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
  * @param block a function to process this closable resource.
  * @return the result of [block] function on this closable resource.
  */
-public inline fun <T : Connection, R> T.use(block: (T) -> R) = useHelper({ it.close() }, block)
+inline fun <T : Connection, R> T.use(block: (T) -> R) = useHelper({ it.close() }, block)
 
-public inline fun <T : Connection, R> T.useTransacted(block: (T) -> R): R = useHelper({ it.close() }) {
+inline fun <T : Connection, R> T.useTransacted(block: (T) -> R): R = useHelper({ it.close() }) {
   it.autoCommit = false
   try {
     val result = block(it)
@@ -334,7 +355,7 @@ public inline fun <T : Connection, R> T.useTransacted(block: (T) -> R): R = useH
 }
 
 
-public inline fun  <T, R> T.useHelper(close: (T) -> Unit, block: (T) -> R): R {
+inline fun  <T, R> T.useHelper(close: (T) -> Unit, block: (T) -> R): R {
   var closed = false
   try {
     return block(this)

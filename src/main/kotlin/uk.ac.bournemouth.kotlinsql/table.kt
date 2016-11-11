@@ -21,12 +21,7 @@
 package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.util.kotlin.sql.DBConnection
-import uk.ac.bournemouth.util.kotlin.sql.impl.gen.DatabaseMethods
 import java.util.*
-
-/**
- * Created by pdvrieze on 03/04/16.
- */
 
 /**
  * A interface for tables. The properties have underscored names to reduce conflicts with members.
@@ -66,4 +61,4 @@ interface Table:TableRef {
 
 }
 
-operator fun Table.get(name:String) = this.column(name) ?: throw NoSuchElementException("The column with the name ${name} does not exist")
+operator fun Table.get(name:String) = this.column(name) ?: throw NoSuchElementException("The column with the name $name does not exist")

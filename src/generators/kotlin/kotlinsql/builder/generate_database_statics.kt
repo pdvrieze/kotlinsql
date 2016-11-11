@@ -63,11 +63,11 @@ class GenerateDatabaseBaseKt() {
 
       run {
         val indent = " ".repeat(if (n < 9) 9 else 10)
-        (1..n).joinToString(",\n${indent}") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }.apply {
+        (1..n).joinToString(",\n$indent") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }.apply {
           append(this)
         }
       }
-      append("> ${funName}(")
+      append("> $funName(")
       (1..n).joinToString { m -> "col$m: C$m" }.apply { append(this) }
       appendln(")=")
       if (className=="_Insert") {

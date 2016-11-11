@@ -20,30 +20,27 @@
 
 package uk.ac.bournemouth.kotlinsql
 
-import java.math.BigDecimal
+import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.*
+import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration
 import uk.ac.bournemouth.kotlinsql.ColumnType.*
+import uk.ac.bournemouth.kotlinsql.ColumnType.CharColumnType.*
+import uk.ac.bournemouth.kotlinsql.ColumnType.DecimalColumnType.DECIMAL_T
+import uk.ac.bournemouth.kotlinsql.ColumnType.DecimalColumnType.NUMERIC_T
+import uk.ac.bournemouth.kotlinsql.ColumnType.LengthCharColumnType.CHAR_T
+import uk.ac.bournemouth.kotlinsql.ColumnType.LengthCharColumnType.VARCHAR_T
+import uk.ac.bournemouth.kotlinsql.ColumnType.LengthColumnType.*
 import uk.ac.bournemouth.kotlinsql.ColumnType.NumericColumnType.*
 import uk.ac.bournemouth.kotlinsql.ColumnType.SimpleColumnType.*
-import uk.ac.bournemouth.kotlinsql.ColumnType.CharColumnType.*
-import uk.ac.bournemouth.kotlinsql.ColumnType.LengthCharColumnType.*
-import uk.ac.bournemouth.kotlinsql.ColumnType.LengthColumnType.*
-import uk.ac.bournemouth.kotlinsql.ColumnType.DecimalColumnType.*
 import java.sql.Date
 import java.sql.Time
 import java.sql.Timestamp
-import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.*
-import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.*
-import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.*
-
-
-/**
- * Created by pdvrieze on 01/04/16.
- */
-
 
 /**
  * A base class for table declarations. Users of the code are expected to use this with a configuration closure to create
- * database tables. for typed columns to be available they need to be declared using `by [type]` or `by [name]`.
+ * database tables. for typed columns to be available they need to be declared using `by <type>` or `by <name>`.
  *
  * A sample use is:
  * ```
@@ -69,14 +66,14 @@ import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColum
  *                  engine or charset to use.
  */
 // Note that the overloadResolver parameter on the primary constructor is there purely to fix overload resolving
-@Suppress("NOTHING_TO_INLINE")
+@Suppress("NOTHING_TO_INLINE", "unused")
 abstract class MutableTable private constructor(name: String?,
-                                        override val _extra: String?, overloadResolver:Unit) : AbstractTable() {
+                                                override val _extra: String?, @Suppress("UNUSED_PARAMETER") overloadResolver:Unit) : AbstractTable() {
 
   constructor(extra:String?=null): this(null, extra, Unit)
   constructor(name:String, extra: String?): this(name, extra, Unit)
 
-  override val _name:String = if (name==null) javaClass.simpleName else name
+  override val _name:String = name ?: javaClass.simpleName
 
   override val _cols: List<Column<*,*,*>> = mutableListOf()
   
@@ -178,11 +175,11 @@ abstract class MutableTable private constructor(name: String?,
 
   /* When there is no body, the configuration subtype does not matter */
   protected fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(other: C): Table.FieldAccessor<T,S,C> {
-    return add(other.copyConfiguration(owner = this).newColumn() as C)
+    return add(other.copyConfiguration(owner = this).newColumn())
   }
 
   protected fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(newName:String, other: C): Table.FieldAccessor<T,S,C> {
-    return add(other.copyConfiguration(newName = newName, owner = this).newColumn() as C)
+    return add(other.copyConfiguration(newName = newName, owner = this).newColumn())
   }
 
   /* Otherwise, the various types need to be distinguished. The different subtypes of column are needed for overload resolution */
@@ -203,7 +200,7 @@ abstract class MutableTable private constructor(name: String?,
   protected fun <T:Any, S:NumericColumnType<T,S>>reference(newName:String, other: NumericColumn<T,S>, block: NumberColumnConfiguration<T,S>.() -> Unit) = other.copyConfiguration(newName, this).add(block)
 
   protected fun <C:Column<*,*,C>> INDEX(col1: ColumnRef<*,*,C>, vararg cols: ColumnRef<*,*,*>) {
-    __indices.add(mutableListOf<Column<*,*,*>>(resolve(col1)).apply {
+    __indices.add(mutableListOf(resolve(col1)).apply {
         addAll(resolveAll(cols))
     })
   }

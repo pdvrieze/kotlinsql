@@ -173,7 +173,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
   }
 
   sealed class DecimalColumnType<S:DecimalColumnType<S>>(typeName: String, type: KClass<BigDecimal>, val javaType:Int):ColumnType<BigDecimal,S, DecimalColumn<S>>(typeName, type), INumericColumnType<BigDecimal,S, DecimalColumn<S>> {
-    override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getBigDecimal(pos)
+    override fun fromResultSet(rs: ResultSet, pos: Int): BigDecimal? = rs.getBigDecimal(pos)
 
     object DECIMAL_T   : DecimalColumnType<DECIMAL_T>("DECIMAL", BigDecimal::class, Types.DECIMAL) {
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: BigDecimal?){statementHelper.setDecimal(pos, value)}
@@ -196,50 +196,50 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     }
 
     object DATE_T      : SimpleColumnType<java.sql.Date, DATE_T>("DATE", java.sql.Date::class){
-      override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getDate(pos)
+      override fun fromResultSet(rs: ResultSet, pos: Int): Date? = rs.getDate(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Date?) { statementHelper.setDate(pos, value) }
     }
     object TIME_T      : SimpleColumnType<java.sql.Time, TIME_T>("TIME", java.sql.Time::class){
-      override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getTime(pos)
+      override fun fromResultSet(rs: ResultSet, pos: Int): Time? = rs.getTime(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Time?) { statementHelper.setTime(pos, value) }
     }
     object TIMESTAMP_T : SimpleColumnType<java.sql.Timestamp, TIMESTAMP_T>("TIMESTAMP", Timestamp::class){
-      override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getTimestamp(pos)
+      override fun fromResultSet(rs: ResultSet, pos: Int): Timestamp? = rs.getTimestamp(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Timestamp?) { statementHelper.setTimestamp(pos, value) }
     }
     object DATETIME_T  : SimpleColumnType<java.sql.Timestamp, DATETIME_T>("DATETIME", Timestamp::class){
-      override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getTimestamp(pos)
+      override fun fromResultSet(rs: ResultSet, pos: Int): Timestamp? = rs.getTimestamp(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Timestamp?) { statementHelper.setTimestamp(pos, value) }
     }
     object YEAR_T      : SimpleColumnType<java.sql.Date, YEAR_T>("YEAR", java.sql.Date::class){
-      override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getDate(pos)
+      override fun fromResultSet(rs: ResultSet, pos: Int): Date? = rs.getDate(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: java.sql.Date?) { statementHelper.setDate(pos, value) }
     }
 
     object TINYBLOB_T  : SimpleColumnType<ByteArray, TINYBLOB_T>("TINYBLOB", ByteArray::class), BoundedType {
       override val maxLen = 255
-      override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getBytes(pos)
+      override fun fromResultSet(rs: ResultSet, pos: Int): ByteArray? = rs.getBytes(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: ByteArray?) {
         statementHelper.setBlob(pos, if(value == null) null else ByteArrayInputStream(value))
       }
     }
     object BLOB_T      : SimpleColumnType<ByteArray, BLOB_T>("BLOB", ByteArray::class), BoundedType {
       override val maxLen = 0xffff
-      override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getBytes(pos)
+      override fun fromResultSet(rs: ResultSet, pos: Int): ByteArray? = rs.getBytes(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: ByteArray?) {
         statementHelper.setBlob(pos, if(value == null) null else ByteArrayInputStream(value))
       }
     }
     object MEDIUMBLOB_T: SimpleColumnType<ByteArray, MEDIUMBLOB_T>("MEDIUMBLOB", ByteArray::class), BoundedType {
       override val maxLen = 0xffffff
-      override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getBytes(pos)
+      override fun fromResultSet(rs: ResultSet, pos: Int): ByteArray? = rs.getBytes(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: ByteArray?) {
         statementHelper.setBlob(pos, if(value == null) null else ByteArrayInputStream(value))
       }
     }
     object LONGBLOB_T  : SimpleColumnType<ByteArray, LONGBLOB_T>("LONGBLOB", ByteArray::class), BoundedType {
       override val maxLen = Int.MAX_VALUE /*Actually it would be more*/
-      override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getBytes(pos)
+      override fun fromResultSet(rs: ResultSet, pos: Int): ByteArray? = rs.getBytes(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: ByteArray?) {
         statementHelper.setBlob(pos, if(value == null) null else ByteArrayInputStream(value))
       }
@@ -250,10 +250,10 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
 
   }
 
-  interface ICharColumnType<S:ICharColumnType<S, C>, C:ICharColumn<String,S, C>>: IColumnType<String,S,C>
+  interface ICharColumnType<S:ICharColumnType<S, C>, C:ICharColumn<S, C>>: IColumnType<String,S,C>
 
   sealed class CharColumnType<S:CharColumnType<S>>(typeName: String, type: KClass<String>):ColumnType<String,S, CharColumn<S>>(typeName, type), ICharColumnType<S, CharColumn<S>> {
-    override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getString(pos)
+    override fun fromResultSet(rs: ResultSet, pos: Int): String? = rs.getString(pos)
 
     object TINYTEXT_T  : CharColumnType<TINYTEXT_T>("TINYTEXT", String::class), BoundedType { override val maxLen:Int get() = 255 }
     object TEXT_T      : CharColumnType<TEXT_T>("TEXT", String::class), BoundedType { override val maxLen:Int get() = 0xffff }
@@ -283,14 +283,14 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
 
     object BINARY_T    : LengthColumnType<ByteArray, BINARY_T>("BINARY", ByteArray::class), BoundedType {
       override val maxLen = 255
-      override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getBytes(pos)
+      override fun fromResultSet(rs: ResultSet, pos: Int): ByteArray? = rs.getBytes(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: ByteArray?) {
         statementHelper.setBytes(pos, value)
       }
     }
     object VARBINARY_T : LengthColumnType<ByteArray, VARBINARY_T>("VARBINARY", ByteArray::class), BoundedType {
       override val maxLen = 0xffff
-      override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getBytes(pos)
+      override fun fromResultSet(rs: ResultSet, pos: Int): ByteArray? = rs.getBytes(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: ByteArray?) {
         statementHelper.setBytes(pos, value)
       }
@@ -309,7 +309,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     override fun newConfiguration(owner: Table, refColumn: LengthCharColumn<S>) =
           LengthCharColumnConfiguration(owner, refColumn.name, asS(), refColumn.length)
 
-    override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getString(pos)
+    override fun fromResultSet(rs: ResultSet, pos: Int): String? = rs.getString(pos)
 
     override fun setParam(statementHelper: StatementHelper, pos: Int, value: String?) {
       statementHelper.setString(pos, value)
@@ -350,8 +350,6 @@ interface SimpleColumn<T:Any, S: SimpleColumnType<T, S>>: Column<T,S, SimpleColu
   override fun copyConfiguration(newName:String?, owner: Table): NormalColumnConfiguration<T,S>
 }
 
-interface Foo<T:Any,S: IColumnType<T,S,C>,C:Column<T,S,C>>: Column<T,S,C>
-
 interface INumericColumn<T:Any, S: INumericColumnType<T, S, C>,C:INumericColumn<T,S,C>>: Column<T,S,C> {
   val unsigned: Boolean
   val zerofill: Boolean
@@ -362,19 +360,19 @@ interface NumericColumn<T:Any, S: NumericColumnType<T, S>>: INumericColumn<T,S, 
   override fun copyConfiguration(newName:String?, owner: Table): NumberColumnConfiguration<T,S>
 }
 
-interface ICharColumn<T:Any, S: ICharColumnType<S, C>, C:ICharColumn<String,S,C>>: Column<String, S, C> {
+interface ICharColumn<S: ICharColumnType<S, C>, C:ICharColumn<S,C>>: Column<String, S, C> {
   val charset: String?
   val collation: String?
   val binary: Boolean
 
 }
 
-interface CharColumn<S: CharColumnType<S>>: ICharColumn<String, S, CharColumn<S>> {
+interface CharColumn<S: CharColumnType<S>>: ICharColumn<S, CharColumn<S>> {
   override fun copyConfiguration(newName:String?, owner: Table): CharColumnConfiguration<S>
 }
 
 
-interface LengthCharColumn<S: LengthCharColumnType<S>>: ICharColumn<String, S, LengthCharColumn<S>>, ILengthColumn<String, S, LengthCharColumn<S>> {
+interface LengthCharColumn<S: LengthCharColumnType<S>>: ICharColumn<S, LengthCharColumn<S>>, ILengthColumn<String, S, LengthCharColumn<S>> {
   override fun copyConfiguration(newName:String?, owner: Table): LengthCharColumnConfiguration<S>
 }
 
@@ -406,7 +404,7 @@ class ForeignKey constructor(val fromCols:List<ColumnRef<*,*,*>>, val toTable:Ta
 /**
  * The main class that caries a lot of the load for the class.
  */
-@Suppress("NOTHING_TO_INLINE")
+@Suppress("NOTHING_TO_INLINE", "unused")
 class TableConfiguration(override val _name:String, val extra:String?=null):TableRef {
 
   val cols = mutableListOf<Column<*, *,*>>()
@@ -585,6 +583,7 @@ class TableConfiguration(override val _name:String, val extra:String?=null):Tabl
 
 }
 
+@Suppress("unused")
 class DatabaseConfiguration {
 
   private class __AnonymousTable(name:String, extra: String?, block:TableConfiguration.()->Unit): ImmutableTable(name, extra, block)
@@ -640,15 +639,16 @@ abstract class ImmutableTable private constructor(override val _name: String,
                                                   override val _indices: List<List<Column<*,*,*>>>,
                                                   override val _extra: String?) : AbstractTable() {
 
+  @Suppress("unused")
   private constructor(c: TableConfiguration):this(c._name, c.cols, c.primaryKey?.let {c.cols.resolveAll(it)}, c.foreignKeys, c.uniqueKeys.map({c.cols.resolveAll(it)}), c.indices.map({c.cols.resolveAll(it)}), c.extra)
 
   /**
    * The main use of this class is through inheriting this constructor.
    */
-  constructor(name:String, extra: String? = null, block: TableConfiguration.()->Unit): this(
-        TableConfiguration(name, extra).apply(block)  )
+  constructor(name:String, extra: String? = null, block: TableConfiguration.()->Unit):
+      this(TableConfiguration(name, extra).apply(block))
 
-  protected fun <T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>> type(type: ColumnType<T, S, C>) = TypeFieldAccessor<T, S, C>(
+  protected fun <T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>> type(type: ColumnType<T, S, C>) = TypeFieldAccessor(
         type)
 
 }

@@ -20,17 +20,17 @@
 
 package uk.ac.bournemouth.kotlinsql
 
-import kotlin.reflect.KProperty
-import uk.ac.bournemouth.kotlinsql.ColumnType.*
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.*
-import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.*
-import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.*
+import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.ColumnType.*
 import uk.ac.bournemouth.util.kotlin.sql.DBConnection
-import uk.ac.bournemouth.util.kotlin.sql.use
 import java.math.BigDecimal
-import java.sql.SQLException
 import java.sql.SQLWarning
 import java.util.*
+import kotlin.reflect.KProperty
 
 
 internal val LINE_SEPARATOR: String by lazy { System.getProperty("line.separator")!! }
@@ -237,7 +237,7 @@ internal class CharColumnImpl<T:Any, S: CharColumnType<S>>(name:String, configur
                                           binary = configuration.binary,
                                           charset = configuration.charset,
                                           collation = configuration.collation), CharColumn<S> {
-  override fun copyConfiguration(newName:String?, owner: Table) = CharColumnConfiguration<S>(owner, newName ?: name, type)
+  override fun copyConfiguration(newName:String?, owner: Table) = CharColumnConfiguration(owner, newName ?: name, type)
 }
 
 
@@ -317,7 +317,7 @@ class CountColumn(val colRef:ColumnRef<*,*,*>): NumericColumn<Int, NumericColumn
   }
 }
 
-class TableRefImpl(override val _name: String) : TableRef {}
+class TableRefImpl(override val _name: String) : TableRef
 
 
 abstract class AbstractTable: Table {
@@ -358,16 +358,15 @@ abstract class AbstractTable: Table {
   }
 
   /** Property delegator to access database columns by name and type. */
-  protected fun <T:Any, S: ColumnType<T, S, C>, C: Column<T,S,C>> name(name:String, type: ColumnType<T, S,C>) = NamedFieldAccessor<T,S,C>(
-        name,
-        type)
+  protected fun <T:Any, S: ColumnType<T, S, C>, C: Column<T,S,C>> name(name:String, type: ColumnType<T, S,C>) =
+      NamedFieldAccessor(name, type)
 
-  final protected class NamedFieldAccessor<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(val name:String, type: ColumnType<T, S, C>): TypeFieldAccessor<T, S, C>(type) {
+  protected class NamedFieldAccessor<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(val name:String, type: ColumnType<T, S, C>): TypeFieldAccessor<T, S, C>(type) {
     override fun name(property: kotlin.reflect.KProperty<*>): String = this.name
   }
 
   override fun appendDDL(appendable: Appendable) {
-    appendable.appendln("CREATE TABLE `${_name}` (")
+    appendable.appendln("CREATE TABLE `$_name` (")
     sequenceOf(_cols.asSequence().map {it.toDDL()},
                _primaryKey?.let {sequenceOf( toDDL("PRIMARY KEY", it))},
                _indices.asSequence().map { toDDL("INDEX", it)},
@@ -375,7 +374,7 @@ abstract class AbstractTable: Table {
                _foreignKeys.asSequence().map { it.toDDL() })
           .filterNotNull()
           .flatten()
-          .joinTo(appendable, ",${LINE_SEPARATOR}  ", "  ")
+          .joinTo(appendable, ",$LINE_SEPARATOR  ", "  ")
     appendable.appendln().append(')')
     _extra?.let { appendable.append(' ').append(_extra)}
     appendable.append(';')
@@ -384,9 +383,9 @@ abstract class AbstractTable: Table {
   override fun createTransitive(connection: DBConnection, ifNotExists: Boolean) {
     if (ifNotExists && connection.hasTable(this)) return // Make sure to check first to prevent loops
 
-    val db = connection.db ?: throw IllegalStateException("Transitive table creation requires a non-null database")
+    val db = connection.db
     val neededTables = (_cols.asSequence().mapNotNull { col -> col.references?.table } +
-          _foreignKeys.asSequence().mapNotNull { fk -> fk.toTable }).map { db.get(it._name) }.toSet()
+          _foreignKeys.asSequence().mapNotNull(ForeignKey::toTable)).map { db[it._name] }.toSet()
 
     neededTables.forEach { if (it!=this) it.createTransitive(connection, true) }
 
@@ -401,7 +400,7 @@ abstract class AbstractTable: Table {
     }
 
     if (ifExists && ! connection.hasTable(this)) return
-    val db = connection.db ?: throw IllegalStateException("Transitive table dropping requires a non-null database")
+    val db = connection.db
 
     db._tables.filter(::tableReferencesThis).forEach { it.dropTransitive(connection, true) }
 

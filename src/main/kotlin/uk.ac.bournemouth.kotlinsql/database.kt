@@ -24,7 +24,6 @@ import uk.ac.bournemouth.kotlinsql.ColumnType.NumericColumnType.INT_T
 import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.DatabaseMethods
-import uk.ac.bournemouth.util.kotlin.sql.impl.gen._Select3
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen._Statement1
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -37,16 +36,13 @@ import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.memberProperties
 
 /**
- * Created by pdvrieze on 03/04/16.
- */
-
-/**
  * This is an abstract class that contains a set of database tables.
  *
  * @property _version The version of the database schema. This can in the future be used for updating
  * @property _tables The actual tables defined in the database
  */
 
+@Suppress("unused")
 abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
   companion object {
@@ -120,7 +116,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
   /**
    * Helper class that implements the actual delegation of table access.
    */
-  protected class TableDelegate<T: ImmutableTable>(private val table: T, private var needsCheck:Boolean=true) {
+  protected class TableDelegate<out T: ImmutableTable>(private val table: T, private var needsCheck:Boolean=true) {
     operator fun getValue(thisRef: Database, property: KProperty<*>): T {
       if (needsCheck) {
         if (table._name != property.name) throw IllegalArgumentException("The table names do not match (${table._name}, ${property.name})")
@@ -131,7 +127,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
   }
 
   operator fun get(key:String): Table {
-    return _tables.find { it._name==key } ?: throw NoSuchElementException("There is no table with the key ${key}")
+    return _tables.find { it._name==key } ?: throw NoSuchElementException("There is no table with the key $key")
   }
 
   override operator fun get(key:TableRef) = get(key._name)
@@ -175,9 +171,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     }
   }
 
-  abstract class WhereClause:WhereValue() {
-
-  }
+  abstract class WhereClause:WhereValue()
 
   private class WhereCombine(val left:WhereClause, val rel:String, val right:WhereClause):BooleanWhereValue() {
     override fun toSQL(prefixMap: Map<String, String>?): String {
@@ -198,7 +192,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     }
   }
 
-  private class WhereLike<C : ICharColumn<String,*,C>>(val col:ColumnRef<*,*,C>, val predicate:String): BooleanWhereValue() {
+  private class WhereLike<C : ICharColumn<*,C>>(val col:ColumnRef<*,*,C>, val predicate:String): BooleanWhereValue() {
 
     override fun toSQL(prefixMap:Map<String,String>?)= "${col.name(prefixMap)} LIKE ?"
 
@@ -253,7 +247,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     infix fun WhereClause.OR(other:WhereClause):WhereClause = WhereCombine(this, "OR", other)
     infix fun WhereClause.XOR(other:WhereClause):WhereClause = WhereCombine(this, "XOR", other)
 
-    infix fun <C:ICharColumn<String,*,C>> ColumnRef<*, *, C>.LIKE(pred:String):WhereClause {
+    infix fun <C:ICharColumn<*,C>> ColumnRef<*, *, C>.LIKE(pred:String):WhereClause {
       return WhereLike(this, pred)
     }
 
@@ -290,7 +284,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     fun toSQL(): String
   }
 
-  interface Query:Statement {}
+  interface Query:Statement
 
   interface ParameterizedQuery: Query, ParameterizedStatement
 
@@ -313,8 +307,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     abstract fun setParameters(statementHelper: StatementHelper, first:Int=1):Int
   }
 
-  abstract class BooleanWhereValue:WhereClause() {
-  }
+  abstract class BooleanWhereValue:WhereClause()
 
   abstract class ConstBooleanWhereValue:BooleanWhereValue() {
     override fun setParameters(statementHelper: StatementHelper, first:Int) = first
@@ -332,7 +325,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
         setParams(this)
         execute { rs ->
           if (rs.next()) {
-            if (!rs.isLast()) throw SQLException("Multiple results found, where only one or none expected")
+            if (!rs.isLast) throw SQLException("Multiple results found, where only one or none expected")
             select.col1.type.fromResultSet(rs, 1)
           } else {
             null
@@ -343,14 +336,6 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
     override fun getSingle(connection: DBConnection): T1 {
       return getSingleOrNull(connection) ?: throw NoSuchElementException()
-    }
-
-    /** Get a list of all non-null values resulting from the query.*/
-    override fun getSafeList(connection:DBConnection): List<T1> {
-      val result=mutableListOf<T1>()
-      executeHelper(connection, Unit) {rs, b -> select.col1.type.fromResultSet(rs,1)?.let { result.add(it) } }
-      return result
-
     }
 
   }
@@ -373,7 +358,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
     /**
      * Execute the statement.
-     * @param The connection object to use for the query
+     * @param connection The connection object to use for the query
      * @return The amount of rows changed
      * @see java.sql.PreparedStatement.executeUpdate
      */
@@ -406,10 +391,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     }
   }
 
-  class _ListSelectStatement(override val select: _ListSelect, where: WhereClause): _StatementBase(where) {
-
-
-  }
+  class _ListSelectStatement(override val select: _ListSelect, where: WhereClause): _StatementBase(where)
 
   class WhereEq(val left:ColumnRef<*,*,*>, val rel:String, val right:RefWhereValue):BooleanWhereValue() {
     override fun toSQL(prefixMap: Map<String, String>?)="${left.name(prefixMap)} $rel ${right.toSQL(prefixMap)}"
@@ -472,7 +454,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
     /**
      * Execute the statement.
-     * @param The connection object to use for the query
+     * @param connection The connection object to use for the query
      * @return The amount of rows changed
      * @see java.sql.PreparedStatement.executeUpdate
      */
@@ -494,7 +476,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     fun getList(connection: DBConnection): List<T1?>
 
     @Deprecated("This can be done outside the function", ReplaceWith("getList(connection).filterNotNull()"), DeprecationLevel.ERROR)
-    fun getSafeList(connection: DBConnection): List<T1>
+    fun getSafeList(connection: DBConnection): List<T1> = getList(connection).filterNotNull()
 
     fun execute(connection:DBConnection, block: (T1?)->Unit):Boolean
 
@@ -519,7 +501,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
     /**
      * Execute the statement.
-     * @param The connection object to use for the query
+     * @param connection The connection object to use for the query
      * @return The amount of rows changed
      * @see java.sql.PreparedStatement.executeUpdate
      */
@@ -541,7 +523,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
         setParams(this)
         execute { rs ->
           if (rs.next()) {
-            if (!rs.isLast()) throw SQLException("Multiple results found, where only one or none expected")
+            if (!rs.isLast) throw SQLException("Multiple results found, where only one or none expected")
             select.col1.type.fromResultSet(rs, 1)
           } else {
             null
@@ -571,10 +553,6 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
       val result=mutableListOf<T1?>()
       execute(connection) { p1 -> result.add(p1) }
       return result
-    }
-
-    override fun getSafeList(connection: DBConnection): List<T1> {
-      return getList(connection).filterNotNull()
     }
   }
 
@@ -661,7 +639,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
           append(" ON DUPLICATE KEY UPDATE ")
           updateColumns.asSequence()
                 .map { it.name(prefixMap)}
-                .joinTo(this) { "${it} = VALUES(${it})" }
+                .joinTo(this) { "$it = VALUES($it)" }
         }
       }
     }
@@ -675,7 +653,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
         return first+columns.size
       }
 
-      override fun toString() = values.joinToString(prefix = "( ", postfix = " )") { it.toString() }
+      override fun toString() = values.joinToString(prefix = "( ", postfix = " )", transform = Any?::toString)
     }
 
     /**
@@ -704,11 +682,10 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     /**
      * Execute the statement.
      * @param connection The connection object to use for the query
-     * @return The amount of rows changed
+     * @return A list of the results.
      * @see java.sql.PreparedStatement.executeUpdate
-     * @todo wrap the resultset into a typed wrapper
      */
-    override fun <T:Any, S:IColumnType<T, S, *>, R> execute(connection: DBConnection, key: Column<T,S,*>, autoGeneratedKeys: (T?)->R):List<R> {
+    override fun <T:Any, S:IColumnType<T, S, *>, R> execute(connection: DBConnection, key: Column<T,S,*>, autogeneratedKeys: (T?)->R):List<R> {
       if (batch.isEmpty()) { throw IllegalStateException("There are no values to add") }
       connection.prepareStatement(toSQL(), true) {
         for(valueSet in batch) {
@@ -718,10 +695,9 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
         val count = executeUpdate()
         if (count>0) {
           withGeneratedKeys { rs ->
-            var i = 0
             return mutableListOf<R>().apply {
               while (rs.next()) {
-                add(autoGeneratedKeys(key.type.fromResultSet(rs, 1)))
+                add(autogeneratedKeys(key.type.fromResultSet(rs, 1)))
               }
             }
 
@@ -735,9 +711,8 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     /**
      * Execute the statement.
      * @param connection The connection object to use for the query
-     * @return The amount of rows changed
+     * @return A list with the resulting rows.
      * @see java.sql.PreparedStatement.executeUpdate
-     * @todo wrap the resultset into a typed wrapper
      */
     override fun <T:Any, S:IColumnType<T, S, *>> execute(connection: DBConnection, key: Column<T,S,*>):List<T> {
       if (batch.isEmpty()) { throw IllegalStateException("There are no values to add") }
@@ -747,7 +722,6 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
           addBatch()
         }
         withGeneratedKeys { rs ->
-          var i =0
           return mutableListOf<T>().apply {
             while (rs.next()) {
               add(key.type.fromResultSet(rs, 1)!!)
@@ -822,11 +796,11 @@ fun <R> Database.SelectStatement.getSingleList(connection: DBConnection,
 
 
 private fun ColumnRef<*,*,*>.name(prefixMap: Map<String, String>?) : String {
-  return prefixMap?.let { prefixMap[table._name]?.let { "${it}.`${name}`" } } ?: "`${name}`"
+  return prefixMap?.let { prefixMap[table._name]?.let { "$it.`$name`" } } ?: "`$name`"
 }
 
 private fun TableRef.name(prefixMap: Map<String, String>?) : String {
-  return prefixMap?.let { prefixMap[this._name]?.let { "`${_name}` AS $it" } } ?: "`$_name`"
+  return prefixMap?.let { prefixMap[this._name]?.let { "`$_name` AS $it" } } ?: "`$_name`"
 }
 
 private fun TableRef.shortRef(prefixMap: Map<String, String>?) : String {

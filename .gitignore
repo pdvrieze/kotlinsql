@@ -1,6 +1,4 @@
-/buildSrc/.gradle
 /gen
-/buildSrc/build
 build
 /.idea/libraries
 /.idea/workspace.xml

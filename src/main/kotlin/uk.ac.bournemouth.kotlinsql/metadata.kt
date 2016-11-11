@@ -26,10 +26,13 @@ import java.sql.*
 import java.util.*
 
 /**
- * Created by pdvrieze on 16/05/16.
+ * A class to handle access to connection metadata (available through jdbc.
  */
 
-class ConnectionMetadata(val connection: DBConnection, private val metadata:DatabaseMetaData) {
+class ConnectionMetadata(private val metadata:DatabaseMetaData) {
+
+  @Deprecated("The connection parameter is unused", ReplaceWith("ConnectionMetadata(metadata)"))
+  constructor(connection: DBConnection, metadata:DatabaseMetaData):this(metadata)
 
   val maxColumnsInIndex: Int get() = metadata.maxColumnsInIndex
 
@@ -513,7 +516,7 @@ abstract class AbstractReadonlyResultSet(protected val resultSet: ResultSet) : C
 
   var fetchSize:Int
     get() = resultSet.fetchSize
-    set(rows:Int) { resultSet.fetchSize=rows }
+    set(rows) { resultSet.fetchSize=rows }
 
   val holdability:Int get() = resultSet.holdability
 
@@ -521,7 +524,7 @@ abstract class AbstractReadonlyResultSet(protected val resultSet: ResultSet) : C
 
   val isClosed: Boolean get() = resultSet.isClosed
 
-  fun getCursorName() = resultSet.cursorName
+  fun getCursorName():String = resultSet.cursorName
 
   val isBeforeFirst: Boolean get() = resultSet.isBeforeFirst
 
@@ -737,6 +740,4 @@ class ColumnsResults(rs:ResultSet) : DataResults(rs) {
   val isGeneratedColumn:Boolean? get() = resultSet.optionalBoolean(idxIsGeneratedColumn)
 }
 
-class WrappedResultSetMetaData(private val metadata:ResultSetMetaData) {
-
-}
+class WrappedResultSetMetaData(private val metadata:ResultSetMetaData)
