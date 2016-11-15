@@ -773,6 +773,15 @@ enum class SqlComparisons(val str:String) {
   override fun toString() = str
 }
 
+/**
+ * Get a single element or a null value according to the conversion function passed. This will throw if the result count
+ * is larger than 1.
+ *
+ * @param connection The connection to use
+ * @param resultHandler The function that transforms the query result into a result object.
+ *
+ * @throws SQLException If there are more results than expected, or if there is an underlying SQL error.
+ */
 fun <R> Database.SelectStatement.getSingleListOrNull(connection: DBConnection,
                                                      resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R):R? {
   connection.prepareStatement(toSQL()) {
@@ -789,6 +798,12 @@ fun <R> Database.SelectStatement.getSingleListOrNull(connection: DBConnection,
   }
 }
 
+@Suppress("unused")
+    /**
+ * Get a single result item, but don't accept an empty result. Otherwise this is the same as [getSingleListOrNull].
+ *
+ * @see getSingleListOrNull
+ */
 fun <R> Database.SelectStatement.getSingleList(connection: DBConnection,
                                                resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R):R {
   return getSingleListOrNull(connection, resultHandler) ?: throw NoSuchElementException()
@@ -801,10 +816,6 @@ private fun ColumnRef<*,*,*>.name(prefixMap: Map<String, String>?) : String {
 
 private fun TableRef.name(prefixMap: Map<String, String>?) : String {
   return prefixMap?.let { prefixMap[this._name]?.let { "`$_name` AS $it" } } ?: "`$_name`"
-}
-
-private fun TableRef.shortRef(prefixMap: Map<String, String>?) : String {
-  return prefixMap?.let { prefixMap[this._name] } ?: "`$_name`"
 }
 
 /** A reference to a table. */

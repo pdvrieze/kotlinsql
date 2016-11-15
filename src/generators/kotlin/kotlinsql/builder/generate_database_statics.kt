@@ -26,6 +26,7 @@ package kotlinsql.builder
 
 import java.io.Writer
 
+@Suppress("unused")
 class GenerateDatabaseBaseKt() {
   fun doGenerate(output: Writer, input: Any) {
     val count =  input as Int
@@ -82,7 +83,4 @@ class GenerateDatabaseBaseKt() {
       appendln(")")
     }
   }
-}
-
-fun main(args:Array<String>) {
 }

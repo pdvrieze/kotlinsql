@@ -20,7 +20,6 @@
 
 package uk.ac.bournemouth.kotlinsql
 
-import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import java.io.Closeable
 import java.sql.*
 import java.util.*
@@ -28,11 +27,8 @@ import java.util.*
 /**
  * A class to handle access to connection metadata (available through jdbc.
  */
-
+@Suppress("unused")
 class ConnectionMetadata(private val metadata:DatabaseMetaData) {
-
-  @Deprecated("The connection parameter is unused", ReplaceWith("ConnectionMetadata(metadata)"))
-  constructor(connection: DBConnection, metadata:DatabaseMetaData):this(metadata)
 
   val maxColumnsInIndex: Int get() = metadata.maxColumnsInIndex
 
