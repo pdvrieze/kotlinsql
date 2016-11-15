@@ -222,7 +222,7 @@ internal class NumberColumnImpl<T:Any, S: NumericColumnType<T, S>>(name:String, 
 }
 
 
-internal class CharColumnImpl<T:Any, S: CharColumnType<S>>(name:String, configuration: CharColumnConfiguration<S>):
+internal class CharColumnImpl<S: CharColumnType<S>>(name:String, configuration: CharColumnConfiguration<S>):
       ColumnImpl<String, S, CharColumn<S>> (table = configuration.table,
                                           type = configuration.type,
                                           name = name,
@@ -241,7 +241,7 @@ internal class CharColumnImpl<T:Any, S: CharColumnType<S>>(name:String, configur
 }
 
 
-internal class LengthCharColumnImpl<T:Any, S: LengthCharColumnType<S>>(name:String, configuration: LengthCharColumnConfiguration<S>):
+internal class LengthCharColumnImpl<S: LengthCharColumnType<S>>(name:String, configuration: LengthCharColumnConfiguration<S>):
       ColumnImpl<String, S, LengthCharColumn<S>> (table = configuration.table,
                                                 type = configuration.type,
                                                 name = name,

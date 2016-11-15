@@ -28,6 +28,7 @@ internal fun indent(n:Int, baseLen:Int) = " ".repeat(when (n) {
   else -> baseLen+2
 })
 
+@Suppress("unused")
 class GenerateInsertsKt {
   fun doGenerate(output: Writer, input: Any) {
     val count = input as Int

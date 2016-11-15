@@ -40,6 +40,7 @@ class testTableDefs {
       }
 
     }
+    assertEquals(test.bit.name, "bit")
   }
 
   @Test

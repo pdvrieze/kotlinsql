@@ -94,11 +94,11 @@ sealed abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>
     inline fun COLLATE(collation:String) { this.collation = collation }
 
     class CharColumnConfiguration<S: CharColumnType<S>>(table: TableRef, name: String, type: S): AbstractCharColumnConfiguration<String, S, CharColumn<S>, CharColumnConfiguration<S>>(table, name, type) {
-      override fun newColumn(): CharColumn<S> = CharColumnImpl<String,S>(name, this)
+      override fun newColumn(): CharColumn<S> = CharColumnImpl(name, this)
     }
 
     class LengthCharColumnConfiguration<S: LengthCharColumnType<S>>(table: TableRef, name: String, type: S, override val length: Int): AbstractCharColumnConfiguration<String, S, LengthCharColumn<S>,LengthCharColumnConfiguration<S>>(table, name, type), BaseLengthColumnConfiguration<String, S, LengthCharColumn<S>> {
-      override fun newColumn(): LengthCharColumn<S> = LengthCharColumnImpl<String, S>(name, this)
+      override fun newColumn(): LengthCharColumn<S> = LengthCharColumnImpl(name, this)
     }
   }
 

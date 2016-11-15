@@ -25,6 +25,9 @@ import java.sql.*
 import java.util.*
 
 class StatementHelper constructor(val statement: PreparedStatement, val queryString:String) : PreparedStatement by statement {
+  /**
+   * Get raw access to the underlying prepared statement. This should normally not be needed, but is available when it is.
+   */
   inline fun <R> raw(block: (PreparedStatement) -> R): R = block(statement)
 
   @Deprecated("Use withResultSet")
@@ -42,18 +45,22 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
     throw UnsupportedOperationException()
   }
 
+  @get:Deprecated("Use the function access. This is not a value, but recreated every time.", ReplaceWith("warningsIterator()"))
   val warningsIt: Iterator<SQLWarning>
-    get() = object : AbstractIterator<SQLWarning>() {
-      override fun computeNext() {
-        val w = statement.warnings
-        if (w != null) {
-          setNext(w)
-        } else {
-          done()
-        }
+    get() = warningsIterator()
+
+  fun warningsIterator(): Iterator<SQLWarning> = object : AbstractIterator<SQLWarning>() {
+    override fun computeNext() {
+      val w = statement.warnings
+      if (w != null) {
+        setNext(w)
+      } else {
+        done()
       }
     }
+  }
 
+  @Suppress("unused")
   @Deprecated("Use the columntype instead. This doesn't do nulls", ReplaceWith("ColumnType::setParam(this, index, value)"), level = DeprecationLevel.ERROR)
   fun <T> setParam_(index: Int, value: T) = when (value) {
     null -> setNull(index, Types.NULL)
@@ -137,11 +144,17 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
     throw UnsupportedOperationException("Setting bit arrays is not yet supported")
   }
 
+  /** Start setting parameters. This returns a helper for adding the next ones. */
   inline fun params(value:Int?):ParamHelper_ { setParam(1, value); return ParamHelper_(this) }
+  /** Start setting parameters. This returns a helper for adding the next ones. */
   inline fun params(value:Long?):ParamHelper_ { setParam(1, value); return ParamHelper_(this) }
+  /** Start setting parameters. This returns a helper for adding the next ones. */
   inline fun params(value:String?):ParamHelper_ { setParam(1, value); return ParamHelper_(this) }
+  /** Start setting parameters. This returns a helper for adding the next ones. */
   inline fun params(value:Boolean?):ParamHelper_ { setParam(1, value); return ParamHelper_(this) }
+  /** Start setting parameters. This returns a helper for adding the next ones. */
   inline fun params(value:Byte?):ParamHelper_ { setParam(1, value); return ParamHelper_(this) }
+  /** Start setting parameters. This returns a helper for adding the next ones. */
   inline fun params(value:Short?):ParamHelper_ { setParam(1, value); return ParamHelper_(this) }
 
   inline fun <R> withResultSet(block: (ResultSet) -> R) = statement.resultSet.use(block)
@@ -150,12 +163,18 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
 
   inline fun <R> execute(block: (ResultSet) -> R) = executeQuery().use(block)
 
+  /**
+   * Execute the block for every result in the ResultSet. This is [execute] and [Sequence.forEach] combined.
+   */
   inline fun <R> executeEach(block: (ResultSet) -> R): List<R> = execute { resultSet ->
     ArrayList<R>().apply {
       add(block(resultSet))
     }
   }
 
+  /**
+   * Get a a string as the single return column.
+   */
   fun stringResult(): String? {
     execute { rs ->
       if(rs.next()) {

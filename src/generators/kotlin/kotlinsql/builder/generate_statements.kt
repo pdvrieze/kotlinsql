@@ -26,6 +26,7 @@ package kotlinsql.builder
 
 import java.io.Writer
 
+@Suppress("unused")
 class GenerateStatementsKt {
   fun doGenerate(output: Writer, input: Any) {
     val count = input as Int
