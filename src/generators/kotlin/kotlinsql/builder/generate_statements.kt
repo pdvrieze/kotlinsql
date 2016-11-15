@@ -62,7 +62,7 @@ class GenerateStatementsKt {
         if (n>1) {
           appendln()
           append("  data class Result<")
-          (1..n).joinTo(this) { "T$it" }
+          (1..n).joinTo(this) { "out T$it" }
           append(">(")
           (1..n).joinTo(this) { "val col$it:T$it?" }
           appendln(")")
