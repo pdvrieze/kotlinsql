@@ -184,7 +184,7 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
     }
   }
 
-  inline fun executeHasRows(): Boolean = execute() && withResultSet { it.next() }
+  fun executeHasRows(): Boolean = execute() && withResultSet { it.next() }
 
   override fun execute(): Boolean {
     try {

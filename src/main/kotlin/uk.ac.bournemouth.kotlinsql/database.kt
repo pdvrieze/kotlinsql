@@ -179,8 +179,8 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     }
 
     override fun setParameters(statementHelper: StatementHelper, first: Int): Int {
-      val i = left.setParameters(statementHelper)
-      return right.setParameters(statementHelper,i)
+      val i = left.setParameters(statementHelper, first)
+      return right.setParameters(statementHelper, i)
     }
   }
 
@@ -334,6 +334,13 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
       }
     }
 
+    override fun hasRows(connection: DBConnection): Boolean {
+      return connection.prepareStatement(toSQL()) {
+        setParams(this)
+        executeHasRows()
+      }
+    }
+
     override fun getSingle(connection: DBConnection): T1 {
       return getSingleOrNull(connection) ?: throw NoSuchElementException()
     }
@@ -479,6 +486,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     fun getSafeList(connection: DBConnection): List<T1> = getList(connection).filterNotNull()
 
     fun execute(connection:DBConnection, block: (T1?)->Unit):Boolean
+    fun  hasRows(connection: DBConnection): Boolean
 
   }
 
@@ -529,6 +537,13 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
             null
           }
         }
+      }
+    }
+
+    override fun hasRows(connection: DBConnection): Boolean {
+      return connection.prepareStatement(toSQL()) {
+        setParams(this)
+        executeHasRows()
       }
     }
 
@@ -594,7 +609,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     }
   }
 
-  class _Set<T:Any, S: IColumnType<T,S,C>, C:Column<T,S,C>>(val column:ColumnRef<T,S,C>, val value:T?) {
+  data class _Set<T:Any, S: IColumnType<T,S,C>, C:Column<T,S,C>>(val column:ColumnRef<T,S,C>, val value:T?) {
     fun setParam(statementHelper: StatementHelper, pos:Int) {
       column.type.setParam(statementHelper, pos, value)
     }
