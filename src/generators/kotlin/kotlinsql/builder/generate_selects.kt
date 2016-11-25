@@ -42,8 +42,11 @@ class GenerateSelectClasses {
       appendln("import uk.ac.bournemouth.kotlinsql.IColumnType")
       appendln("import uk.ac.bournemouth.util.kotlin.sql.DBConnection")
       appendln("import uk.ac.bournemouth.kotlinsql.executeHelper")
+      appendln("import javax.annotation.Generated")
+
       for (n in 2..count) {
         appendln()
+        appendln("@Generated(\"${GenerateSelectClasses::class.java.name}\")")
         append("interface Select$n<")
         (1..n).joinToString(",\n               ") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }.apply { append(this) }
         appendln(">:SelectStatement {")
