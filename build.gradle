@@ -21,6 +21,7 @@
 
 ext {
     if (! rootProject.ext.has('kotlin_version') ) { kotlin_version = '1.0.5' }
+    if (! rootProject.hasProperty('myJavaVersion')) { myJavaVersion = org.gradle.api.JavaVersion.VERSION_1_7 }
 }
 
 version 0.5
@@ -99,3 +100,6 @@ idea{
         downloadSources = true
     }
 }
+
+sourceCompatibility = myJavaVersion
+targetCompatibility = myJavaVersion
