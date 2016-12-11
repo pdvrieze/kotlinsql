@@ -29,7 +29,7 @@ version 0.5
 buildscript {
 
     ext {
-        if (! rootProject.ext.has('kotlin_version') ) { kotlin_version = '1.0.5' }
+        if (! rootProject.ext.has('kotlin_version') ) { kotlin_version = '1.0.5-2' }
         if (! rootProject.ext.has('codegen_version') ) { codegen_version = '0.5.10' }
     }
     dependencies {
@@ -38,6 +38,9 @@ buildscript {
     }
 
     repositories {
+        maven {
+            url 'https://dl.bintray.com/kotlin/kotlin-eap-1.1'
+        }
         mavenLocal()
         jcenter()
     }
