@@ -180,7 +180,7 @@ abstract class MutableTable private constructor(name: String?,
   protected fun LONGBLOB(name:String?=null) = NormalColumnConfiguration(this, name, LONGBLOB_T)
   protected fun TINYTEXT(name:String?=null) = CharColumnConfiguration(this, name, TINYTEXT_T)
   protected fun TEXT(name:String?=null) = CharColumnConfiguration(this, name, TEXT_T)
-  protected fun MEDIUMTEXT(name:String) = CharColumnConfiguration(this, name, MEDIUMTEXT_T)
+  protected fun MEDIUMTEXT(name:String?=null) = CharColumnConfiguration(this, name, MEDIUMTEXT_T)
   protected fun LONGTEXT(name:String?=null) = CharColumnConfiguration(this, name, LONGTEXT_T)
 
   /* When there is no body, the configuration subtype does not matter */
