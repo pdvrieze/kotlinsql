@@ -184,20 +184,59 @@ abstract class MutableTable private constructor(name: String?,
   protected fun LONGTEXT(name:String?=null) = CharColumnConfiguration(this, name, LONGTEXT_T)
 
   /* When there is no body, the configuration subtype does not matter */
+  /**
+   * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
+   * @param other The column whose type to copy
+   */
   protected fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(other: C): Table.FieldAccessor<T,S,C> {
     return add(other.copyConfiguration(owner = this).newColumn())
   }
 
-  protected fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(newName:String, other: C): Table.FieldAccessor<T,S,C> {
+  /**
+   * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
+   * @param other The column whose type to copy
+   */
+  protected fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(newName:String?=null, other: C): Table.FieldAccessor<T,S,C> {
     return add(other.copyConfiguration(newName = newName, owner = this).newColumn())
   }
 
   /* Otherwise, the various types need to be distinguished. The different subtypes of column are needed for overload resolution */
+
+  /**
+   * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
+   * @param other The column whose type to copy
+   * @param block The block to further configure the column
+   */
   protected fun <S:DecimalColumnType<S>>reference(other: DecimalColumn<S>, block: DecimalColumnConfiguration<S>.() -> Unit) = other.copyConfiguration(null, this).apply(block)
+  /**
+   * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
+   * @param other The column whose type to copy
+   * @param block The block to further configure the column
+   */
   protected fun <S:LengthCharColumnType<S>>reference(other: LengthCharColumn<S>, block: LengthCharColumnConfiguration<S>.() -> Unit) = other.copyConfiguration(null, this).apply(block)
+  /**
+   * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
+   * @param other The column whose type to copy
+   * @param block The block to further configure the column
+   */
   protected fun <S:CharColumnType<S>>reference(other: CharColumn<S>, block: CharColumnConfiguration<S>.() -> Unit) = other.copyConfiguration(null, this).apply(block)
+  /**
+   * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
+   * @param other The column whose type to copy
+   * @param block The block to further configure the column
+   */
   protected fun <T:Any, S:SimpleColumnType<T,S>>reference(other: SimpleColumn<T,S>, block: NormalColumnConfiguration<T,S>.() -> Unit) = other.copyConfiguration(null, this).apply(block)
+  /**
+   * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
+   * @param other The column whose type to copy
+   * @param block The block to further configure the column
+   */
   protected fun <T:Any, S:LengthColumnType<T,S>>reference(other: LengthColumn<T,S>, block: LengthColumnConfiguration<T,S>.() -> Unit) = other.copyConfiguration(null, this).apply(block)
+  /**
+   * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
+   * @param other The column whose type to copy
+   * @param block The block to further configure the column
+   */
   protected fun <T:Any, S:NumericColumnType<T,S>>reference(other: NumericColumn<T,S>, block: NumberColumnConfiguration<T,S>.() -> Unit) = other.copyConfiguration(null, this).apply(block)
 
 
