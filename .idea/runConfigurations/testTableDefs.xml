@@ -1,0 +1,35 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="testTableDefs" type="TestNG" factoryName="TestNG" nameIsGenerated="true">
+    <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
+      <pattern>
+        <option name="PATTERN" value="uk.ac.bournemouth.kotlinsql.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <module name="kotlinsql_test" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <option name="SUITE_NAME" value="" />
+    <option name="PACKAGE_NAME" value="uk.ac.bournemouth.kotlinsql" />
+    <option name="MAIN_CLASS_NAME" value="uk.ac.bournemouth.kotlinsql.testTableDefs" />
+    <option name="METHOD_NAME" />
+    <option name="GROUP_NAME" value="" />
+    <option name="TEST_OBJECT" value="CLASS" />
+    <option name="VM_PARAMETERS" value="-ea" />
+    <option name="PARAMETERS" value="" />
+    <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+    <option name="OUTPUT_DIRECTORY" value="" />
+    <option name="ANNOTATION_TYPE" />
+    <option name="ENV_VARIABLES" />
+    <option name="PASS_PARENT_ENVS" value="true" />
+    <option name="TEST_SEARCH_SCOPE">
+      <value defaultName="singleModule" />
+    </option>
+    <option name="USE_DEFAULT_REPORTERS" value="false" />
+    <option name="PROPERTIES_FILE" value="" />
+    <envs />
+    <properties />
+    <listeners />
+    <method />
+  </configuration>
+</component>

@@ -345,7 +345,7 @@ abstract class AbstractTable: Table {
     return column(property.name)!!
   }
 
-  open protected class TypeFieldAccessor<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(val type: ColumnType<T, S, C>): Table.FieldAccessor<T, S, C> {
+  open protected class TypeFieldAccessor<T:Any, S: IColumnType<T, S, C>, C:Column<T,S,C>>(val type: IColumnType<T, S, C>): Table.FieldAccessor<T, S, C> {
     private var value: C? = null
     open fun name(property: kotlin.reflect.KProperty<*>) = property.name
     override operator fun getValue(thisRef: Table, property: kotlin.reflect.KProperty<*>): C {
@@ -358,10 +358,10 @@ abstract class AbstractTable: Table {
   }
 
   /** Property delegator to access database columns by name and type. */
-  protected fun <T:Any, S: ColumnType<T, S, C>, C: Column<T,S,C>> name(name:String, type: ColumnType<T, S,C>) =
+  protected fun <T:Any, S: IColumnType<T, S, C>, C: Column<T,S,C>> name(name:String, type: IColumnType<T, S,C>) =
       NamedFieldAccessor(name, type)
 
-  protected class NamedFieldAccessor<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(val name:String, type: ColumnType<T, S, C>): TypeFieldAccessor<T, S, C>(type) {
+  protected class NamedFieldAccessor<T:Any, S: IColumnType<T, S, C>, C:Column<T,S,C>>(val name:String, type: IColumnType<T, S, C>): TypeFieldAccessor<T, S, C>(type) {
     override fun name(property: kotlin.reflect.KProperty<*>): String = this.name
   }
 

@@ -20,17 +20,17 @@
 
 
 ext {
-    if (! rootProject.ext.has('kotlin_version') ) { kotlin_version = '1.0.5' }
+//    if (! rootProject.hasProperty('kotlin_version') ) { kotlin_version = '1.1-M04' }
     if (! rootProject.hasProperty('myJavaVersion')) { myJavaVersion = org.gradle.api.JavaVersion.VERSION_1_7 }
 }
 
-version 0.5
+version 0.6
 
 buildscript {
 
     ext {
-        if (! rootProject.ext.has('kotlin_version') ) { kotlin_version = '1.0.5-2' }
-        if (! rootProject.ext.has('codegen_version') ) { codegen_version = '0.5.10' }
+        if (! rootProject.hasProperty('kotlin_version') ) { kotlin_version = '1.1-M04' }
+        if (! rootProject.hasProperty('codegen_version') ) { codegen_version = '0.5.10' }
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -39,7 +39,7 @@ buildscript {
 
     repositories {
         maven {
-            url 'https://dl.bintray.com/kotlin/kotlin-eap-1.1'
+            url='https://dl.bintray.com/kotlin/kotlin-eap-1.1'
         }
         mavenLocal()
         jcenter()
@@ -54,6 +54,9 @@ apply plugin: 'net.devrieze.gradlecodegen'
 description = 'A utility library for working with databases in kotlin'
 
 repositories {
+    maven {
+        url='https://dl.bintray.com/kotlin/kotlin-eap-1.1'
+    }
     jcenter()
 }
 

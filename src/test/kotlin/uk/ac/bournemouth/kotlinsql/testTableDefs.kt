@@ -44,6 +44,20 @@ class testTableDefs {
   }
 
   @Test
+  fun testAnonymousDefine() {
+    val test = object: MutableTable("Testq", null) {
+
+      val bit by BIT()
+
+      override fun init() {
+        throw UnsupportedOperationException()
+      }
+
+    }
+    assertEquals(test.bit.name, "bit")
+  }
+
+  @Test
   fun testMakeSQL() {
     val table = object: MutableTable("TestMakeSQL", null) {
       val index by INT("index") { AUTO_INCREMENT }
@@ -72,7 +86,7 @@ class testTableDefs {
 
     val emails = object: MutableTable("emails", null) {
       val index by reference(persons.index) { AUTO_INCREMENT }
-      val email by VARCHAR("email", 50)
+      val email by VARCHAR(50)
 
       override fun init() {
         PRIMARY_KEY(index, email)

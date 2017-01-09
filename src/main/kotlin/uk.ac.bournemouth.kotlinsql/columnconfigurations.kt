@@ -22,12 +22,18 @@ package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.kotlinsql.ColumnType.*
 import java.math.BigDecimal
+import kotlin.reflect.KProperty
 
 /**
  * Class to abstract the column configuration of a resultset
  */
 @Suppress("unused")
-sealed abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Column<T, S, C>, out CONF_T>(val table: TableRef, val name: String, val type: S) {
+sealed abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Column<T, S, C>, out CONF_T>(val table: TableRef, var name: String?=null, val type: S) {
+
+  inline operator fun provideDelegate(thisRef: MutableTable, property: KProperty<*>): Table.FieldAccessor<T,S,C> {
+    if(name.isNullOrBlank()) { name = property.name }
+    return thisRef.add(this.newColumn())
+  }
 
   enum class ColumnFormat { FIXED, MEMORY, DEFAULT }
   enum class StorageFormat { DISK, MEMORY, DEFAULT }
@@ -56,11 +62,11 @@ sealed abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>
 
   abstract fun newColumn():C
 
-  class NormalColumnConfiguration<T:Any, S: SimpleColumnType<T, S>>(table: TableRef, name: String, type: S): AbstractColumnConfiguration<T, S, SimpleColumn<T, S>, NormalColumnConfiguration<T,S>>(table, name, type) {
-    override fun newColumn(): SimpleColumn<T, S> = NormalColumnImpl(name, this)
+  class NormalColumnConfiguration<T:Any, S: SimpleColumnType<T, S>>(table: TableRef, name: String?=null, type: S): AbstractColumnConfiguration<T, S, SimpleColumn<T, S>, NormalColumnConfiguration<T,S>>(table, name, type) {
+    override fun newColumn(): SimpleColumn<T, S> = NormalColumnImpl(effectiveName, this)
   }
 
-  sealed abstract class AbstractNumberColumnConfiguration<T:Any, S: INumericColumnType<T, S,C>, C: INumericColumn<T, S, C>, out CONF_T>(table: TableRef, name: String, type: S): AbstractColumnConfiguration<T, S, C, CONF_T>(table, name, type) {
+  sealed abstract class AbstractNumberColumnConfiguration<T:Any, S: INumericColumnType<T, S,C>, C: INumericColumn<T, S, C>, out CONF_T>(table: TableRef, name: String?=null, type: S): AbstractColumnConfiguration<T, S, C, CONF_T>(table, name, type) {
     var unsigned: Boolean = false
     var zerofill: Boolean = false
     var displayLength: Int = -1
@@ -69,21 +75,21 @@ sealed abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>
 
     val ZEROFILL:Unit get() { unsigned = true }
 
-    class NumberColumnConfiguration<T:Any, S: NumericColumnType<T, S>>(table: TableRef, name: String, type: S): AbstractNumberColumnConfiguration<T, S, NumericColumn<T, S>, NumberColumnConfiguration<T,S>>(table, name, type) {
-      override fun newColumn(): NumericColumn<T, S> = NumberColumnImpl(name, this)
+    class NumberColumnConfiguration<T:Any, S: NumericColumnType<T, S>>(table: TableRef, name: String?=null, type: S): AbstractNumberColumnConfiguration<T, S, NumericColumn<T, S>, NumberColumnConfiguration<T,S>>(table, name, type) {
+      override fun newColumn(): NumericColumn<T, S> = NumberColumnImpl(effectiveName, this)
 
     }
 
-    class DecimalColumnConfiguration<S: DecimalColumnType<S>>(table: TableRef, name: String, type: S, val precision: Int, val scale: Int): AbstractNumberColumnConfiguration<BigDecimal, S, DecimalColumn<S>, DecimalColumnConfiguration<S>>(table, name, type) {
+    class DecimalColumnConfiguration<S: DecimalColumnType<S>>(table: TableRef, name: String?=null, type: S, val precision: Int, val scale: Int): AbstractNumberColumnConfiguration<BigDecimal, S, DecimalColumn<S>, DecimalColumnConfiguration<S>>(table, name, type) {
       val defaultPrecision=10
       val defaultScale=0
 
-      override fun newColumn(): DecimalColumn<S> = DecimalColumnImpl(name, this)
+      override fun newColumn(): DecimalColumn<S> = DecimalColumnImpl(effectiveName, this)
     }
 
   }
 
-  sealed abstract class AbstractCharColumnConfiguration<T:String, S: ICharColumnType<S, C>, C: ICharColumn<S, C>, out CONF_T>(table: TableRef, name: String, type: S): AbstractColumnConfiguration<String, S, C, CONF_T>(table, name, type) {
+  sealed abstract class AbstractCharColumnConfiguration<T:String, S: ICharColumnType<S, C>, C: ICharColumn<S, C>, out CONF_T>(table: TableRef, name: String?=null, type: S): AbstractColumnConfiguration<String, S, C, CONF_T>(table, name, type) {
     var charset: String? = null
     var collation: String? = null
     var binary:Boolean = false
@@ -93,12 +99,12 @@ sealed abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>
     inline fun CHARACTER_SET(charset:String) { this.charset = charset }
     inline fun COLLATE(collation:String) { this.collation = collation }
 
-    class CharColumnConfiguration<S: CharColumnType<S>>(table: TableRef, name: String, type: S): AbstractCharColumnConfiguration<String, S, CharColumn<S>, CharColumnConfiguration<S>>(table, name, type) {
-      override fun newColumn(): CharColumn<S> = CharColumnImpl(name, this)
+    class CharColumnConfiguration<S: CharColumnType<S>>(table: TableRef, name: String?=null, type: S): AbstractCharColumnConfiguration<String, S, CharColumn<S>, CharColumnConfiguration<S>>(table, name, type) {
+      override fun newColumn(): CharColumn<S> = CharColumnImpl(effectiveName, this)
     }
 
-    class LengthCharColumnConfiguration<S: LengthCharColumnType<S>>(table: TableRef, name: String, type: S, override val length: Int): AbstractCharColumnConfiguration<String, S, LengthCharColumn<S>,LengthCharColumnConfiguration<S>>(table, name, type), BaseLengthColumnConfiguration<String, S, LengthCharColumn<S>> {
-      override fun newColumn(): LengthCharColumn<S> = LengthCharColumnImpl(name, this)
+    class LengthCharColumnConfiguration<S: LengthCharColumnType<S>>(table: TableRef, name: String?=null, type: S, override val length: Int): AbstractCharColumnConfiguration<String, S, LengthCharColumn<S>,LengthCharColumnConfiguration<S>>(table, name, type), BaseLengthColumnConfiguration<String, S, LengthCharColumn<S>> {
+      override fun newColumn(): LengthCharColumn<S> = LengthCharColumnImpl(effectiveName, this)
     }
   }
 
@@ -106,8 +112,10 @@ sealed abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>
     val length:Int
   }
 
-  class LengthColumnConfiguration<T:Any, S: LengthColumnType<T, S>>(table: TableRef, name: String, type: S, override val length: Int): AbstractColumnConfiguration<T, S, LengthColumn<T, S>, LengthColumnConfiguration<T,S>>(table, name, type), BaseLengthColumnConfiguration<T, S, LengthColumn<T, S>> {
-    override fun newColumn(): LengthColumn<T, S> = LengthColumnImpl(name, this)
+  class LengthColumnConfiguration<T:Any, S: LengthColumnType<T, S>>(table: TableRef, name: String?=null, type: S, override val length: Int): AbstractColumnConfiguration<T, S, LengthColumn<T, S>, LengthColumnConfiguration<T,S>>(table, name, type), BaseLengthColumnConfiguration<T, S, LengthColumn<T, S>> {
+    override fun newColumn(): LengthColumn<T, S> = LengthColumnImpl(effectiveName, this)
   }
 }
 
+
+private inline val AbstractColumnConfiguration<*,*,*,*>.effectiveName: String get() = name?:  throw NullPointerException("database columns must have names")

@@ -22,6 +22,8 @@ package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import java.util.*
+import kotlin.properties.ReadOnlyProperty
+import kotlin.reflect.KProperty
 
 /**
  * A interface for tables. The properties have underscored names to reduce conflicts with members.
@@ -46,8 +48,8 @@ interface Table:TableRef {
   fun ref(): TableRef
   fun resolve(ref: ColumnRef<*,*,*>): Column<*,*,*>
 
-  interface FieldAccessor<T:Any, S: ColumnType<T,S,C>, C:Column<T,S,C>> {
-    operator fun getValue(thisRef: Table, property: kotlin.reflect.KProperty<*>): C
+  interface FieldAccessor<T:Any, S: IColumnType<T,S,C>, C:Column<T,S,C>>: ReadOnlyProperty<Table, C> {
+    override operator fun getValue(thisRef: Table, property: kotlin.reflect.KProperty<*>): C
   }
 
   fun appendDDL(appendable: Appendable)

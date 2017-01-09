@@ -90,7 +90,7 @@ interface IColumnType<T:Any, S: IColumnType<T, S, C>, C:Column<T,S,C>> {
   val typeName:String
   val type: KClass<T>
 
-  fun cast(column: Column<*,*,*>): Column<T, S, C>
+  fun cast(column: Column<*,*,*>): C
   fun cast(value: Any): T
   /**
    * Cast the given value to the type of the column. Null values are fine, incompatible values will
