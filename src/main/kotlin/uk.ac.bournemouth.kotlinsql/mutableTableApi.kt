@@ -153,7 +153,7 @@ abstract class MutableTable private constructor(name: String?,
   protected fun SMALLINT(name:String?=null) = NumberColumnConfiguration(this, name, SMALLINT_T)
   protected fun MEDIUMINT(name:String?=null) = NumberColumnConfiguration(this, name, MEDIUMINT_T)
   protected fun INT(name:String?=null) = NumberColumnConfiguration(this, name, INT_T)
-  protected fun BIGINT(name:String) = NumberColumnConfiguration(this, name, BIGINT_T)
+  protected fun BIGINT(name:String?=null) = NumberColumnConfiguration(this, name, BIGINT_T)
   protected fun FLOAT(name:String?=null) = NumberColumnConfiguration(this, name, FLOAT_T)
   protected fun DOUBLE(name:String?=null) = NumberColumnConfiguration(this, name, DOUBLE_T)
   protected inline fun DECIMAL(precision:Int=-1, scale:Int=-1) = DECIMAL(name = null, precision = precision, scale = scale)
