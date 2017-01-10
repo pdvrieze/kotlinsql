@@ -351,6 +351,9 @@ interface Column<T:Any, S: IColumnType<T, S,C>, C:Column<T,S,C>>: ColumnRef<T,S,
 
   fun copyConfiguration(newName:String? = null, owner: Table): AbstractColumnConfiguration<T,S,C, Any>
 
+  /** Delegating function here as that means that */
+  fun fromResultSet(rs: ResultSet, pos: Int): T? = type.fromResultSet(rs, pos)
+
   /**
    * Determine whether has the given properties
    */
