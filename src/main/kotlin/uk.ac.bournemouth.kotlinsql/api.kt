@@ -176,7 +176,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     }
 
     override fun newConfiguration(owner: Table, refColumn: NumericColumn<T, S>)=
-          NumberColumnConfiguration(owner, refColumn.name, asS())
+          NumberColumnConfiguration(asS(), refColumn.name)
 
   }
 
@@ -191,7 +191,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     }
 
     override fun newConfiguration(owner: Table, refColumn: DecimalColumn<S>): AbstractColumnConfiguration<BigDecimal, S, DecimalColumn<S>, *> {
-      return DecimalColumnConfiguration(owner, refColumn.name, asS(), refColumn.precision, refColumn.scale)
+      return DecimalColumnConfiguration(asS(), refColumn.name, refColumn.precision, refColumn.scale)
     }
   }
 
@@ -254,7 +254,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     }
 
     override fun newConfiguration(owner: Table, refColumn: SimpleColumn<T, S>) =
-          NormalColumnConfiguration(owner, refColumn.name, asS())
+          NormalColumnConfiguration(asS(), refColumn.name)
 
   }
 
@@ -270,7 +270,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
 
     @Suppress("UNCHECKED_CAST")
     override fun newConfiguration(owner: Table, refColumn: CharColumn<S>) =
-          CharColumnConfiguration(owner, refColumn.name, this as S)
+          CharColumnConfiguration(this as S, refColumn.name)
 
     override fun setParam(statementHelper: StatementHelper, pos: Int, value: String?) {
       statementHelper.setString(pos, value)
@@ -306,7 +306,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
 
     @Suppress("UNCHECKED_CAST")
     override fun newConfiguration(owner: Table, refColumn: LengthColumn<T, S>) =
-          LengthColumnConfiguration(owner, refColumn.name, this as S, refColumn.length)
+          LengthColumnConfiguration(refColumn.name, this as S, refColumn.length)
   }
 
   sealed class LengthCharColumnType<S:LengthCharColumnType<S>>(typeName: String, type: KClass<String>):ColumnType<String,S, LengthCharColumn<S>>(typeName, type), ILengthColumnType<String,S,LengthCharColumn<S>>, ICharColumnType<S,LengthCharColumn<S>> {
@@ -315,7 +315,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     object VARCHAR_T   : LengthCharColumnType<VARCHAR_T>("VARCHAR", String::class), BoundedType { override val maxLen:Int get() = 0xffff }
 
     override fun newConfiguration(owner: Table, refColumn: LengthCharColumn<S>) =
-          LengthCharColumnConfiguration(owner, refColumn.name, asS(), refColumn.length)
+          LengthCharColumnConfiguration(asS(), refColumn.name, refColumn.length)
 
     override fun fromResultSet(rs: ResultSet, pos: Int): String? = rs.getString(pos)
 
@@ -439,64 +439,77 @@ class TableConfiguration(override val _name:String, val extra:String?=null):Tabl
 
   // @formatter:off
   /* Versions with configuration closure. */
-  fun BIT(name:String, block: NormalColumnConfiguration<Boolean, BIT_T>.() -> Unit) = NormalColumnConfiguration( this, name, BIT_T).add(block)
-  fun BIT(name:String, length:Int, block: BaseLengthColumnConfiguration<BooleanArray, BITFIELD_T, LengthColumn<BooleanArray,BITFIELD_T>>.() -> Unit) = LengthColumnConfiguration( this, name, BITFIELD_T, length).add( block)
-  fun TINYINT(name: String, block: NumberColumnConfiguration<Byte, TINYINT_T>.() -> Unit) = NumberColumnConfiguration( this, name, TINYINT_T).add( block)
-  fun SMALLINT(name: String, block: NumberColumnConfiguration<Short, SMALLINT_T>.() -> Unit) = NumberColumnConfiguration( this, name, SMALLINT_T).add( block)
-  fun MEDIUMINT(name: String, block: NumberColumnConfiguration<Int, MEDIUMINT_T>.() -> Unit) = NumberColumnConfiguration( this, name, MEDIUMINT_T).add( block)
-  fun INT(name: String, block: NumberColumnConfiguration<Int, INT_T>.() -> Unit) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration( this, name, INT_T).add( block)
-  fun BIGINT(name: String, block: NumberColumnConfiguration<Long, BIGINT_T>.() -> Unit) = NumberColumnConfiguration( this, name, BIGINT_T).add( block)
-  fun FLOAT(name: String, block: NumberColumnConfiguration<Float, FLOAT_T>.() -> Unit) = NumberColumnConfiguration( this, name, FLOAT_T).add( block)
-  fun DOUBLE(name: String, block: NumberColumnConfiguration<Double, DOUBLE_T>.() -> Unit) = NumberColumnConfiguration( this, name, DOUBLE_T).add( block)
-  fun DECIMAL(name: String, precision: Int = -1, scale: Int = -1, block: DecimalColumnConfiguration<DECIMAL_T>.() -> Unit) = DecimalColumnConfiguration( this, name, DECIMAL_T, precision, scale).add( block)
-  fun NUMERIC(name: String, precision: Int = -1, scale: Int = -1, block: DecimalColumnConfiguration<NUMERIC_T>.() -> Unit) = DecimalColumnConfiguration( this, name, NUMERIC_T, precision, scale).add( block)
-  fun DATE(name: String, block: NormalColumnConfiguration<Date, DATE_T>.() -> Unit) = NormalColumnConfiguration( this, name, DATE_T).add( block)
-  fun TIME(name: String, block: NormalColumnConfiguration<Time, TIME_T>.() -> Unit) = NormalColumnConfiguration( this, name, TIME_T).add( block)
-  fun TIMESTAMP(name: String, block: NormalColumnConfiguration<Timestamp, TIMESTAMP_T>.() -> Unit) = NormalColumnConfiguration( this, name, TIMESTAMP_T).add( block)
-  fun DATETIME(name: String, block: NormalColumnConfiguration<Timestamp, DATETIME_T>.() -> Unit) = NormalColumnConfiguration( this, name, DATETIME_T).add( block)
-  fun YEAR(name: String, block: NormalColumnConfiguration<Date, YEAR_T>.() -> Unit) = NormalColumnConfiguration( this, name, YEAR_T).add( block)
-  fun CHAR(name: String, length: Int = -1, block: LengthCharColumnConfiguration<CHAR_T>.() -> Unit) = LengthCharColumnConfiguration( this, name, CHAR_T, length).add( block)
-  fun VARCHAR(name: String, length: Int, block: LengthCharColumnConfiguration<VARCHAR_T>.() -> Unit) = LengthCharColumnConfiguration( this, name, VARCHAR_T, length).add( block)
-  fun BINARY(name: String, length: Int, block: BaseLengthColumnConfiguration<ByteArray, BINARY_T, LengthColumn<ByteArray, BINARY_T>>.() -> Unit) = LengthColumnConfiguration( this, name, BINARY_T, length).add( block)
-  fun VARBINARY(name: String, length: Int, block: BaseLengthColumnConfiguration<ByteArray, VARBINARY_T, LengthColumn<ByteArray, VARBINARY_T>>.() -> Unit) = LengthColumnConfiguration( this, name, VARBINARY_T, length).add( block)
-  fun TINYBLOB(name: String, block: NormalColumnConfiguration<ByteArray, TINYBLOB_T>.() -> Unit) = NormalColumnConfiguration( this, name, TINYBLOB_T).add( block)
-  fun BLOB(name: String, block: NormalColumnConfiguration<ByteArray, BLOB_T>.() -> Unit) = NormalColumnConfiguration( this, name, BLOB_T).add( block)
-  fun MEDIUMBLOB(name: String, block: NormalColumnConfiguration<ByteArray, MEDIUMBLOB_T>.() -> Unit) = NormalColumnConfiguration( this, name, MEDIUMBLOB_T).add( block)
-  fun LONGBLOB(name: String, block: NormalColumnConfiguration<ByteArray, LONGBLOB_T>.() -> Unit) = NormalColumnConfiguration( this, name, LONGBLOB_T).add( block)
-  fun TINYTEXT(name: String, block: CharColumnConfiguration<TINYTEXT_T>.() -> Unit) = CharColumnConfiguration( this, name, TINYTEXT_T).add( block)
-  fun TEXT(name: String, block: CharColumnConfiguration<TEXT_T>.() -> Unit) = CharColumnConfiguration( this, name, TEXT_T).add( block)
-  fun MEDIUMTEXT(name: String, block: CharColumnConfiguration<MEDIUMTEXT_T>.() -> Unit) = CharColumnConfiguration( this, name, MEDIUMTEXT_T).add( block)
-  fun LONGTEXT(name: String, block: CharColumnConfiguration<LONGTEXT_T>.() -> Unit) = CharColumnConfiguration( this, name, LONGTEXT_T).add( block)
+  fun BIT(name:String, block: NormalColumnConfiguration<Boolean, BIT_T>.() -> Unit) = NormalColumnConfiguration(  BIT_T, name).add(block)
+  fun BIT(name:String, length:Int, block: BaseLengthColumnConfiguration<BooleanArray, BITFIELD_T, LengthColumn<BooleanArray,BITFIELD_T>>.() -> Unit) = LengthColumnConfiguration( name, BITFIELD_T, length).add( block)
+  fun TINYINT(name: String, block: NumberColumnConfiguration<Byte, TINYINT_T>.() -> Unit) = NumberColumnConfiguration( TINYINT_T, name).add( block)
+  fun SMALLINT(name: String, block: NumberColumnConfiguration<Short, SMALLINT_T>.() -> Unit) = NumberColumnConfiguration( SMALLINT_T, name).add( block)
+  fun MEDIUMINT(name: String, block: NumberColumnConfiguration<Int, MEDIUMINT_T>.() -> Unit) = NumberColumnConfiguration( MEDIUMINT_T, name).add( block)
+  fun INT(name: String, block: NumberColumnConfiguration<Int, INT_T>.() -> Unit) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration( INT_T, name).add( block)
+  fun BIGINT(name: String, block: NumberColumnConfiguration<Long, BIGINT_T>.() -> Unit) = NumberColumnConfiguration( BIGINT_T, name).add( block)
+  fun FLOAT(name: String, block: NumberColumnConfiguration<Float, FLOAT_T>.() -> Unit) = NumberColumnConfiguration( FLOAT_T, name).add( block)
+  fun DOUBLE(name: String, block: NumberColumnConfiguration<Double, DOUBLE_T>.() -> Unit) = NumberColumnConfiguration( DOUBLE_T, name).add( block)
+  fun DECIMAL(name: String, precision: Int = -1, scale: Int = -1, block: DecimalColumnConfiguration<DECIMAL_T>.() -> Unit) = DecimalColumnConfiguration(
+      DECIMAL_T, name, precision, scale).add(block)
+  fun NUMERIC(name: String, precision: Int = -1, scale: Int = -1, block: DecimalColumnConfiguration<NUMERIC_T>.() -> Unit) = DecimalColumnConfiguration(
+      NUMERIC_T, name, precision, scale).add(block)
+  fun DATE(name: String, block: NormalColumnConfiguration<Date, DATE_T>.() -> Unit) = NormalColumnConfiguration(  DATE_T, name).add( block)
+  fun TIME(name: String, block: NormalColumnConfiguration<Time, TIME_T>.() -> Unit) = NormalColumnConfiguration(  TIME_T, name).add( block)
+  fun TIMESTAMP(name: String, block: NormalColumnConfiguration<Timestamp, TIMESTAMP_T>.() -> Unit) = NormalColumnConfiguration(  TIMESTAMP_T, name).add( block)
+  fun DATETIME(name: String, block: NormalColumnConfiguration<Timestamp, DATETIME_T>.() -> Unit) = NormalColumnConfiguration(  DATETIME_T, name).add( block)
+  fun YEAR(name: String, block: NormalColumnConfiguration<Date, YEAR_T>.() -> Unit) = NormalColumnConfiguration(  YEAR_T, name).add( block)
+  fun CHAR(name: String, length: Int = -1, block: LengthCharColumnConfiguration<CHAR_T>.() -> Unit) = LengthCharColumnConfiguration(
+      CHAR_T, name, length).add(block)
+  fun VARCHAR(name: String, length: Int, block: LengthCharColumnConfiguration<VARCHAR_T>.() -> Unit) = LengthCharColumnConfiguration(
+      VARCHAR_T, name, length).add(block)
+  fun BINARY(name: String, length: Int, block: BaseLengthColumnConfiguration<ByteArray, BINARY_T, LengthColumn<ByteArray, BINARY_T>>.() -> Unit) = LengthColumnConfiguration( name, BINARY_T, length).add( block)
+  fun VARBINARY(name: String, length: Int, block: BaseLengthColumnConfiguration<ByteArray, VARBINARY_T, LengthColumn<ByteArray, VARBINARY_T>>.() -> Unit) = LengthColumnConfiguration( name, VARBINARY_T, length).add( block)
+  fun TINYBLOB(name: String, block: NormalColumnConfiguration<ByteArray, TINYBLOB_T>.() -> Unit) = NormalColumnConfiguration(  TINYBLOB_T, name).add( block)
+  fun BLOB(name: String, block: NormalColumnConfiguration<ByteArray, BLOB_T>.() -> Unit) = NormalColumnConfiguration(  BLOB_T, name).add( block)
+  fun MEDIUMBLOB(name: String, block: NormalColumnConfiguration<ByteArray, MEDIUMBLOB_T>.() -> Unit) = NormalColumnConfiguration(  MEDIUMBLOB_T, name).add( block)
+  fun LONGBLOB(name: String, block: NormalColumnConfiguration<ByteArray, LONGBLOB_T>.() -> Unit) = NormalColumnConfiguration(  LONGBLOB_T, name).add( block)
+  fun TINYTEXT(name: String, block: CharColumnConfiguration<TINYTEXT_T>.() -> Unit) = CharColumnConfiguration(
+      TINYTEXT_T,
+      name).add(block)
+  fun TEXT(name: String, block: CharColumnConfiguration<TEXT_T>.() -> Unit) = CharColumnConfiguration(TEXT_T,
+                                                                                                      name).add(block)
+  fun MEDIUMTEXT(name: String, block: CharColumnConfiguration<MEDIUMTEXT_T>.() -> Unit) = CharColumnConfiguration(
+      MEDIUMTEXT_T,
+      name).add(block)
+  fun LONGTEXT(name: String, block: CharColumnConfiguration<LONGTEXT_T>.() -> Unit) = CharColumnConfiguration(
+      LONGTEXT_T,
+      name).add(block)
 
   /* Versions without configuration closure */
-  fun BIT(name: String) = NormalColumnConfiguration(this, name, BIT_T).add({})
-  fun BIT(name:String, length:Int) = LengthColumnConfiguration(this, name, BITFIELD_T, length).add({})
-  fun TINYINT(name: String) = NumberColumnConfiguration(this, name, TINYINT_T).add({})
-  fun SMALLINT(name:String) = NumberColumnConfiguration(this, name, SMALLINT_T).add({})
-  fun MEDIUMINT(name:String) = NumberColumnConfiguration(this, name, MEDIUMINT_T).add({})
-  fun INT(name: String) = NumberColumnConfiguration(this, name, INT_T).add({})
-  fun BIGINT(name:String) = NumberColumnConfiguration(this, name, BIGINT_T).add({})
-  fun FLOAT(name:String) = NumberColumnConfiguration(this, name, FLOAT_T).add({})
-  fun DOUBLE(name:String) = NumberColumnConfiguration(this, name, DOUBLE_T).add({})
-  fun DECIMAL(name:String, precision:Int=-1, scale:Int=-1) = DecimalColumnConfiguration(this, name, DECIMAL_T, precision, scale).add({})
-  fun NUMERIC(name: String, precision: Int = -1, scale: Int = -1) = DecimalColumnConfiguration(this, name, NUMERIC_T, precision, scale).add({})
-  fun DATE(name: String) = NormalColumnConfiguration(this, name, DATE_T).add({})
-  fun TIME(name:String) = NormalColumnConfiguration(this, name, TIME_T).add({})
-  fun TIMESTAMP(name:String) = NormalColumnConfiguration(this, name, TIMESTAMP_T).add({})
-  fun DATETIME(name: String) = NormalColumnConfiguration(this, name, DATETIME_T).add({})
-  fun YEAR(name:String) = NormalColumnConfiguration(this, name, YEAR_T).add({})
-  fun CHAR(name:String, length:Int = -1) = LengthCharColumnConfiguration(this, name, CHAR_T, length).add({})
-  fun VARCHAR(name: String, length: Int) = LengthCharColumnConfiguration(this, name, VARCHAR_T, length).add({})
-  fun BINARY(name: String, length: Int) = LengthColumnConfiguration(this, name, BINARY_T, length).add({})
-  fun VARBINARY(name: String, length: Int) = LengthColumnConfiguration(this, name, VARBINARY_T, length).add({})
-  fun TINYBLOB(name: String) = NormalColumnConfiguration(this, name, TINYBLOB_T).add({})
-  fun BLOB(name:String) = NormalColumnConfiguration(this, name, BLOB_T).add({})
-  fun MEDIUMBLOB(name:String) = NormalColumnConfiguration(this, name, MEDIUMBLOB_T).add({})
-  fun LONGBLOB(name: String) = NormalColumnConfiguration(this, name, LONGBLOB_T).add({})
-  fun TINYTEXT(name:String) = CharColumnConfiguration(this, name, TINYTEXT_T).add({})
-  fun TEXT(name:String) = CharColumnConfiguration(this, name, TEXT_T).add({})
-  fun MEDIUMTEXT(name:String) = CharColumnConfiguration(this, name, MEDIUMTEXT_T).add({})
-  fun LONGTEXT(name: String) = CharColumnConfiguration(this, name, LONGTEXT_T).add({})
+  fun BIT(name: String) = NormalColumnConfiguration( BIT_T, name).add({})
+  fun BIT(name:String, length:Int) = LengthColumnConfiguration(name, BITFIELD_T, length).add({})
+  fun TINYINT(name: String) = NumberColumnConfiguration(TINYINT_T, name).add({})
+  fun SMALLINT(name:String) = NumberColumnConfiguration(SMALLINT_T, name).add({})
+  fun MEDIUMINT(name:String) = NumberColumnConfiguration(MEDIUMINT_T, name).add({})
+  fun INT(name: String) = NumberColumnConfiguration(INT_T, name).add({})
+  fun BIGINT(name:String) = NumberColumnConfiguration(BIGINT_T, name).add({})
+  fun FLOAT(name:String) = NumberColumnConfiguration(FLOAT_T, name).add({})
+  fun DOUBLE(name:String) = NumberColumnConfiguration(DOUBLE_T, name).add({})
+  fun DECIMAL(name:String, precision:Int=-1, scale:Int=-1) = DecimalColumnConfiguration(DECIMAL_T, name, precision,
+                                                                                        scale).add({})
+  fun NUMERIC(name: String, precision: Int = -1, scale: Int = -1) = DecimalColumnConfiguration(NUMERIC_T, name,
+                                                                                               precision, scale).add({})
+  fun DATE(name: String) = NormalColumnConfiguration( DATE_T, name).add({})
+  fun TIME(name:String) = NormalColumnConfiguration( TIME_T, name).add({})
+  fun TIMESTAMP(name:String) = NormalColumnConfiguration( TIMESTAMP_T, name).add({})
+  fun DATETIME(name: String) = NormalColumnConfiguration( DATETIME_T, name).add({})
+  fun YEAR(name:String) = NormalColumnConfiguration( YEAR_T, name).add({})
+  fun CHAR(name:String, length:Int = -1) = LengthCharColumnConfiguration(CHAR_T, name, length).add({})
+  fun VARCHAR(name: String, length: Int) = LengthCharColumnConfiguration(VARCHAR_T, name, length).add({})
+  fun BINARY(name: String, length: Int) = LengthColumnConfiguration(name, BINARY_T, length).add({})
+  fun VARBINARY(name: String, length: Int) = LengthColumnConfiguration(name, VARBINARY_T, length).add({})
+  fun TINYBLOB(name: String) = NormalColumnConfiguration( TINYBLOB_T, name).add({})
+  fun BLOB(name:String) = NormalColumnConfiguration( BLOB_T, name).add({})
+  fun MEDIUMBLOB(name:String) = NormalColumnConfiguration( MEDIUMBLOB_T, name).add({})
+  fun LONGBLOB(name: String) = NormalColumnConfiguration( LONGBLOB_T, name).add({})
+  fun TINYTEXT(name:String) = CharColumnConfiguration(TINYTEXT_T, name).add({})
+  fun TEXT(name:String) = CharColumnConfiguration(TEXT_T, name).add({})
+  fun MEDIUMTEXT(name:String) = CharColumnConfiguration(MEDIUMTEXT_T, name).add({})
+  fun LONGTEXT(name: String) = CharColumnConfiguration(LONGTEXT_T, name).add({})
 
   fun INDEX(col1: ColumnRef<*,*,*>, vararg cols: ColumnRef<*,*,*>) { indices.add(mutableListOf(col1).apply { addAll(cols) })}
   fun UNIQUE(col1: ColumnRef<*,*,*>, vararg cols: ColumnRef<*,*,*>) { uniqueKeys.add(mutableListOf(col1).apply { addAll(cols) })}

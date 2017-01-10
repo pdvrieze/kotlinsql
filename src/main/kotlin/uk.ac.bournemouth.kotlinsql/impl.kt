@@ -184,7 +184,7 @@ internal class NormalColumnImpl<T:Any, S: SimpleColumnType<T, S>>(name:String, c
                                             columnFormat = configuration.columnFormat,
                                             storageFormat = configuration.storageFormat,
                                             references = configuration.references), SimpleColumn<T, S> {
-  override fun copyConfiguration(newName:String?, owner: Table) = NormalColumnConfiguration(owner, newName ?: name, type)
+  override fun copyConfiguration(newName:String?, owner: Table) = NormalColumnConfiguration(type, newName ?: name)
 }
 
 internal class LengthColumnImpl<T:Any, S: LengthColumnType<T, S>>(name:String, configuration: LengthColumnConfiguration<T, S>):
@@ -204,7 +204,8 @@ internal class LengthColumnImpl<T:Any, S: LengthColumnType<T, S>>(name:String, c
     if (length<1) { throw IllegalArgumentException("Lengths must be at least 1 and specified")}
   }
 
-  override fun copyConfiguration(newName:String?, owner: Table) = LengthColumnConfiguration(owner, newName ?: name, type, length)
+  override fun copyConfiguration(newName:String?, owner: Table) = LengthColumnConfiguration(newName ?: name, type,
+                                                                                            length)
 }
 
 internal class NumberColumnImpl<T:Any, S: NumericColumnType<T, S>>(name:String, configuration: NumberColumnConfiguration<T, S>):
@@ -222,7 +223,7 @@ internal class NumberColumnImpl<T:Any, S: NumericColumnType<T, S>>(name:String, 
                                              unsigned = configuration.unsigned,
                                              zerofill = configuration.zerofill,
                                              displayLength = configuration.displayLength), NumericColumn<T, S> {
-  override fun copyConfiguration(newName:String?, owner: Table) = NumberColumnConfiguration(owner, newName ?: name, type)
+  override fun copyConfiguration(newName:String?, owner: Table) = NumberColumnConfiguration(type, newName ?: name)
 }
 
 
@@ -241,7 +242,7 @@ internal class CharColumnImpl<S: CharColumnType<S>>(name:String, configuration: 
                                           binary = configuration.binary,
                                           charset = configuration.charset,
                                           collation = configuration.collation), CharColumn<S> {
-  override fun copyConfiguration(newName:String?, owner: Table) = CharColumnConfiguration(owner, newName ?: name, type)
+  override fun copyConfiguration(newName:String?, owner: Table) = CharColumnConfiguration(type, newName ?: name)
 }
 
 
@@ -265,7 +266,8 @@ internal class LengthCharColumnImpl<S: LengthCharColumnType<S>>(name:String, con
     if (length<1) { throw IllegalArgumentException("Lengths must be at least 1 and specified")}
   }
 
-  override fun copyConfiguration(newName:String?, owner: Table) = LengthCharColumnConfiguration(owner, newName ?: name, type, length)
+  override fun copyConfiguration(newName:String?, owner: Table) = LengthCharColumnConfiguration(type, newName ?: name,
+                                                                                                length)
 }
 
 
@@ -286,7 +288,8 @@ internal class DecimalColumnImpl<S: DecimalColumnType<S>>(name:String, configura
                                              displayLength = configuration.displayLength,
                                              precision = configuration.precision,
                                              scale = configuration.scale), DecimalColumn<S> {
-  override fun copyConfiguration(newName:String?, owner: Table) = DecimalColumnConfiguration(owner, newName ?: name, type, precision, scale)
+  override fun copyConfiguration(newName:String?, owner: Table) = DecimalColumnConfiguration(type, newName ?: name,
+                                                                                             precision, scale)
 }
 
 class CountColumn(val colRef:ColumnRef<*,*,*>): NumericColumn<Int, NumericColumnType.INT_T> {

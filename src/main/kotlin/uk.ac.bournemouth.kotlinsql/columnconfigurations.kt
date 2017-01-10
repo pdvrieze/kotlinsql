@@ -29,8 +29,6 @@ import kotlin.reflect.KProperty
  */
 @Suppress("unused")
 abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Column<T, S, C>, out CONF_T:Any> {
-
-  val table: TableRef
   var name: String?
   val type: S
   var notnull: Boolean?
@@ -42,8 +40,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
   var storageFormat: StorageFormat?
   var references: ColsetRef?
 
-  constructor(table: TableRef, name: String? = null, type: S) {
-    this.table = table
+  constructor(type: S, name: String? = null) {
     this.name = name
     this.type = type
     this.notnull=null
@@ -56,10 +53,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
     this.references=null
   }
 
-  constructor(orig: AbstractColumnConfiguration<T, S, C, CONF_T>,
-              table: TableRef,
-              newName: String? = null) {
-    this.table = table
+  constructor(orig: AbstractColumnConfiguration<T, S, C, CONF_T>, newName: String? = null) {
     name = newName
     type = orig.type
     notnull = orig.notnull
@@ -93,29 +87,28 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
     references= ColsetRef(table, col1, *columns)
   }
 
-  abstract fun copy(table: TableRef, newName: String?=null): CONF_T
+  abstract fun copy(newName: String? = null): CONF_T
 
   abstract fun newColumn():C
 
   class NormalColumnConfiguration<T:Any, S: SimpleColumnType<T, S>> : AbstractColumnConfiguration<T, S, SimpleColumn<T, S>, NormalColumnConfiguration<T, S>> {
 
-    constructor(table: TableRef, name: String? = null, type: S) : super(table, name, type)
+    constructor(type: S, name: String? = null) : super(type, name)
 
-    constructor(orig: NormalColumnConfiguration<T, S>,
-                table: TableRef,
-                newName: String? = null): super(orig, table, newName)
+    constructor(orig: NormalColumnConfiguration<T, S>, newName: String? = null): super(orig, newName)
 
     override fun newColumn(): SimpleColumn<T, S> = NormalColumnImpl(effectiveName, this)
 
-    override fun copy(table: TableRef, newName: String?) = NormalColumnConfiguration(this, table, newName)
+    override fun copy(newName: String?) = NormalColumnConfiguration(this, newName)
   }
 
   sealed abstract class AbstractNumberColumnConfiguration<T:Any, S: INumericColumnType<T, S,C>, C: INumericColumn<T, S, C>, out CONF_T:Any> : AbstractColumnConfiguration<T, S, C, CONF_T> {
-    constructor(table: TableRef, name: String? = null, type: S) : super(table, name, type) {
+    constructor(type: S, name: String? = null) : super(type, name) {
       this.displayLength = -1
     }
 
-    constructor(orig: AbstractNumberColumnConfiguration<T, S, C, CONF_T>, table:TableRef, newName: String?=null) : super(orig, table, newName) {
+    constructor(orig: AbstractNumberColumnConfiguration<T, S, C, CONF_T>, newName: String? = null) : super(
+        orig, newName) {
       unsigned = orig.unsigned
       zerofill = orig.zerofill
       displayLength = orig.displayLength
@@ -131,30 +124,32 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
     val ZEROFILL:Unit get() { unsigned = true }
 
     class NumberColumnConfiguration<T:Any, S: NumericColumnType<T, S>> : AbstractNumberColumnConfiguration<T, S, NumericColumn<T, S>, NumberColumnConfiguration<T, S>> {
-      constructor(table: TableRef, name: String? = null, type: S) : super(table, name, type)
-      constructor(orig: NumberColumnConfiguration<T, S>, table:TableRef, newName: String?=null) : super(orig, table, newName)
+      constructor(type: S, name: String? = null) : super(type, name)
+      constructor(orig: NumberColumnConfiguration<T, S>,
+                  newName: String? = null) : super(orig, newName)
 
       override fun newColumn(): NumericColumn<T, S> = NumberColumnImpl(effectiveName, this)
 
-      override fun copy(table: TableRef, newName: String?) = NumberColumnConfiguration(this, table, newName)
+      override fun copy(newName: String?) = NumberColumnConfiguration(this, newName)
     }
 
     class DecimalColumnConfiguration<S: DecimalColumnType<S>> : AbstractNumberColumnConfiguration<BigDecimal, S, DecimalColumn<S>, DecimalColumnConfiguration<S>> {
       val precision: Int
       val scale: Int
 
-      constructor(table: TableRef, name: String? = null, type: S, precision: Int= defaultPrecision, scale: Int = defaultScale) : super(table, name, type) {
+      constructor(type: S, name: String? = null, precision: Int = defaultPrecision, scale: Int = defaultScale) :
+          super(type, name) {
         this.precision = precision
         this.scale = scale
       }
 
-      constructor(orig: DecimalColumnConfiguration<S>, table:TableRef, newName: String?=null) : super(orig, table, newName) {
+      constructor(orig: DecimalColumnConfiguration<S>, newName: String? = null) : super(orig, newName) {
         precision = orig.precision
         scale = orig.scale
       }
 
       override fun newColumn(): DecimalColumn<S> = DecimalColumnImpl(effectiveName, this)
-      override fun copy(table: TableRef, newName: String?) = DecimalColumnConfiguration(this, table, newName)
+      override fun copy(newName: String?) = DecimalColumnConfiguration(this, newName)
 
       companion object {
         const val defaultPrecision = 10
@@ -170,8 +165,8 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
     var collation: String? = null
     var binary:Boolean = false
 
-    constructor(table: TableRef, name: String? = null, type: S) : super(table, name, type)
-    constructor(orig: AbstractCharColumnConfiguration<String, S, C, CONF_T>, table:TableRef, newName: String?) : super(orig, table, newName) {
+    constructor(type: S, name: String? = null) : super(type, name)
+    constructor(orig: AbstractCharColumnConfiguration<String, S, C, CONF_T>, newName: String?) : super(orig, newName) {
       charset = orig.charset
       collation = orig.collation
       binary = orig.binary
@@ -184,26 +179,26 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
     inline fun COLLATE(collation:String) { this.collation = collation }
 
     class CharColumnConfiguration<S: CharColumnType<S>> : AbstractCharColumnConfiguration<String, S, CharColumn<S>, CharColumnConfiguration<S>> {
-      constructor(table: TableRef, name: String? = null, type: S) : super(table, name, type)
-      constructor(orig: CharColumnConfiguration<S>, table:TableRef, newName: String?=null) : super(orig, table, newName)
+      constructor(type: S, name: String? = null) : super(type, name)
+      constructor(orig: CharColumnConfiguration<S>, newName: String? = null) : super(orig, newName)
 
       override fun newColumn(): CharColumn<S> = CharColumnImpl(effectiveName, this)
-      override fun copy(table: TableRef, newName: String?) = CharColumnConfiguration(this, table, newName)
+      override fun copy(newName: String?) = CharColumnConfiguration(this, newName)
     }
 
     class LengthCharColumnConfiguration<S: LengthCharColumnType<S>> : AbstractCharColumnConfiguration<String, S, LengthCharColumn<S>, LengthCharColumnConfiguration<S>>, BaseLengthColumnConfiguration<String, S, LengthCharColumn<S>> {
       override val length: Int
 
-      constructor(table: TableRef, name: String? = null, type: S, length: Int) : super(table, name, type) {
+      constructor(type: S, name: String? = null, length: Int) : super(type, name) {
         this.length = length
       }
 
-      constructor(orig: LengthCharColumnConfiguration<S>, table:TableRef, newName: String? =null) : super(orig, table, newName) {
+      constructor(orig: LengthCharColumnConfiguration<S>, newName: String? = null) : super(orig, newName) {
         this.length = orig.length
       }
 
       override fun newColumn(): LengthCharColumn<S> = LengthCharColumnImpl(effectiveName, this)
-      override fun copy(table: TableRef, newName: String?) = LengthCharColumnConfiguration(this, table, newName)
+      override fun copy(newName: String?) = LengthCharColumnConfiguration(this, newName)
     }
   }
 
@@ -214,16 +209,16 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
   class LengthColumnConfiguration<T:Any, S: LengthColumnType<T, S>> : AbstractColumnConfiguration<T, S, LengthColumn<T, S>, LengthColumnConfiguration<T, S>>, BaseLengthColumnConfiguration<T, S, LengthColumn<T, S>> {
     override val length: Int
 
-    constructor(table: TableRef, name: String? = null, type: S, length: Int) : super(table, name, type) {
+    constructor(name: String? = null, type: S, length: Int) : super(type, name) {
       this.length = length
     }
 
-    constructor(orig: LengthColumnConfiguration<T, S>, table:TableRef, newName: String?=null) : super(orig, table, newName) {
+    constructor(orig: LengthColumnConfiguration<T, S>, newName: String? = null) : super(orig, newName) {
       length = orig.length
     }
 
     override fun newColumn(): LengthColumn<T, S> = LengthColumnImpl(effectiveName, this)
-    override fun copy(table: TableRef, newName: String?) = LengthColumnConfiguration(this, table, newName)
+    override fun copy(newName: String?) = LengthColumnConfiguration(this, newName)
   }
 }
 

@@ -22,6 +22,7 @@ package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration
 import uk.ac.bournemouth.kotlinsql.ColumnType.LengthCharColumnType.VARCHAR_T
+import uk.ac.bournemouth.kotlinsql.SingleColumnType.DUMMY_TABLE_REF
 import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
 import java.sql.ResultSet
 import kotlin.reflect.KClass
@@ -82,7 +83,7 @@ class CustomColumnType<U :Any,
 
   @Suppress("UNCHECKED_CAST")
   override fun newConfiguration(owner: Table, refColumn: CustomColumnType<U, T, S, C, CONF_T>.CustomColumn)
-    = CustomColumnConfiguration(baseConfiguration.copy(owner), this@CustomColumnType)
+    = CustomColumnConfiguration(baseConfiguration.copy(), this@CustomColumnType)
 
   override fun fromResultSet(rs: ResultSet, pos: Int): U?
     = baseColumnType.fromResultSet(rs, pos)?.let(fromDb)
@@ -91,25 +92,27 @@ class CustomColumnType<U :Any,
     = baseColumnType.setParam(statementHelper, pos, value?.let(toDB))
 
   operator fun provideDelegate(thisRef: MutableTable, property: KProperty<*>): Table.FieldAccessor<U,CustomColumnType<U,T,S,C,CONF_T>,CustomColumnType<U, T, S, C, CONF_T>.CustomColumn> {
-    return thisRef.add(CustomColumn(baseConfiguration.copy(thisRef, property.name)))
+    return thisRef.add(CustomColumn(baseConfiguration.copy(property.name)))
   }
 
-  operator fun TableRef.invoke(configurator: CONF_T.()->Unit) = CustomColumnConfiguration(baseConfiguration.copy(this).apply(configurator), this@CustomColumnType)
+  operator fun invoke(configurator: CONF_T.()->Unit) = CustomColumnConfiguration(baseConfiguration.copy().apply(configurator), this@CustomColumnType)
 
 }
 
 class CustomColumnConfiguration<U :Any, T: Any, S:IColumnType<T,S, C>, C:Column<T,S,C>, CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>(val baseConfiguration: CONF_T, type: CustomColumnType<U,T,S,C,CONF_T>):
-  AbstractColumnConfiguration<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn, CustomColumnConfiguration<U, T, S, C, CONF_T>>(baseConfiguration.table, baseConfiguration.name, type) {
+  AbstractColumnConfiguration<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn, CustomColumnConfiguration<U, T, S, C, CONF_T>>(
+    type, baseConfiguration.table) {
 
   override fun newColumn() = type.CustomColumn(baseConfiguration)
 
-  override fun copy(table:TableRef, newName: String?) = CustomColumnConfiguration(baseConfiguration.copy(table, newName), type)
+  override fun copy(newName: String?) = CustomColumnConfiguration(baseConfiguration.copy(newName), type)
 }
 
 object SingleColumnType {
-  fun VARCHAR(length: Int, block: LengthCharColumnConfiguration<VARCHAR_T>.() -> Unit = {}) = LengthCharColumnConfiguration(DUMMY_TABLE_REF, null, VARCHAR_T, length).apply( block )
+  fun VARCHAR(length: Int, block: LengthCharColumnConfiguration<VARCHAR_T>.() -> Unit = {}) = LengthCharColumnConfiguration(
+    VARCHAR_T, null, length).apply(block)
 
   @JvmStatic
-  val DUMMY_TABLE_REF = TableRefImpl("SYSTEM")
+  internal val DUMMY_TABLE_REF = TableRefImpl("SYSTEM")
 }
 
