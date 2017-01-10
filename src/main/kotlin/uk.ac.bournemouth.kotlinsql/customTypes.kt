@@ -107,9 +107,4 @@ class CustomColumnConfiguration<U :Any, T: Any, S:IColumnType<T,S, C>, C:Column<
   override fun copy(newName: String?) = CustomColumnConfiguration(baseConfiguration.copy(newName), type)
 }
 
-object SingleColumnType {
-  fun VARCHAR(length: Int, block: LengthCharColumnConfiguration<VARCHAR_T>.() -> Unit = {}) = LengthCharColumnConfiguration(
-    VARCHAR_T, null, length).apply(block)
-
-}
-
+object SingleColumnType: SqlTypesMixin
