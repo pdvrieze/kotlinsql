@@ -119,7 +119,7 @@ interface IColumnType<T:Any, S: IColumnType<T, S, C>, C:Column<T,S,C>> {
    */
   fun maybeCast(value: Any?): T? = value?.let{ type.javaObjectType.cast(it) }
 
-  fun newConfiguration(owner: Table, refColumn: C): AbstractColumnConfiguration<T, S, C, *>
+  fun newConfiguration(refColumn: C): AbstractColumnConfiguration<T, S, C, *>
 
   fun fromResultSet(rs: ResultSet, pos: Int): T?
 
@@ -175,7 +175,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Double?){statementHelper.setDouble(pos, value)}
     }
 
-    override fun newConfiguration(owner: Table, refColumn: NumericColumn<T, S>)=
+    override fun newConfiguration(refColumn: NumericColumn<T, S>)=
           NumberColumnConfiguration(asS(), refColumn.name)
 
   }
@@ -190,7 +190,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: BigDecimal?){statementHelper.setNumeric(pos, value)}
     }
 
-    override fun newConfiguration(owner: Table, refColumn: DecimalColumn<S>): AbstractColumnConfiguration<BigDecimal, S, DecimalColumn<S>, *> {
+    override fun newConfiguration(refColumn: DecimalColumn<S>): AbstractColumnConfiguration<BigDecimal, S, DecimalColumn<S>, *> {
       return DecimalColumnConfiguration(asS(), refColumn.name, refColumn.precision, refColumn.scale)
     }
   }
@@ -253,7 +253,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
       }
     }
 
-    override fun newConfiguration(owner: Table, refColumn: SimpleColumn<T, S>) =
+    override fun newConfiguration(refColumn: SimpleColumn<T, S>) =
           NormalColumnConfiguration(asS(), refColumn.name)
 
   }
@@ -269,7 +269,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     object LONGTEXT_T  : CharColumnType<LONGTEXT_T>("LONGTEXT", String::class), BoundedType { override val maxLen:Int get() = Int.MAX_VALUE /*Actually it would be more*/}
 
     @Suppress("UNCHECKED_CAST")
-    override fun newConfiguration(owner: Table, refColumn: CharColumn<S>) =
+    override fun newConfiguration(refColumn: CharColumn<S>) =
           CharColumnConfiguration(this as S, refColumn.name)
 
     override fun setParam(statementHelper: StatementHelper, pos: Int, value: String?) {
@@ -305,7 +305,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun newConfiguration(owner: Table, refColumn: LengthColumn<T, S>) =
+    override fun newConfiguration(refColumn: LengthColumn<T, S>) =
           LengthColumnConfiguration(refColumn.name, this as S, refColumn.length)
   }
 
@@ -314,7 +314,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     object CHAR_T      : LengthCharColumnType<CHAR_T>("CHAR", String::class), BoundedType { override val maxLen:Int get() = 255 }
     object VARCHAR_T   : LengthCharColumnType<VARCHAR_T>("VARCHAR", String::class), BoundedType { override val maxLen:Int get() = 0xffff }
 
-    override fun newConfiguration(owner: Table, refColumn: LengthCharColumn<S>) =
+    override fun newConfiguration(refColumn: LengthCharColumn<S>) =
           LengthCharColumnConfiguration(asS(), refColumn.name, refColumn.length)
 
     override fun fromResultSet(rs: ResultSet, pos: Int): String? = rs.getString(pos)

@@ -125,6 +125,16 @@ abstract class MutableTable private constructor(name: String?,
   }
 
   /* Otherwise, the various types need to be distinguished. The different subtypes of column are needed for overload resolution */
+  /**
+   * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
+   * @param other The column whose type to copy
+   * @param block The block to further configure the column
+   */
+  protected fun <U :Any,
+    T:Any,
+    S:IColumnType<T,S, C>,
+    C:Column<T,S,C>,
+    CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>reference(other: CustomColumnType<U,T,S,C,CONF_T>, block: CONF_T.() -> Unit) = CustomColumnConfiguration(other.baseConfiguration.copy(null).apply(block),other)
 
   /**
    * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
@@ -165,6 +175,12 @@ abstract class MutableTable private constructor(name: String?,
 
 
   /* Otherwise, the various types need to be distinguished. The different subtypes of column are needed for overload resolution */
+  protected fun <U :Any,
+    T:Any,
+    S:IColumnType<T,S, C>,
+    C:Column<T,S,C>,
+    CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>reference(newName:String, other: CustomColumnType<U,T,S,C,CONF_T>, block: CONF_T.() -> Unit) = CustomColumnConfiguration(other.baseConfiguration.copy(newName).apply(block),other)
+
   protected fun <S:DecimalColumnType<S>>reference(newName:String, other: DecimalColumn<S>, block: DecimalColumnConfiguration<S>.() -> Unit) = other.copyConfiguration(newName, this).apply(block)
   protected fun <S:LengthCharColumnType<S>>reference(newName:String, other: LengthCharColumn<S>, block: LengthCharColumnConfiguration<S>.() -> Unit) = other.copyConfiguration(newName, this).apply(block)
   protected fun <S:CharColumnType<S>>reference(newName:String, other: CharColumn<S>, block: CharColumnConfiguration<S>.() -> Unit) = other.copyConfiguration(newName, this).apply(block)

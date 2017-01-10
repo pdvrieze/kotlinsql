@@ -20,8 +20,6 @@
 
 package uk.ac.bournemouth.kotlinsql
 
-import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.ColumnType.LengthCharColumnType.VARCHAR_T
 import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
 import java.sql.ResultSet
 import kotlin.reflect.KClass
@@ -48,11 +46,12 @@ class CustomColumnType<U :Any,
 
   val baseColumnType = baseConfiguration.type
 
-  inner class CustomColumn(table: TableRef,
-                           baseConfiguration: AbstractColumnConfiguration<T, S, C, *>): Column<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn> {
+  inner class CustomColumn(table: TableRef, baseConfiguration: AbstractColumnConfiguration<T, S, C, *>):
+    Column<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn> {
+
     val baseColumn: Column<T, S, C> = baseConfiguration.newColumn(table)
 
-    override val table: TableRef = baseColumn.table
+    override val table: TableRef get() = baseColumn.table
     override val name:String get() = baseColumn.name
     override val notnull:Boolean? get() = baseColumn.notnull
 
@@ -73,17 +72,15 @@ class CustomColumnType<U :Any,
     override fun toDDL() = baseColumn.toDDL()
 
     @Suppress("UNCHECKED_CAST")
-    override fun copyConfiguration(newName: String?, owner: Table): AbstractColumnConfiguration<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn, CONF_T> {
-      return baseColumn.copyConfiguration(newName, owner) as AbstractColumnConfiguration<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn, CONF_T>
-    }
+    override fun copyConfiguration(newName: String?, owner: Table) =
+      CustomColumnConfiguration(baseColumn.copyConfiguration(newName, owner) as CONF_T, this@CustomColumnType)
 
   }
 
   override val typeName: String get() = baseColumnType.typeName
 
-  @Suppress("UNCHECKED_CAST")
-  override fun newConfiguration(owner: Table, refColumn: CustomColumnType<U, T, S, C, CONF_T>.CustomColumn)
-    = CustomColumnConfiguration(baseConfiguration.copy(), this@CustomColumnType)
+  override fun newConfiguration(refColumn: CustomColumn): AbstractColumnConfiguration<U, CustomColumnType<U, T, S, C, CONF_T>, CustomColumn, *>
+    = CustomColumnConfiguration(baseConfiguration.copy(newName = refColumn.name), this@CustomColumnType)
 
   override fun fromResultSet(rs: ResultSet, pos: Int): U?
     = baseColumnType.fromResultSet(rs, pos)?.let(fromDb)
