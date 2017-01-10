@@ -200,6 +200,10 @@ internal class LengthColumnImpl<T:Any, S: LengthColumnType<T, S>>(name:String, c
                                          storageFormat=configuration.storageFormat,
                                          references=configuration.references,
                                          length = configuration.length), LengthColumn<T,S> {
+  init {
+    if (length<1) { throw IllegalArgumentException("Lengths must be at least 1 and specified")}
+  }
+
   override fun copyConfiguration(newName:String?, owner: Table) = LengthColumnConfiguration(owner, newName ?: name, type, length)
 }
 
@@ -257,6 +261,10 @@ internal class LengthCharColumnImpl<S: LengthCharColumnType<S>>(name:String, con
                                                 binary = configuration.binary,
                                                 charset = configuration.charset,
                                                 collation = configuration.collation), LengthCharColumn<S> {
+  init {
+    if (length<1) { throw IllegalArgumentException("Lengths must be at least 1 and specified")}
+  }
+
   override fun copyConfiguration(newName:String?, owner: Table) = LengthCharColumnConfiguration(owner, newName ?: name, type, length)
 }
 

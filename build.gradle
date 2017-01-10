@@ -24,7 +24,7 @@ ext {
     if (! rootProject.hasProperty('myJavaVersion')) { myJavaVersion = org.gradle.api.JavaVersion.VERSION_1_7 }
 }
 
-version 0.6
+version '0.6.99.1'
 
 buildscript {
 

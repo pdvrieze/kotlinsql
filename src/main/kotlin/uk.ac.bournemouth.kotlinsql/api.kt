@@ -86,49 +86,57 @@ fun columnType(sqlType:Int): IColumnType<*,*,*> {
   }
 }
 
+/**
+ * A meta value for columns. Many columns can share a single type.
+ * @param T The user type that this [IColumnType] exposes
+ * @param S The column type, basically the implementation itself
+ * @param C The type of the column that results from the type
+ */
 interface IColumnType<T:Any, S: IColumnType<T, S, C>, C:Column<T,S,C>> {
+  /**
+   * The name of the type as used in SQL
+   */
   val typeName:String
+  /**
+   * The class object for the type
+   */
   val type: KClass<T>
 
-  fun cast(column: Column<*,*,*>): C
-  fun cast(value: Any): T
-  /**
-   * Cast the given value to the type of the column. Null values are fine, incompatible values will
-   * throw a ClassCastException
-   */
-  fun maybeCast(value: Any?): T?
-
-  fun newConfiguration(owner: Table, refColumn: C): AbstractColumnConfiguration<T,S, C, Any>
-
-  fun fromResultSet(rs: ResultSet, pos: Int): T?
-
-  fun setParam(statementHelper: StatementHelper, pos: Int, value: T?)
-
-  fun castSetParam(statementHelper: StatementHelper, pos: Int, value: Any?)
-}
-
-sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override val typeName:String, override val type: KClass<T>): IColumnType<T,S,C> {
-
-  @Suppress("UNCHECKED_CAST")
-  override fun cast(column: Column<*,*,*>): C {
+  fun cast(column: Column<*,*,*>): C {
     if (column.type.typeName == typeName) {
+      @Suppress("UNCHECKED_CAST")
       return column as C
     } else {
       throw TypeCastException("The given column is not of the correct type")
     }
   }
 
-  override fun maybeCast(value: Any?): T? {
-    return if (value!=null) type.javaObjectType.cast(value) else null
-  }
+  fun cast(value: Any): T = type.javaObjectType.cast(value)
 
-  override fun castSetParam(statementHelper: StatementHelper, pos: Int, value: Any?) {
+  /**
+   * Cast the given value to the type of the column for SQL. Null values are fine, incompatible values will
+   * throw a ClassCastException
+   */
+  fun maybeCast(value: Any?): T? = value?.let{ type.javaObjectType.cast(it) }
+
+  fun newConfiguration(owner: Table, refColumn: C): AbstractColumnConfiguration<T, S, C, *>
+
+  fun fromResultSet(rs: ResultSet, pos: Int): T?
+
+  /**
+   * Set the parameter for the given input.
+   */
+  fun setParam(statementHelper: StatementHelper, pos: Int, value: T?)
+
+  /**
+   * Helper that sets the parameter based upon the input.
+   */
+  fun castSetParam(statementHelper: StatementHelper, pos: Int, value: Any?) {
     setParam(statementHelper, pos, maybeCast(value))
   }
+}
 
-  override fun cast(value:Any): T {
-    return type.javaObjectType.cast(value)
-  }
+sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override val typeName:String, override val type: KClass<T>): IColumnType<T,S,C> {
 
   @Suppress("UNCHECKED_CAST")
   fun asS() = this as S
@@ -167,7 +175,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Double?){statementHelper.setDouble(pos, value)}
     }
 
-    override fun newConfiguration(owner: Table, refColumn: NumericColumn<T,S>)=
+    override fun newConfiguration(owner: Table, refColumn: NumericColumn<T, S>)=
           NumberColumnConfiguration(owner, refColumn.name, asS())
 
   }
@@ -182,7 +190,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: BigDecimal?){statementHelper.setNumeric(pos, value)}
     }
 
-    override fun newConfiguration(owner: Table, refColumn: DecimalColumn<S>):DecimalColumnConfiguration<S> {
+    override fun newConfiguration(owner: Table, refColumn: DecimalColumn<S>): AbstractColumnConfiguration<BigDecimal, S, DecimalColumn<S>, *> {
       return DecimalColumnConfiguration(owner, refColumn.name, asS(), refColumn.precision, refColumn.scale)
     }
   }
@@ -245,7 +253,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
       }
     }
 
-    override fun newConfiguration(owner: Table, refColumn: SimpleColumn<T,S>) =
+    override fun newConfiguration(owner: Table, refColumn: SimpleColumn<T, S>) =
           NormalColumnConfiguration(owner, refColumn.name, asS())
 
   }
@@ -297,7 +305,7 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun newConfiguration(owner: Table, refColumn: LengthColumn<T,S>) =
+    override fun newConfiguration(owner: Table, refColumn: LengthColumn<T, S>) =
           LengthColumnConfiguration(owner, refColumn.name, this as S, refColumn.length)
   }
 
@@ -343,7 +351,17 @@ interface Column<T:Any, S: IColumnType<T, S,C>, C:Column<T,S,C>>: ColumnRef<T,S,
 
   fun copyConfiguration(newName:String? = null, owner: Table): AbstractColumnConfiguration<T,S,C, Any>
 
-  fun matches(typeName: String, size: Int, notNull:Boolean?, autoincrement:Boolean?, default:String?, comment:String?): Boolean
+  /**
+   * Determine whether has the given properties
+   */
+  fun matches(typeName: String, size: Int, notNull:Boolean?, autoincrement:Boolean?, default:String?, comment:String?): Boolean =
+    this.type.typeName==typeName &&
+    ((this !is LengthColumn) || length < 0 || length==size) &&
+    this.notnull==notNull &&
+    this.autoincrement == autoincrement &&
+    this.default == default &&
+    this.comment == comment
+
 }
 
 interface SimpleColumn<T:Any, S: SimpleColumnType<T, S>>: Column<T,S, SimpleColumn<T,S>> {
