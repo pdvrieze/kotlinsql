@@ -98,8 +98,8 @@ class CustomColumnType<U :Any,
 
 }
 
-class CustomColumnConfiguration<T :Any, I: Any, S2:IColumnType<I,S2, C2>, C2:Column<I,S2,C2>, CONF_T: AbstractColumnConfiguration<I, S2, C2, CONF_T>>(val baseConfiguration: CONF_T, type: CustomColumnType<T,I,S2,C2,CONF_T>):
-  AbstractColumnConfiguration<T, CustomColumnType<T,I,S2,C2,CONF_T>, CustomColumnType<T, I, S2, C2, CONF_T>.CustomColumn, CustomColumnConfiguration<T, I, S2, C2, CONF_T>>(baseConfiguration.table, baseConfiguration.name, type) {
+class CustomColumnConfiguration<U :Any, T: Any, S:IColumnType<T,S, C>, C:Column<T,S,C>, CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>(val baseConfiguration: CONF_T, type: CustomColumnType<U,T,S,C,CONF_T>):
+  AbstractColumnConfiguration<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn, CustomColumnConfiguration<U, T, S, C, CONF_T>>(baseConfiguration.table, baseConfiguration.name, type) {
 
   override fun newColumn() = type.CustomColumn(baseConfiguration)
 
