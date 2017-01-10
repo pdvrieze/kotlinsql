@@ -22,6 +22,8 @@ package uk.ac.bournemouth.kotlinsql
 
 import org.testng.Assert.assertEquals
 import org.testng.annotations.Test
+import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.ColumnType.LengthCharColumnType.VARCHAR_T
 import java.util.*
 
 /**
@@ -107,6 +109,33 @@ class testTableDefs {
 
     val emails = object: MutableTable("emails", null) {
       val index by reference(persons.index) { AUTO_INCREMENT }
+      val email by VARCHAR(50)
+
+      override fun init() {
+        PRIMARY_KEY(index, email)
+        FOREIGN_KEY(index).REFERENCES(persons.index)
+      }
+    }
+
+    val statement = db.SELECT(persons.name, emails.email).WHERE { persons.index eq emails.index }
+    assertEquals(statement.toSQL(), "SELECT p.`name`, e.`email` FROM `emails` AS e, `persons` AS p WHERE p.`index` = e.`index`")
+
+  }
+
+  @Test
+  fun testCustomReference() {
+    val X_UUID = customType({ VARCHAR(36)}, UUID::toString, UUID::fromString)
+    val persons = object: MutableTable("persons", null) {
+      val index by X_UUID
+      val name by VARCHAR("name", 20)
+
+      override fun init() {
+        PRIMARY_KEY(index)
+      }
+    }
+
+    val emails = object: MutableTable("emails", null) {
+      val index by reference(persons.index) /*{ UNIQUE }*/
       val email by VARCHAR(50)
 
       override fun init() {

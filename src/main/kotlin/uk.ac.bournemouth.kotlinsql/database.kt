@@ -203,7 +203,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
   }
 
-  private class WhereCmpCol<S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>>(val col1:ColumnRef<*,S1,*>, val cmp:SqlComparisons, val col2:ColumnRef<*,S2,*>): BooleanWhereValue() {
+  private class WhereCmpCol<S1 : IColumnType<*,S1,*>, S2 : IColumnType<*,S2,*>>(val col1:ColumnRef<*,S1,*>, val cmp:SqlComparisons, val col2:ColumnRef<*,S2,*>): BooleanWhereValue() {
 
     override fun toSQL(prefixMap:Map<String,String>?)= "${col1.name(prefixMap)} $cmp ${col2.name(prefixMap)}"
 
@@ -228,12 +228,12 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     infix fun <T:Any, S: IColumnType<T, S, *>> ColumnRef<T, S, *>.gt(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.gt, value)
     infix fun <T:Any, S: IColumnType<T, S, *>> ColumnRef<T, S, *>.ge(value: T): BooleanWhereValue = WhereCmpParam(this, SqlComparisons.ge, value)
 
-    infix fun <S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>> ColumnRef<*, S1, *>.eq(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.eq, other)
-    infix fun <S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>> ColumnRef<*, S1, *>.ne(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.ne, other)
-    infix fun <S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>> ColumnRef<*, S1, *>.lt(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.lt, other)
-    infix fun <S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>> ColumnRef<*, S1, *>.le(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.le, other)
-    infix fun <S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>> ColumnRef<*, S1, *>.gt(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.gt, other)
-    infix fun <S1 : ColumnType<*,S1,*>, S2 : ColumnType<*,S2,*>> ColumnRef<*, S1, *>.ge(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.ge, other)
+    infix fun <S1 : IColumnType<*,S1,*>, S2 : IColumnType<*,S2,*>> ColumnRef<*, S1, *>.eq(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.eq, other)
+    infix fun <S1 : IColumnType<*,S1,*>, S2 : IColumnType<*,S2,*>> ColumnRef<*, S1, *>.ne(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.ne, other)
+    infix fun <S1 : IColumnType<*,S1,*>, S2 : IColumnType<*,S2,*>> ColumnRef<*, S1, *>.lt(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.lt, other)
+    infix fun <S1 : IColumnType<*,S1,*>, S2 : IColumnType<*,S2,*>> ColumnRef<*, S1, *>.le(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.le, other)
+    infix fun <S1 : IColumnType<*,S1,*>, S2 : IColumnType<*,S2,*>> ColumnRef<*, S1, *>.gt(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.gt, other)
+    infix fun <S1 : IColumnType<*,S1,*>, S2 : IColumnType<*,S2,*>> ColumnRef<*, S1, *>.ge(other: ColumnRef<*,S2,*>): BooleanWhereValue = WhereCmpCol(this, SqlComparisons.ge, other)
 
     infix fun WhereClause?.AND(other:WhereClause?):WhereClause? {
       return if (this==null) {

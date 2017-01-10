@@ -116,6 +116,17 @@ abstract class MutableTable private constructor(name: String?,
     return other.copyConfiguration(owner = this)
   }
 
+  /* When there is no body, the configuration subtype does not matter except for custom columns */
+  /**
+   * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
+   * @param other The column whose type to copy
+   */
+  protected fun <U :Any,
+    T:Any,
+    S:IColumnType<T,S, C>,
+    C:Column<T,S,C>,
+    CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>reference(other: CustomColumnType<U,T,S,C,CONF_T>.CustomColumn) = other.copyConfiguration(owner=this)
+
   /**
    * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
    * @param other The column whose type to copy
@@ -134,7 +145,7 @@ abstract class MutableTable private constructor(name: String?,
     T:Any,
     S:IColumnType<T,S, C>,
     C:Column<T,S,C>,
-    CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>reference(other: CustomColumnType<U,T,S,C,CONF_T>, block: CONF_T.() -> Unit) = CustomColumnConfiguration(other.baseConfiguration.copy(null).apply(block),other)
+    CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>reference(other: CustomColumnType<U,T,S,C,CONF_T>.CustomColumn, block: CONF_T.() -> Unit) = CustomColumnConfiguration((other.baseColumn.copyConfiguration(null, this) as CONF_T).apply(block),other.type)
 
   /**
    * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
