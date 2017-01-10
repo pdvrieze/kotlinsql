@@ -190,7 +190,7 @@ abstract class MutableTable private constructor(name: String?,
     T:Any,
     S:IColumnType<T,S, C>,
     C:Column<T,S,C>,
-    CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>reference(newName:String, other: CustomColumnType<U,T,S,C,CONF_T>, block: CONF_T.() -> Unit) = CustomColumnConfiguration(other.baseConfiguration.copy(newName).apply(block),other)
+    CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>reference(newName:String, other: CustomColumnType<U,T,S,C,CONF_T>.CustomColumn, block: CONF_T.() -> Unit) = CustomColumnConfiguration<U,T,S,C,CONF_T>((other.baseColumn.copyConfiguration(newName, this) as CONF_T).apply(block),other.type)
 
   protected fun <S:DecimalColumnType<S>>reference(newName:String, other: DecimalColumn<S>, block: DecimalColumnConfiguration<S>.() -> Unit) = other.copyConfiguration(newName, this).apply(block)
   protected fun <S:LengthCharColumnType<S>>reference(newName:String, other: LengthCharColumn<S>, block: LengthCharColumnConfiguration<S>.() -> Unit) = other.copyConfiguration(newName, this).apply(block)
