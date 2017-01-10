@@ -22,7 +22,6 @@ package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration
 import uk.ac.bournemouth.kotlinsql.ColumnType.LengthCharColumnType.VARCHAR_T
-import uk.ac.bournemouth.kotlinsql.SingleColumnType.DUMMY_TABLE_REF
 import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
 import java.sql.ResultSet
 import kotlin.reflect.KClass
@@ -100,8 +99,7 @@ class CustomColumnType<U :Any,
 }
 
 class CustomColumnConfiguration<U :Any, T: Any, S:IColumnType<T,S, C>, C:Column<T,S,C>, CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>(val baseConfiguration: CONF_T, type: CustomColumnType<U,T,S,C,CONF_T>):
-  AbstractColumnConfiguration<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn, CustomColumnConfiguration<U, T, S, C, CONF_T>>(
-    type, baseConfiguration.table) {
+  AbstractColumnConfiguration<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn, CustomColumnConfiguration<U, T, S, C, CONF_T>>(type) {
 
   override fun newColumn() = type.CustomColumn(baseConfiguration)
 
@@ -112,7 +110,5 @@ object SingleColumnType {
   fun VARCHAR(length: Int, block: LengthCharColumnConfiguration<VARCHAR_T>.() -> Unit = {}) = LengthCharColumnConfiguration(
     VARCHAR_T, null, length).apply(block)
 
-  @JvmStatic
-  internal val DUMMY_TABLE_REF = TableRefImpl("SYSTEM")
 }
 
