@@ -68,7 +68,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
 
   inline operator fun provideDelegate(thisRef: MutableTable, property: KProperty<*>): Table.FieldAccessor<T,S,C> {
     if(name.isNullOrBlank()) { name = property.name }
-    return thisRef.add(this.newColumn())
+    return thisRef.add(this.newColumn(thisRef))
   }
 
   enum class ColumnFormat { FIXED, MEMORY, DEFAULT }
@@ -89,7 +89,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
 
   abstract fun copy(newName: String? = null): CONF_T
 
-  abstract fun newColumn():C
+  abstract fun newColumn(table: TableRef): C
 
   class NormalColumnConfiguration<T:Any, S: SimpleColumnType<T, S>> : AbstractColumnConfiguration<T, S, SimpleColumn<T, S>, NormalColumnConfiguration<T, S>> {
 
@@ -97,7 +97,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
 
     constructor(orig: NormalColumnConfiguration<T, S>, newName: String? = null): super(orig, newName)
 
-    override fun newColumn(): SimpleColumn<T, S> = NormalColumnImpl(effectiveName, this)
+    override fun newColumn(table: TableRef): SimpleColumn<T, S> = NormalColumnImpl(table, effectiveName, this)
 
     override fun copy(newName: String?) = NormalColumnConfiguration(this, newName)
   }
@@ -128,7 +128,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
       constructor(orig: NumberColumnConfiguration<T, S>,
                   newName: String? = null) : super(orig, newName)
 
-      override fun newColumn(): NumericColumn<T, S> = NumberColumnImpl(effectiveName, this)
+      override fun newColumn(table: TableRef): NumericColumn<T, S> = NumberColumnImpl(table, effectiveName, this)
 
       override fun copy(newName: String?) = NumberColumnConfiguration(this, newName)
     }
@@ -148,7 +148,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
         scale = orig.scale
       }
 
-      override fun newColumn(): DecimalColumn<S> = DecimalColumnImpl(effectiveName, this)
+      override fun newColumn(table: TableRef): DecimalColumn<S> = DecimalColumnImpl(table, effectiveName, this)
       override fun copy(newName: String?) = DecimalColumnConfiguration(this, newName)
 
       companion object {
@@ -182,7 +182,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
       constructor(type: S, name: String? = null) : super(type, name)
       constructor(orig: CharColumnConfiguration<S>, newName: String? = null) : super(orig, newName)
 
-      override fun newColumn(): CharColumn<S> = CharColumnImpl(effectiveName, this)
+      override fun newColumn(table: TableRef): CharColumn<S> = CharColumnImpl(table, effectiveName, this)
       override fun copy(newName: String?) = CharColumnConfiguration(this, newName)
     }
 
@@ -197,7 +197,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
         this.length = orig.length
       }
 
-      override fun newColumn(): LengthCharColumn<S> = LengthCharColumnImpl(effectiveName, this)
+      override fun newColumn(table: TableRef): LengthCharColumn<S> = LengthCharColumnImpl(table, effectiveName, this)
       override fun copy(newName: String?) = LengthCharColumnConfiguration(this, newName)
     }
   }
@@ -217,7 +217,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
       length = orig.length
     }
 
-    override fun newColumn(): LengthColumn<T, S> = LengthColumnImpl(effectiveName, this)
+    override fun newColumn(table: TableRef): LengthColumn<T, S> = LengthColumnImpl(table, effectiveName, this)
     override fun copy(newName: String?) = LengthColumnConfiguration(this, newName)
   }
 }

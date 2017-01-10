@@ -48,8 +48,9 @@ class CustomColumnType<U :Any,
 
   val baseColumnType = baseConfiguration.type
 
-  inner class CustomColumn(baseConfiguration: AbstractColumnConfiguration<T, S, C, *>): Column<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn> {
-    val baseColumn: Column<T, S, C> = baseConfiguration.newColumn()
+  inner class CustomColumn(table: TableRef,
+                           baseConfiguration: AbstractColumnConfiguration<T, S, C, *>): Column<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn> {
+    val baseColumn: Column<T, S, C> = baseConfiguration.newColumn(table)
 
     override val table: TableRef = baseColumn.table
     override val name:String get() = baseColumn.name
@@ -91,7 +92,7 @@ class CustomColumnType<U :Any,
     = baseColumnType.setParam(statementHelper, pos, value?.let(toDB))
 
   operator fun provideDelegate(thisRef: MutableTable, property: KProperty<*>): Table.FieldAccessor<U,CustomColumnType<U,T,S,C,CONF_T>,CustomColumnType<U, T, S, C, CONF_T>.CustomColumn> {
-    return thisRef.add(CustomColumn(baseConfiguration.copy(property.name)))
+    return thisRef.add(CustomColumn(thisRef, baseConfiguration.copy(property.name)))
   }
 
   operator fun invoke(configurator: CONF_T.()->Unit) = CustomColumnConfiguration(baseConfiguration.copy().apply(configurator), this@CustomColumnType)
@@ -101,7 +102,7 @@ class CustomColumnType<U :Any,
 class CustomColumnConfiguration<U :Any, T: Any, S:IColumnType<T,S, C>, C:Column<T,S,C>, CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>(val baseConfiguration: CONF_T, type: CustomColumnType<U,T,S,C,CONF_T>):
   AbstractColumnConfiguration<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn, CustomColumnConfiguration<U, T, S, C, CONF_T>>(type) {
 
-  override fun newColumn() = type.CustomColumn(baseConfiguration)
+  override fun newColumn(table: TableRef) = type.CustomColumn(table, baseConfiguration)
 
   override fun copy(newName: String?) = CustomColumnConfiguration(baseConfiguration.copy(newName), type)
 }

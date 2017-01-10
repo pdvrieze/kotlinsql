@@ -432,7 +432,7 @@ class TableConfiguration(override val _name:String, val extra:String?=null):Tabl
   val indices = mutableListOf<List<ColumnRef<*,*,*>>>()
 
   inline fun <T :Any, S: IColumnType<T,S,C>, C:Column<T,S,C>, CONF_T : AbstractColumnConfiguration<T, S, C, CONF_T>> CONF_T.add(block: CONF_T.() ->Unit):ColumnRef<T,S,C> {
-    val newColumn:C = apply(block).newColumn()
+    val newColumn:C = apply(block).newColumn(this@TableConfiguration)
     cols.add(newColumn)
     return newColumn.ref()
   }

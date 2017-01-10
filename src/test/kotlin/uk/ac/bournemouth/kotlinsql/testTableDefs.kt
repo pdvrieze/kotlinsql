@@ -22,6 +22,7 @@ package uk.ac.bournemouth.kotlinsql
 
 import org.testng.Assert.assertEquals
 import org.testng.annotations.Test
+import java.util.*
 
 /**
  * Created by pdvrieze on 02/04/16.
@@ -47,7 +48,7 @@ class testTableDefs {
   fun testAnonymousDefine() {
     val test = object: MutableTable("Testq", null) {
 
-      val bit by BIT()
+      val bit by BIT
 
       override fun init() {
         throw UnsupportedOperationException()
@@ -55,6 +56,26 @@ class testTableDefs {
 
     }
     assertEquals(test.bit.name, "bit")
+  }
+
+  @Test
+  fun testCustomType() {
+    val X_UUID = customType({ VARCHAR(36)}, UUID::toString, UUID::fromString)
+    val test = object: MutableTable("Testq", null) {
+
+      val uuid by X_UUID
+
+      override fun init() {
+        throw UnsupportedOperationException()
+      }
+
+    }
+    assertEquals(test.uuid.name, "uuid")
+    assertEquals(test.uuid.table._name, "Testq")
+    val uuidString = "c5321579-770a-4d72-a6fe-71c92ad32c71"
+    val myUUID = UUID.fromString(uuidString)
+    assertEquals(test.uuid.type.fromDb(uuidString), myUUID)
+    assertEquals(test.uuid.type.toDB(myUUID), uuidString)
   }
 
   @Test

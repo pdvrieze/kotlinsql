@@ -161,46 +161,72 @@ abstract class MutableTable private constructor(name: String?,
       LONGTEXT_T, name).apply(block)
 
   /* Versions without configuration closure */
+  protected inline val BIT get()=BIT()
   protected fun BIT(name:String?=null) = NormalColumnConfiguration( BIT_T, name)
   protected inline fun BIT(length:Int) = BIT(name=null, length = length)
   protected fun BIT(name:String?=null, length:Int) = LengthColumnConfiguration(name, BITFIELD_T, length)
+  protected inline val TINYINT get()=TINYINT()
   protected fun TINYINT(name:String?=null) = NumberColumnConfiguration(TINYINT_T, name)
+  protected inline val SMALLINT get()=SMALLINT()
   protected fun SMALLINT(name:String?=null) = NumberColumnConfiguration(SMALLINT_T, name)
+  protected inline val MEDIUMINT get()=MEDIUMINT()
   protected fun MEDIUMINT(name:String?=null) = NumberColumnConfiguration(MEDIUMINT_T, name)
+  protected inline val INT get()=INT()
   protected fun INT(name:String?=null) = NumberColumnConfiguration(INT_T, name)
+  protected inline val BIGINT get()=BIGINT()
   protected fun BIGINT(name:String?=null) = NumberColumnConfiguration(BIGINT_T, name)
+  protected inline val FLOAT get()=FLOAT()
   protected fun FLOAT(name:String?=null) = NumberColumnConfiguration(FLOAT_T, name)
+  protected inline val DOUBLE get()=INT()
   protected fun DOUBLE(name:String?=null) = NumberColumnConfiguration(DOUBLE_T, name)
+  protected inline val DECIMAL get()=DECIMAL()
   protected inline fun DECIMAL(precision:Int=-1, scale:Int=-1) = DECIMAL(name = null, precision = precision, scale = scale)
   protected fun DECIMAL(name:String?=null, precision:Int=-1, scale:Int=-1) = DecimalColumnConfiguration(DECIMAL_T, name,
                                                                                                         precision,
                                                                                                         scale)
+  protected inline val NUMERIC get()=NUMERIC()
   protected inline fun NUMERIC(precision: Int = -1, scale: Int = -1) = NUMERIC(name = null, precision = precision, scale = scale)
   protected fun NUMERIC(name:String?=null, precision: Int = -1, scale: Int = -1) = DecimalColumnConfiguration(NUMERIC_T,
                                                                                                               name,
                                                                                                               precision,
                                                                                                               scale)
+  protected inline val DATE get()=DATE()
   protected fun DATE(name:String?=null) = NormalColumnConfiguration( DATE_T, name)
+  protected inline val TIME get()=TIME()
   protected fun TIME(name:String?=null) = NormalColumnConfiguration( TIME_T, name)
+  protected inline val TIMESTAMP get()=TIMESTAMP()
   protected fun TIMESTAMP(name:String?=null) = NormalColumnConfiguration( TIMESTAMP_T, name)
+  protected inline val DATETIME get()=DATETIME()
   protected fun DATETIME(name:String?=null) = NormalColumnConfiguration( DATETIME_T, name)
+  protected inline val YEAR get()=YEAR()
   protected fun YEAR(name:String?=null) = NormalColumnConfiguration( YEAR_T, name)
+  protected inline val CHAR get()=CHAR()
   protected inline fun CHAR(length: Int = -1) = CHAR(name=null, length=length)
   protected fun CHAR(name:String?=null, length: Int = -1) = LengthCharColumnConfiguration(CHAR_T, name, length)
+  protected inline val VARCHAR get()=VARCHAR()
   protected inline fun VARCHAR(length: Int = -1) = VARCHAR(name=null, length=length)
   protected fun VARCHAR(name:String?=null, length: Int) = LengthCharColumnConfiguration(VARCHAR_T, name, length)
 
+  protected inline val BINARY get()=BINARY()
   protected inline fun BINARY(length: Int = -1) = BINARY(name=null, length=length)
   protected fun BINARY(name:String?=null, length: Int) = LengthColumnConfiguration(name, BINARY_T, length)
+  protected inline val VARBINARY get()=VARBINARY()
   protected inline fun VARBINARY(length: Int = -1) = VARBINARY(name=null, length=length)
   protected fun VARBINARY(name:String?=null, length: Int) = LengthColumnConfiguration(name, VARBINARY_T, length)
+  protected inline val TINYBLOB get()=TINYBLOB()
   protected fun TINYBLOB(name:String?=null) = NormalColumnConfiguration( TINYBLOB_T, name)
+  protected inline val BLOB get()=BLOB()
   protected fun BLOB(name:String?=null) = NormalColumnConfiguration( BLOB_T, name)
+  protected inline val MEDIUMBLOB get()=MEDIUMBLOB()
   protected fun MEDIUMBLOB(name:String?=null) = NormalColumnConfiguration( MEDIUMBLOB_T, name)
   protected fun LONGBLOB(name:String?=null) = NormalColumnConfiguration( LONGBLOB_T, name)
+  protected inline val TINYTEXT get()=TINYTEXT()
   protected fun TINYTEXT(name:String?=null) = CharColumnConfiguration(TINYTEXT_T, name)
+  protected inline val TEXT get()=TEXT()
   protected fun TEXT(name:String?=null) = CharColumnConfiguration(TEXT_T, name)
+  protected inline val MEDIUMTEXT get()=MEDIUMTEXT()
   protected fun MEDIUMTEXT(name:String?=null) = CharColumnConfiguration(MEDIUMTEXT_T, name)
+  protected inline val LONGTEXT get()=LONGTEXT()
   protected fun LONGTEXT(name:String?=null) = CharColumnConfiguration(LONGTEXT_T, name)
 
   /* When there is no body, the configuration subtype does not matter */
@@ -208,16 +234,16 @@ abstract class MutableTable private constructor(name: String?,
    * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
    * @param other The column whose type to copy
    */
-  protected fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(other: C): Table.FieldAccessor<T,S,C> {
-    return add(other.copyConfiguration(owner = this).newColumn())
+  protected inline fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(other: C): AbstractColumnConfiguration<T,S,C,*> {
+    return other.copyConfiguration(owner = this)
   }
 
   /**
    * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
    * @param other The column whose type to copy
    */
-  protected fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(newName:String?=null, other: C): Table.FieldAccessor<T,S,C> {
-    return add(other.copyConfiguration(newName = newName, owner = this).newColumn())
+  protected inline fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(newName:String, other: C): AbstractColumnConfiguration<T,S,C,*> {
+    return other.copyConfiguration(newName = newName, owner = this)
   }
 
   /* Otherwise, the various types need to be distinguished. The different subtypes of column are needed for overload resolution */

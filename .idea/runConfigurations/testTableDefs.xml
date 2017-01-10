@@ -30,6 +30,8 @@
     <envs />
     <properties />
     <listeners />
-    <method />
+    <method>
+      <option name="Gradle.BeforeRunTask" enabled="true" tasks="testClasses" externalProjectPath="$PROJECT_DIR$" vmOptions="" scriptParameters="" />
+    </method>
   </configuration>
 </component>

@@ -172,8 +172,10 @@ internal abstract class ColumnImpl<T:Any, S: ColumnType<T, S,C>, C:Column<T,S,C>
 
 }
 
-internal class NormalColumnImpl<T:Any, S: SimpleColumnType<T, S>>(name:String, configuration: NormalColumnConfiguration<T, S>):
-      ColumnImpl<T, S, SimpleColumn<T, S>> (table = configuration.table,
+internal class NormalColumnImpl<T:Any, S: SimpleColumnType<T, S>>(table: TableRef,
+                                                                  name: String,
+                                                                  configuration: NormalColumnConfiguration<T, S>):
+      ColumnImpl<T, S, SimpleColumn<T, S>> (table = table,
                                             type = configuration.type,
                                             name = name,
                                             notnull = configuration.notnull,
@@ -187,8 +189,10 @@ internal class NormalColumnImpl<T:Any, S: SimpleColumnType<T, S>>(name:String, c
   override fun copyConfiguration(newName:String?, owner: Table) = NormalColumnConfiguration(type, newName ?: name)
 }
 
-internal class LengthColumnImpl<T:Any, S: LengthColumnType<T, S>>(name:String, configuration: LengthColumnConfiguration<T, S>):
-      ColumnImpl<T,S, LengthColumn<T,S>>(table=configuration.table,
+internal class LengthColumnImpl<T:Any, S: LengthColumnType<T, S>>(table: TableRef,
+                                                                  name: String,
+                                                                  configuration: LengthColumnConfiguration<T, S>):
+      ColumnImpl<T,S, LengthColumn<T,S>>(table=table,
                                          type=configuration.type,
                                          name=name,
                                          notnull=configuration.notnull,
@@ -208,8 +212,10 @@ internal class LengthColumnImpl<T:Any, S: LengthColumnType<T, S>>(name:String, c
                                                                                             length)
 }
 
-internal class NumberColumnImpl<T:Any, S: NumericColumnType<T, S>>(name:String, configuration: NumberColumnConfiguration<T, S>):
-      ColumnImpl<T, S, NumericColumn<T, S>> (table = configuration.table,
+internal class NumberColumnImpl<T:Any, S: NumericColumnType<T, S>>(table: TableRef,
+                                                                   name: String,
+                                                                   configuration: NumberColumnConfiguration<T, S>):
+      ColumnImpl<T, S, NumericColumn<T, S>> (table = table,
                                              type = configuration.type,
                                              name = name,
                                              notnull = configuration.notnull,
@@ -227,8 +233,10 @@ internal class NumberColumnImpl<T:Any, S: NumericColumnType<T, S>>(name:String, 
 }
 
 
-internal class CharColumnImpl<S: CharColumnType<S>>(name:String, configuration: CharColumnConfiguration<S>):
-      ColumnImpl<String, S, CharColumn<S>> (table = configuration.table,
+internal class CharColumnImpl<S: CharColumnType<S>>(table: TableRef,
+                                                    name: String,
+                                                    configuration: CharColumnConfiguration<S>):
+      ColumnImpl<String, S, CharColumn<S>> (table = table,
                                           type = configuration.type,
                                           name = name,
                                           notnull = configuration.notnull,
@@ -246,8 +254,10 @@ internal class CharColumnImpl<S: CharColumnType<S>>(name:String, configuration: 
 }
 
 
-internal class LengthCharColumnImpl<S: LengthCharColumnType<S>>(name:String, configuration: LengthCharColumnConfiguration<S>):
-      ColumnImpl<String, S, LengthCharColumn<S>> (table = configuration.table,
+internal class LengthCharColumnImpl<S: LengthCharColumnType<S>>(table: TableRef,
+                                                                name: String,
+                                                                configuration: LengthCharColumnConfiguration<S>):
+      ColumnImpl<String, S, LengthCharColumn<S>> (table = table,
                                                 type = configuration.type,
                                                 name = name,
                                                 notnull = configuration.notnull,
@@ -271,8 +281,10 @@ internal class LengthCharColumnImpl<S: LengthCharColumnType<S>>(name:String, con
 }
 
 
-internal class DecimalColumnImpl<S: DecimalColumnType<S>>(name:String, configuration: DecimalColumnConfiguration<S>):
-      ColumnImpl<BigDecimal, S, DecimalColumn<S>> (table = configuration.table,
+internal class DecimalColumnImpl<S: DecimalColumnType<S>>(table: TableRef,
+                                                          name: String,
+                                                          configuration: DecimalColumnConfiguration<S>):
+      ColumnImpl<BigDecimal, S, DecimalColumn<S>> (table = table,
                                              type = configuration.type,
                                              name = name,
                                              notnull = configuration.notnull,
