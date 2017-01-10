@@ -37,8 +37,6 @@ import uk.ac.bournemouth.kotlinsql.ColumnType.SimpleColumnType.*
 import java.sql.Date
 import java.sql.Time
 import java.sql.Timestamp
-import kotlin.properties.ReadOnlyProperty
-import kotlin.reflect.KProperty
 
 /**
  * A base class for table declarations. Users of the code are expected to use this with a configuration closure to create
@@ -70,7 +68,7 @@ import kotlin.reflect.KProperty
 // Note that the overloadResolver parameter on the primary constructor is there purely to fix overload resolving
 @Suppress("NOTHING_TO_INLINE", "unused")
 abstract class MutableTable private constructor(name: String?,
-                                                override val _extra: String?, @Suppress("UNUSED_PARAMETER") overloadResolver:Unit) : AbstractTable() {
+                                                override val _extra: String?, @Suppress("UNUSED_PARAMETER") overloadResolver:Unit) : AbstractTable(), SqlTypesMixin {
 
   constructor(extra:String?=null): this(null, extra, Unit)
   constructor(name:String, extra: String?): this(name, extra, Unit)
@@ -108,126 +106,6 @@ abstract class MutableTable private constructor(name: String?,
     return column.apply { (_cols as MutableList<Column<*,*,*>>).add(this)}.let{ name(column.name, it.type) }
   }
 
-  // @formatter:off
-  protected fun BIT(name:String?=null, block: NormalColumnConfiguration<Boolean, BIT_T>.() -> Unit) = NormalColumnConfiguration(  BIT_T, name).apply(block)
-  protected inline fun BIT(length: Int, noinline block: BaseLengthColumnConfiguration<BooleanArray, BITFIELD_T, LengthColumn<BooleanArray, BITFIELD_T>>.() -> Unit) = BIT(name=null, length = length, block = block)
-  protected fun BIT(name:String?=null, length: Int, block: BaseLengthColumnConfiguration<BooleanArray, BITFIELD_T, LengthColumn<BooleanArray, BITFIELD_T>>.() -> Unit) = LengthColumnConfiguration( name, BITFIELD_T, length).apply(block)
-  protected fun TINYINT(name:String?=null, block: NumberColumnConfiguration<Byte, TINYINT_T>.() -> Unit) = NumberColumnConfiguration(
-      TINYINT_T, name).apply(block)
-  protected fun SMALLINT(name:String?=null, block: NumberColumnConfiguration<Short, SMALLINT_T>.() -> Unit) = NumberColumnConfiguration(
-      SMALLINT_T, name).apply(block)
-  protected fun MEDIUMINT(name:String?=null, block: NumberColumnConfiguration<Int, MEDIUMINT_T>.() -> Unit) = NumberColumnConfiguration(
-      MEDIUMINT_T, name).apply(block)
-  protected fun INT(name:String?=null, block: NumberColumnConfiguration<Int, INT_T>.() -> Unit) = NumberColumnConfiguration(
-      INT_T, name).apply(block)
-  protected fun BIGINT(name:String?=null, block: NumberColumnConfiguration<Long, BIGINT_T>.() -> Unit) = NumberColumnConfiguration(
-      BIGINT_T, name).apply(block)
-  protected fun FLOAT(name:String?=null, block: NumberColumnConfiguration<Float, FLOAT_T>.() -> Unit) = NumberColumnConfiguration(
-      FLOAT_T, name).apply(block)
-  protected fun DOUBLE(name:String?=null, block: NumberColumnConfiguration<Double, DOUBLE_T>.() -> Unit) = NumberColumnConfiguration(
-      DOUBLE_T, name).apply(block)
-  protected inline fun DECIMAL(precision: Int = -1, scale: Int = -1, noinline block: DecimalColumnConfiguration<DECIMAL_T>.() -> Unit) = DECIMAL(name=null, precision=precision, scale=scale, block=block)
-  protected fun DECIMAL(name:String?=null, precision: Int = -1, scale: Int = -1, block: DecimalColumnConfiguration<DECIMAL_T>.() -> Unit) = DecimalColumnConfiguration(
-      DECIMAL_T, name, precision, scale).apply(block)
-  protected inline fun NUMERIC(precision: Int = -1, scale: Int = -1, noinline block: DecimalColumnConfiguration<NUMERIC_T>.() -> Unit) = NUMERIC(name=null, precision = precision, scale=scale, block = block)
-  protected fun NUMERIC(name:String?=null, precision: Int = -1, scale: Int = -1, block: DecimalColumnConfiguration<NUMERIC_T>.() -> Unit) = DecimalColumnConfiguration(
-      NUMERIC_T, name, precision, scale).apply(block)
-  protected fun DATE(name:String?=null, block: NormalColumnConfiguration<Date, DATE_T>.() -> Unit) = NormalColumnConfiguration(  DATE_T, name).apply(block)
-  protected fun TIME(name:String?=null, block: NormalColumnConfiguration<Time, TIME_T>.() -> Unit) = NormalColumnConfiguration(  TIME_T, name).apply(block)
-  protected fun TIMESTAMP(name:String?=null, block: NormalColumnConfiguration<Timestamp, TIMESTAMP_T>.() -> Unit) = NormalColumnConfiguration(  TIMESTAMP_T, name).apply(block)
-  protected fun DATETIME(name:String?=null, block: NormalColumnConfiguration<Timestamp, DATETIME_T>.() -> Unit) = NormalColumnConfiguration(  DATETIME_T, name).apply(block)
-  protected fun YEAR(name:String?=null, block: NormalColumnConfiguration<Date, YEAR_T>.() -> Unit) = NormalColumnConfiguration(  YEAR_T, name).apply(block)
-  protected inline fun CHAR(length: Int = -1, noinline block: LengthCharColumnConfiguration<CHAR_T>.() -> Unit) = CHAR(name=null, length=length, block = block)
-  protected fun CHAR(name:String?=null, length: Int = -1, block: LengthCharColumnConfiguration<CHAR_T>.() -> Unit) = LengthCharColumnConfiguration(
-      CHAR_T, name, length).apply(block)
-  protected inline fun VARCHAR(length: Int, noinline block: LengthCharColumnConfiguration<VARCHAR_T>.() -> Unit) = VARCHAR(name=null, length=length, block=block)
-  protected fun VARCHAR(name:String?=null, length: Int, block: LengthCharColumnConfiguration<VARCHAR_T>.() -> Unit) = LengthCharColumnConfiguration(
-      VARCHAR_T, name, length).apply(block)
-  protected inline fun BINARY(length: Int, noinline block: BaseLengthColumnConfiguration<ByteArray, BINARY_T, LengthColumn<ByteArray, BINARY_T>>.() -> Unit) = BINARY(name=null, length=length, block=block)
-  protected fun BINARY(name:String?=null, length: Int, block: BaseLengthColumnConfiguration<ByteArray, BINARY_T, LengthColumn<ByteArray, BINARY_T>>.() -> Unit) = LengthColumnConfiguration( name, BINARY_T, length).apply(block)
-  protected inline fun VARBINARY(length: Int, noinline block: BaseLengthColumnConfiguration<ByteArray, VARBINARY_T, LengthColumn<ByteArray, VARBINARY_T>>.() -> Unit) = VARBINARY(name=null, length=length, block=block)
-  protected fun VARBINARY(name:String?=null, length: Int, block: BaseLengthColumnConfiguration<ByteArray, VARBINARY_T, LengthColumn<ByteArray, VARBINARY_T>>.() -> Unit) = LengthColumnConfiguration( name, VARBINARY_T, length).apply(block)
-  protected fun TINYBLOB(name:String?=null, block: NormalColumnConfiguration<ByteArray, TINYBLOB_T>.() -> Unit) = NormalColumnConfiguration(  TINYBLOB_T, name).apply(block)
-  protected fun BLOB(name:String?=null, block: NormalColumnConfiguration<ByteArray, BLOB_T>.() -> Unit) = NormalColumnConfiguration(  BLOB_T, name).apply(block)
-  protected fun MEDIUMBLOB(name:String?=null, block: NormalColumnConfiguration<ByteArray, MEDIUMBLOB_T>.() -> Unit) = NormalColumnConfiguration(  MEDIUMBLOB_T, name).apply(block)
-  protected fun LONGBLOB(name:String?=null, block: NormalColumnConfiguration<ByteArray, LONGBLOB_T>.() -> Unit) = NormalColumnConfiguration(  LONGBLOB_T, name).apply(block)
-  protected fun TINYTEXT(name:String?=null, block: CharColumnConfiguration<TINYTEXT_T>.() -> Unit) = CharColumnConfiguration(
-      TINYTEXT_T, name).apply(block)
-  protected fun TEXT(name:String?=null, block: CharColumnConfiguration<TEXT_T>.() -> Unit) = CharColumnConfiguration(
-      TEXT_T, name).apply(block)
-  protected fun MEDIUMTEXT(name:String?=null, block: CharColumnConfiguration<MEDIUMTEXT_T>.() -> Unit) = CharColumnConfiguration(
-      MEDIUMTEXT_T, name).apply(block)
-  protected fun LONGTEXT(name:String?=null, block: CharColumnConfiguration<LONGTEXT_T>.() -> Unit) = CharColumnConfiguration(
-      LONGTEXT_T, name).apply(block)
-
-  /* Versions without configuration closure */
-  protected inline val BIT get()=BIT()
-  protected fun BIT(name:String?=null) = NormalColumnConfiguration( BIT_T, name)
-  protected inline fun BIT(length:Int) = BIT(name=null, length = length)
-  protected fun BIT(name:String?=null, length:Int) = LengthColumnConfiguration(name, BITFIELD_T, length)
-  protected inline val TINYINT get()=TINYINT()
-  protected fun TINYINT(name:String?=null) = NumberColumnConfiguration(TINYINT_T, name)
-  protected inline val SMALLINT get()=SMALLINT()
-  protected fun SMALLINT(name:String?=null) = NumberColumnConfiguration(SMALLINT_T, name)
-  protected inline val MEDIUMINT get()=MEDIUMINT()
-  protected fun MEDIUMINT(name:String?=null) = NumberColumnConfiguration(MEDIUMINT_T, name)
-  protected inline val INT get()=INT()
-  protected fun INT(name:String?=null) = NumberColumnConfiguration(INT_T, name)
-  protected inline val BIGINT get()=BIGINT()
-  protected fun BIGINT(name:String?=null) = NumberColumnConfiguration(BIGINT_T, name)
-  protected inline val FLOAT get()=FLOAT()
-  protected fun FLOAT(name:String?=null) = NumberColumnConfiguration(FLOAT_T, name)
-  protected inline val DOUBLE get()=INT()
-  protected fun DOUBLE(name:String?=null) = NumberColumnConfiguration(DOUBLE_T, name)
-  protected inline val DECIMAL get()=DECIMAL()
-  protected inline fun DECIMAL(precision:Int=-1, scale:Int=-1) = DECIMAL(name = null, precision = precision, scale = scale)
-  protected fun DECIMAL(name:String?=null, precision:Int=-1, scale:Int=-1) = DecimalColumnConfiguration(DECIMAL_T, name,
-                                                                                                        precision,
-                                                                                                        scale)
-  protected inline val NUMERIC get()=NUMERIC()
-  protected inline fun NUMERIC(precision: Int = -1, scale: Int = -1) = NUMERIC(name = null, precision = precision, scale = scale)
-  protected fun NUMERIC(name:String?=null, precision: Int = -1, scale: Int = -1) = DecimalColumnConfiguration(NUMERIC_T,
-                                                                                                              name,
-                                                                                                              precision,
-                                                                                                              scale)
-  protected inline val DATE get()=DATE()
-  protected fun DATE(name:String?=null) = NormalColumnConfiguration( DATE_T, name)
-  protected inline val TIME get()=TIME()
-  protected fun TIME(name:String?=null) = NormalColumnConfiguration( TIME_T, name)
-  protected inline val TIMESTAMP get()=TIMESTAMP()
-  protected fun TIMESTAMP(name:String?=null) = NormalColumnConfiguration( TIMESTAMP_T, name)
-  protected inline val DATETIME get()=DATETIME()
-  protected fun DATETIME(name:String?=null) = NormalColumnConfiguration( DATETIME_T, name)
-  protected inline val YEAR get()=YEAR()
-  protected fun YEAR(name:String?=null) = NormalColumnConfiguration( YEAR_T, name)
-  protected inline val CHAR get()=CHAR()
-  protected inline fun CHAR(length: Int = -1) = CHAR(name=null, length=length)
-  protected fun CHAR(name:String?=null, length: Int = -1) = LengthCharColumnConfiguration(CHAR_T, name, length)
-  protected inline val VARCHAR get()=VARCHAR()
-  protected inline fun VARCHAR(length: Int = -1) = VARCHAR(name=null, length=length)
-  protected fun VARCHAR(name:String?=null, length: Int) = LengthCharColumnConfiguration(VARCHAR_T, name, length)
-
-  protected inline val BINARY get()=BINARY()
-  protected inline fun BINARY(length: Int = -1) = BINARY(name=null, length=length)
-  protected fun BINARY(name:String?=null, length: Int) = LengthColumnConfiguration(name, BINARY_T, length)
-  protected inline val VARBINARY get()=VARBINARY()
-  protected inline fun VARBINARY(length: Int = -1) = VARBINARY(name=null, length=length)
-  protected fun VARBINARY(name:String?=null, length: Int) = LengthColumnConfiguration(name, VARBINARY_T, length)
-  protected inline val TINYBLOB get()=TINYBLOB()
-  protected fun TINYBLOB(name:String?=null) = NormalColumnConfiguration( TINYBLOB_T, name)
-  protected inline val BLOB get()=BLOB()
-  protected fun BLOB(name:String?=null) = NormalColumnConfiguration( BLOB_T, name)
-  protected inline val MEDIUMBLOB get()=MEDIUMBLOB()
-  protected fun MEDIUMBLOB(name:String?=null) = NormalColumnConfiguration( MEDIUMBLOB_T, name)
-  protected fun LONGBLOB(name:String?=null) = NormalColumnConfiguration( LONGBLOB_T, name)
-  protected inline val TINYTEXT get()=TINYTEXT()
-  protected fun TINYTEXT(name:String?=null) = CharColumnConfiguration(TINYTEXT_T, name)
-  protected inline val TEXT get()=TEXT()
-  protected fun TEXT(name:String?=null) = CharColumnConfiguration(TEXT_T, name)
-  protected inline val MEDIUMTEXT get()=MEDIUMTEXT()
-  protected fun MEDIUMTEXT(name:String?=null) = CharColumnConfiguration(MEDIUMTEXT_T, name)
-  protected inline val LONGTEXT get()=LONGTEXT()
-  protected fun LONGTEXT(name:String?=null) = CharColumnConfiguration(LONGTEXT_T, name)
 
   /* When there is no body, the configuration subtype does not matter */
   /**
