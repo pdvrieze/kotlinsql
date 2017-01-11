@@ -30,7 +30,7 @@ import kotlin.reflect.KProperty
  */
 
 inline fun <reified U:Any, T :Any, S: IColumnType<T,S,C>, C :Column<T,S,C>, CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>> customType(
-  createConfiguration: SingleColumnType.()->CONF_T, noinline toDB: (U)->T, noinline fromDb: (T)->U)
+  createConfiguration: SqlTypesMixin.()->CONF_T, noinline toDB: (U)->T, noinline fromDb: (T)->U)
     = CustomColumnType<U, T, S, C, CONF_T>(U::class, SingleColumnType.createConfiguration(), toDB, fromDb)
 
 class CustomColumnType<U :Any,
