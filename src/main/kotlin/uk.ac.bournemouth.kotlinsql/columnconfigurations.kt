@@ -66,7 +66,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
     references = orig.references
   }
 
-  inline operator fun provideDelegate(thisRef: MutableTable, property: KProperty<*>): Table.FieldAccessor<T,S,C> {
+  operator fun provideDelegate(thisRef: MutableTable, property: KProperty<*>): Table.FieldAccessor<T,S,C> {
     if(name.isNullOrBlank()) { name = property.name }
     return thisRef.add(this.newColumn(thisRef))
   }
@@ -79,11 +79,11 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
   val AUTO_INCREMENT:Unit get() { autoincrement = true }
   val UNIQUE:Unit get() { unique = true }
 
-  inline fun DEFAULT(value:T) { default=value }
-  inline fun COMMENT(comment:String) { this.comment = comment }
-  inline fun COLUMN_FORMAT(format: ColumnFormat) { columnFormat = format }
-  inline fun STORAGE(format: StorageFormat) { storageFormat = format }
-  inline fun REFERENCES(table: TableRef, col1: ColumnRef<*,*,*>, vararg columns: ColumnRef<*,*,*>) {
+  fun DEFAULT(value:T) { default=value }
+  fun COMMENT(comment:String) { this.comment = comment }
+  fun COLUMN_FORMAT(format: ColumnFormat) { columnFormat = format }
+  fun STORAGE(format: StorageFormat) { storageFormat = format }
+  fun REFERENCES(table: TableRef, col1: ColumnRef<*,*,*>, vararg columns: ColumnRef<*,*,*>) {
     references= ColsetRef(table, col1, *columns)
   }
 
@@ -102,7 +102,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
     override fun copy(newName: String?) = NormalColumnConfiguration(this, newName)
   }
 
-  sealed abstract class AbstractNumberColumnConfiguration<T:Any, S: INumericColumnType<T, S,C>, C: INumericColumn<T, S, C>, out CONF_T:Any> : AbstractColumnConfiguration<T, S, C, CONF_T> {
+  sealed class AbstractNumberColumnConfiguration<T:Any, S: INumericColumnType<T, S,C>, C: INumericColumn<T, S, C>, out CONF_T:Any> : AbstractColumnConfiguration<T, S, C, CONF_T> {
     constructor(type: S, name: String? = null) : super(type, name) {
       this.displayLength = -1
     }
@@ -159,14 +159,14 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
 
   }
 
-  sealed abstract class AbstractCharColumnConfiguration<T:String, S: ICharColumnType<S, C>, C: ICharColumn<S, C>, out CONF_T:Any> : AbstractColumnConfiguration<String, S, C, CONF_T> {
+  sealed class AbstractCharColumnConfiguration<S: ICharColumnType<S, C>, C: ICharColumn<S, C>, out CONF_T:Any> : AbstractColumnConfiguration<String, S, C, CONF_T> {
     var charset: String? = null
 
     var collation: String? = null
     var binary:Boolean = false
 
     constructor(type: S, name: String? = null) : super(type, name)
-    constructor(orig: AbstractCharColumnConfiguration<String, S, C, CONF_T>, newName: String?) : super(orig, newName) {
+    constructor(orig: AbstractCharColumnConfiguration<S, C, CONF_T>, newName: String?) : super(orig, newName) {
       charset = orig.charset
       collation = orig.collation
       binary = orig.binary
@@ -175,10 +175,10 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
 
     val BINARY:Unit get() { binary = true }
 
-    inline fun CHARACTER_SET(charset:String) { this.charset = charset }
-    inline fun COLLATE(collation:String) { this.collation = collation }
+    fun CHARACTER_SET(charset:String) { this.charset = charset }
+    fun COLLATE(collation:String) { this.collation = collation }
 
-    class CharColumnConfiguration<S: CharColumnType<S>> : AbstractCharColumnConfiguration<String, S, CharColumn<S>, CharColumnConfiguration<S>> {
+    class CharColumnConfiguration<S: CharColumnType<S>> : AbstractCharColumnConfiguration<S, CharColumn<S>, CharColumnConfiguration<S>> {
       constructor(type: S, name: String? = null) : super(type, name)
       constructor(orig: CharColumnConfiguration<S>, newName: String? = null) : super(orig, newName)
 
@@ -186,7 +186,7 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
       override fun copy(newName: String?) = CharColumnConfiguration(this, newName)
     }
 
-    class LengthCharColumnConfiguration<S: LengthCharColumnType<S>> : AbstractCharColumnConfiguration<String, S, LengthCharColumn<S>, LengthCharColumnConfiguration<S>>, BaseLengthColumnConfiguration<String, S, LengthCharColumn<S>> {
+    class LengthCharColumnConfiguration<S: LengthCharColumnType<S>> : AbstractCharColumnConfiguration<S, LengthCharColumn<S>, LengthCharColumnConfiguration<S>>, BaseLengthColumnConfiguration<String, S, LengthCharColumn<S>> {
       override val length: Int
 
       constructor(type: S, name: String? = null, length: Int) : super(type, name) {

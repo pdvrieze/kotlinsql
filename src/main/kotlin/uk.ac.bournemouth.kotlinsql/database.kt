@@ -33,7 +33,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaGetter
-import kotlin.reflect.memberProperties
+import kotlin.reflect.full.memberProperties
 
 /**
  * This is an abstract class that contains a set of database tables.
@@ -105,11 +105,13 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
    * Delegate function to be used to reference tables. Note that this requires the name of the property to match the name
    * of the table.
    */
+  @Suppress("NOTHING_TO_INLINE")
   protected inline fun <T: ImmutableTable> ref(table: T)= TableDelegate(table)
 
   /**
    * Delegate function to be used to reference tables. This delegate allows for renaming, by removing the need for checking.
    */
+  @Suppress("NOTHING_TO_INLINE")
   protected inline fun <T: ImmutableTable> rename(table: T)= TableDelegate(table, false)
 
 

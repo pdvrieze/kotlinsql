@@ -141,6 +141,7 @@ abstract class MutableTable private constructor(name: String?,
    * @param other The column whose type to copy
    * @param block The block to further configure the column
    */
+  @Suppress("UNCHECKED_CAST")
   protected fun <U :Any,
     T:Any,
     S:IColumnType<T,S, C>,
@@ -186,6 +187,7 @@ abstract class MutableTable private constructor(name: String?,
 
 
   /* Otherwise, the various types need to be distinguished. The different subtypes of column are needed for overload resolution */
+  @Suppress("UNCHECKED_CAST")
   protected fun <U :Any,
     T:Any,
     S:IColumnType<T,S, C>,

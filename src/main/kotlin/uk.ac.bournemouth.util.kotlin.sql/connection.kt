@@ -71,6 +71,7 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
 
   fun getMetaData() = ConnectionMetadata(rawConnection.metaData)
 
+  @Suppress("NOTHING_TO_INLINE")
   private inline fun prepareCall(sql: String) = rawConnection.prepareCall(sql)
 
   /** @see [Connection.getAutoCommit] */
@@ -122,7 +123,7 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
     return DBConnection.TransactionIsolation.values().first { it.intValue==jdbcValue }
   }
 
-  enum class TransactionIsolation constructor(val intValue: Int, dummy:Unit) {
+  enum class TransactionIsolation constructor(val intValue: Int, @Suppress("UNUSED_PARAMETER") dummy:Unit) {
     TRANSACTION_NONE(Connection.TRANSACTION_NONE, Unit),
     TRANSACTION_READ_UNCOMMITTED(Connection.TRANSACTION_READ_UNCOMMITTED, Unit),
     TRANSACTION_READ_COMMITTED(Connection.TRANSACTION_READ_COMMITTED, Unit),
@@ -191,7 +192,7 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
     return Holdability.values().first { it.jdbc == jdbc }
   }
 
-  enum class Holdability(val jdbc: Int, dummy: Unit) {
+  enum class Holdability(val jdbc: Int, @Suppress("UNUSED_PARAMETER") dummy: Unit) {
     HOLD_CURSORS_OVER_COMMIT(ResultSet.HOLD_CURSORS_OVER_COMMIT, Unit),
     CLOSE_CURSORS_AT_COMMIT(ResultSet.CLOSE_CURSORS_AT_COMMIT, Unit);
   }
@@ -326,7 +327,7 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
 
   fun hasTable(tableRef: TableRef): Boolean {
     return getMetaData().getTables(null, null, tableRef._name, null).use { rs->
-      return rs.next()
+      rs.next()
     }
   }
 

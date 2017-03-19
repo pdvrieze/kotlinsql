@@ -24,6 +24,7 @@ import java.math.BigDecimal
 import java.sql.*
 import java.util.*
 
+@Suppress("NOTHING_TO_INLINE")
 class StatementHelper constructor(val statement: PreparedStatement, val queryString:String) : PreparedStatement by statement {
   /**
    * Get raw access to the underlying prepared statement. This should normally not be needed, but is available when it is.
@@ -83,7 +84,7 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
   fun setParam(index: Int, value: Byte?) = if (value == null) setNull(index, Types.TINYINT) else setByte(index, value)
   fun setParam(index: Int, value: Short?) = if (value == null) setNull(index, Types.SMALLINT) else setShort(index, value)
 
-  @Suppress("unused")
+  @Suppress("unused", "NOTHING_TO_INLINE")
   class ParamHelper_(val sh: StatementHelper) {
 
     var index = 2
@@ -140,6 +141,7 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
     if (value ==null) statement.setNull(pos, Types.NUMERIC) else statement.setBigDecimal(pos, value)
   }
 
+  @Suppress("UNUSED_PARAMETER")
   fun setArray(pos:Int, value: BooleanArray?) {
     throw UnsupportedOperationException("Setting bit arrays is not yet supported")
   }
