@@ -44,7 +44,7 @@ class GenerateDatabaseBaseKt() {
       appendln("import javax.annotation.Generated")
       appendln()
       appendln("@Generated(\"${GenerateDatabaseBaseKt::class.java.name}\")")
-      appendln("abstract open class DatabaseMethods {")
+      appendln("abstract class DatabaseMethods {")
 //      appendln("  companion object {")
 
       appendln("abstract operator fun get(key:TableRef):Table")
