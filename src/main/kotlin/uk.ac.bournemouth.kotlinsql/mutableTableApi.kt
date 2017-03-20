@@ -112,7 +112,7 @@ abstract class MutableTable private constructor(name: String?,
    * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
    * @param other The column whose type to copy
    */
-  protected inline fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(other: C): AbstractColumnConfiguration<T,S,C,*> {
+  protected inline fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(other: C): ColumnConfiguration<T,S,C,*> {
     return other.copyConfiguration(owner = this)
   }
 
@@ -131,7 +131,7 @@ abstract class MutableTable private constructor(name: String?,
    * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
    * @param other The column whose type to copy
    */
-  protected inline fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(newName:String, other: C): AbstractColumnConfiguration<T,S,C,*> {
+  protected inline fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(newName:String, other: C): ColumnConfiguration<T,S,C,*> {
     return other.copyConfiguration(newName = newName, owner = this)
   }
 

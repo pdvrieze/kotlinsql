@@ -25,6 +25,8 @@ import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColum
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.ColumnConfiguration.ColumnFormat
+import uk.ac.bournemouth.kotlinsql.ColumnConfiguration.StorageFormat
 import uk.ac.bournemouth.kotlinsql.ColumnType.*
 import uk.ac.bournemouth.kotlinsql.ColumnType.CharColumnType.*
 import uk.ac.bournemouth.kotlinsql.ColumnType.DecimalColumnType.DECIMAL_T
@@ -119,7 +121,7 @@ interface IColumnType<T:Any, S: IColumnType<T, S, C>, C:Column<T,S,C>> {
    */
   fun maybeCast(value: Any?): T? = value?.let{ type.javaObjectType.cast(it) }
 
-  fun newConfiguration(refColumn: C): AbstractColumnConfiguration<T, S, C, *>
+  fun newConfiguration(refColumn: C): ColumnConfiguration<T, S, C, *>
 
   fun fromResultSet(rs: ResultSet, pos: Int): T?
 
@@ -343,13 +345,13 @@ interface Column<T:Any, S: IColumnType<T, S,C>, C:Column<T,S,C>>: ColumnRef<T,S,
   val autoincrement: Boolean
   val default: T?
   val comment:String?
-  val columnFormat: AbstractColumnConfiguration.ColumnFormat?
-  val storageFormat: AbstractColumnConfiguration.StorageFormat?
+  val columnFormat: ColumnFormat?
+  val storageFormat: StorageFormat?
   val references:ColsetRef?
 
   fun toDDL(): CharSequence
 
-  fun copyConfiguration(newName:String? = null, owner: Table): AbstractColumnConfiguration<T,S,C, Any>
+  fun copyConfiguration(newName:String? = null, owner: Table): ColumnConfiguration<T,S,C, Any>
 
   /** Delegating function here as that means that */
   fun fromResultSet(rs: ResultSet, pos: Int): T? = type.fromResultSet(rs, pos)

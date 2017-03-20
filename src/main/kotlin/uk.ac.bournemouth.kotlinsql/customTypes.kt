@@ -29,7 +29,7 @@ import kotlin.reflect.KProperty
  * Support for custom types that do automatic mapping
  */
 
-inline fun <reified U:Any, T :Any, S: IColumnType<T,S,C>, C :Column<T,S,C>, CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>> customType(
+inline fun <reified U:Any, T :Any, S: IColumnType<T,S,C>, C :Column<T,S,C>, CONF_T: ColumnConfiguration<T, S, C, CONF_T>> customType(
   createConfiguration: SqlTypesMixin.()->CONF_T, noinline toDB: (U)->T, noinline fromDb: (T)->U)
     = CustomColumnType<U, T, S, C, CONF_T>(U::class, SingleColumnType.createConfiguration(), toDB, fromDb)
 
@@ -37,7 +37,7 @@ class CustomColumnType<U :Any,
   T:Any,
   S:IColumnType<T,S, C>,
   C:Column<T,S,C>,
-  CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>(
+  CONF_T: ColumnConfiguration<T, S, C, CONF_T>>(
 
   override val type: KClass<U>,
   val baseConfiguration: CONF_T,
@@ -46,7 +46,7 @@ class CustomColumnType<U :Any,
 
   val baseColumnType = baseConfiguration.type
 
-  inner class CustomColumn(table: TableRef, baseConfiguration: AbstractColumnConfiguration<T, S, C, *>):
+  inner class CustomColumn(table: TableRef, baseConfiguration: ColumnConfiguration<T, S, C, *>):
     Column<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn> {
 
     val baseColumn: Column<T, S, C> = baseConfiguration.newColumn(table)
@@ -79,7 +79,7 @@ class CustomColumnType<U :Any,
 
   override val typeName: String get() = baseColumnType.typeName
 
-  override fun newConfiguration(refColumn: CustomColumn): AbstractColumnConfiguration<U, CustomColumnType<U, T, S, C, CONF_T>, CustomColumn, *>
+  override fun newConfiguration(refColumn: CustomColumn): ColumnConfiguration<U, CustomColumnType<U, T, S, C, CONF_T>, CustomColumn, *>
     = CustomColumnConfiguration(baseConfiguration.copy(newName = refColumn.name), this@CustomColumnType)
 
   override fun fromResultSet(rs: ResultSet, pos: Int): U?
@@ -96,12 +96,50 @@ class CustomColumnType<U :Any,
 
 }
 
-class CustomColumnConfiguration<U :Any, T: Any, S:IColumnType<T,S, C>, C:Column<T,S,C>, CONF_T: AbstractColumnConfiguration<T, S, C, CONF_T>>(val baseConfiguration: CONF_T, type: CustomColumnType<U,T,S,C,CONF_T>):
-  AbstractColumnConfiguration<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn, CustomColumnConfiguration<U, T, S, C, CONF_T>>(type) {
+class CustomColumnConfiguration<U :Any, T: Any, S:IColumnType<T,S, C>, C:Column<T,S,C>, CONF_T: ColumnConfiguration<T, S, C, CONF_T>>(val baseConfiguration: CONF_T, type: CustomColumnType<U,T,S,C,CONF_T>):
+  ColumnConfiguration<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn, CustomColumnConfiguration<U, T, S, C, CONF_T>> {
 
   override fun newColumn(table: TableRef) = type.CustomColumn(table, baseConfiguration)
 
   override fun copy(newName: String?) = CustomColumnConfiguration(baseConfiguration.copy(newName), type)
+
+  override val type: CustomColumnType<U, T, S, C, CONF_T> = type
+
+  override var name: String?
+    get() = baseConfiguration.name
+    set(value) { baseConfiguration.name = value }
+
+  override var notnull: Boolean?
+    get() = baseConfiguration.notnull
+    set(value) { baseConfiguration.notnull = value }
+
+  override var unique: Boolean
+    get() = baseConfiguration.unique
+    set(value) { baseConfiguration.unique=value }
+
+  override var autoincrement: Boolean
+    get() = baseConfiguration.autoincrement
+    set(value) { baseConfiguration.autoincrement = autoincrement }
+
+  override var default: U?
+    get() = baseConfiguration.default?.let { type.fromDb(it) }
+    set(value) { baseConfiguration.default = value?.let { type.toDB(it) } }
+
+  override var comment: String?
+    get() = baseConfiguration.comment
+    set(value) { baseConfiguration.comment = value }
+
+  override var columnFormat: ColumnConfiguration.ColumnFormat?
+    get() = baseConfiguration.columnFormat
+    set(value) { baseConfiguration.columnFormat }
+
+  override var storageFormat: ColumnConfiguration.StorageFormat?
+    get() = baseConfiguration.storageFormat
+    set(value) { baseConfiguration.storageFormat = value }
+
+  override var references: ColsetRef?
+    get() = baseConfiguration.references
+    set(value) { baseConfiguration.references = value }
 }
 
 object SingleColumnType: SqlTypesMixin

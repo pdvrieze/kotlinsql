@@ -25,6 +25,8 @@ import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColum
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.ColumnConfiguration.ColumnFormat
+import uk.ac.bournemouth.kotlinsql.ColumnConfiguration.StorageFormat
 import uk.ac.bournemouth.kotlinsql.ColumnType.*
 import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import java.math.BigDecimal
@@ -48,8 +50,8 @@ internal abstract class ColumnImpl<T:Any, S: ColumnType<T, S,C>, C:Column<T,S,C>
       override val autoincrement: Boolean,
       override val default: T?,
       override val comment: String?,
-      override val columnFormat: AbstractColumnConfiguration.ColumnFormat?,
-      override val storageFormat: AbstractColumnConfiguration.StorageFormat?,
+      override val columnFormat: ColumnFormat?,
+      override val storageFormat: StorageFormat?,
       override val references: ColsetRef?,
       val unsigned:Boolean = false,
       val zerofill: Boolean = false,
