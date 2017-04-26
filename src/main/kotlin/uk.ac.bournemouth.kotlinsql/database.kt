@@ -25,15 +25,13 @@ import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.DatabaseMethods
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen._Statement1
+import java.lang.reflect.Method
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.util.*
 import javax.sql.DataSource
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
-import kotlin.reflect.jvm.javaField
-import kotlin.reflect.jvm.javaGetter
-import kotlin.reflect.full.memberProperties
 
 /**
  * This is an abstract class that contains a set of database tables.
@@ -81,13 +79,15 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
     private fun tablesFromProperties(db: Database): List<Table> {
 
-      fun isTable(property:KProperty<*>): Boolean {
-        return Table::class.java.isAssignableFrom(property.javaGetter?.returnType ?: property.javaField?.type)
+      fun isTable(method:Method): Boolean {
+        return method.parameterCount==0 &&
+               method.name.startsWith("get") &&
+               Table::class.java.isAssignableFrom(method.returnType)
       }
 
-      return db.javaClass.kotlin.memberProperties.asSequence()
+      return db.javaClass.declaredMethods.asSequence()
             .filter (::isTable)
-            .map { property -> (property.get(db)) as Table }
+            .map { method -> (method.invoke(db)) as Table }
             .toList()
     }
   }
