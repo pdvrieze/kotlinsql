@@ -19,17 +19,11 @@
  */
 
 
-ext {
-//    if (! rootProject.hasProperty('kotlin_version') ) { kotlin_version = '1.1-M04' }
-    if (! rootProject.hasProperty('myJavaVersion')) { myJavaVersion = org.gradle.api.JavaVersion.VERSION_1_7 }
-}
-
-version '0.6.99.2'
 
 buildscript {
 
     ext {
-        if (! rootProject.hasProperty('kotlin_version') ) { kotlin_version = '1.1-M04' }
+        if (! rootProject.hasProperty('kotlin_version') ) { kotlin_version = '1.1.2-3' }
         if (! rootProject.hasProperty('codegen_version') ) { codegen_version = '0.5.10' }
     }
     dependencies {
@@ -38,12 +32,15 @@ buildscript {
     }
 
     repositories {
-        maven {
-            url='https://dl.bintray.com/kotlin/kotlin-eap-1.1'
-        }
         mavenLocal()
         jcenter()
     }
+}
+
+plugins {
+    id "com.gradle.plugin-publish" version "0.9.7"
+    id "com.jfrog.bintray" version "1.7.3"
+    id 'maven-publish'
 }
 
 apply plugin: 'java-library'
@@ -51,13 +48,55 @@ apply plugin: 'kotlin'
 apply plugin: 'idea'
 apply plugin: 'net.devrieze.gradlecodegen'
 
+ext {
+//    if (! rootProject.hasProperty('kotlin_version') ) { kotlin_version = '1.1.2-3' }
+    if (! rootProject.hasProperty('myJavaVersion')) { myJavaVersion = JavaVersion.VERSION_1_7 }
+}
+
+version = '0.7'
+group = 'net.devrieze'
+
+
+
+bintray {
+    user = bintrayUser
+    key = bintrayApiKey
+    publications = ['MyPublication']
+
+    pkg {
+        repo = 'maven'
+        name = 'gradle-codegen'
+        userOrg = 'pdvrieze'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/pdvrieze/kotlinsql.git'
+
+        version {
+            name = project.version
+            desc = 'First released version. It should be stable, but it may be missing some API'
+            released = new Date()
+            vcsTag = "v$version"
+        }
+    }
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            groupId group
+            artifactId 'kotlinsql'
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}
+
 
 description = 'A utility library for working with databases in kotlin'
 
 repositories {
-    maven {
-        url='https://dl.bintray.com/kotlin/kotlin-eap-1.1'
-    }
     jcenter()
 }
 
@@ -91,6 +130,13 @@ sourceSets {
             }
         }
     }
+}
+
+
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+    from files('LICENSE')
 }
 
 dependencies {
