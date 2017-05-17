@@ -65,7 +65,7 @@ bintray {
 
     pkg {
         repo = 'maven'
-        name = 'gradle-codegen'
+        name = 'kotlinsql'
         userOrg = 'pdvrieze'
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/pdvrieze/kotlinsql.git'
