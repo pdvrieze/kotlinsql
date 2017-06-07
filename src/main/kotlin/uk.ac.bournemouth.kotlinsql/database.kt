@@ -25,7 +25,9 @@ import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.DatabaseMethods
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen._Statement1
+import java.lang.reflect.Field
 import java.lang.reflect.Method
+import java.lang.reflect.Modifier
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.util.*
@@ -48,8 +50,14 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     fun createUpdateStatement(update: _UpdateBase, where:WhereClause?):UpdatingStatement =
           if (where==null) update else _UpdateStatement(update, where)
 
-    private fun tablesFromObjects(container: KClass<out Database>): List<Table> {
-      return container.nestedClasses.map { it.objectInstance as? Table }.filterNotNull()
+    private val Field.isStatic:Boolean inline get() = Modifier.isStatic(modifiers)
+
+    private fun tablesFromObjects(container: Class<out Database>): List<Table> {
+      return container.classes.asSequence()
+        .mapNotNull { member -> member.fields.firstOrNull { field-> field.isStatic && field.name=="INSTANCE" } }
+        .mapNotNull { field -> field.get(null) }
+        .map { it as Table }
+        .toList()
     }
 
 
@@ -94,7 +102,7 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
 
   val _tables:List<Table> by lazy {
     val result = ArrayList<Table>()
-    result.addAll(tablesFromObjects(this.javaClass.kotlin))
+    result.addAll(tablesFromObjects(this.javaClass))
     tablesFromProperties(this)
           .filter { table -> ! result.any { table._name == it._name} }
           .forEach { result.add(it) }
