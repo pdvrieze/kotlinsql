@@ -53,7 +53,7 @@ ext {
     if (! rootProject.hasProperty('myJavaVersion')) { myJavaVersion = JavaVersion.VERSION_1_7 }
 }
 
-version = '0.7'
+version = '0.7.1'
 group = 'net.devrieze'
 
 
