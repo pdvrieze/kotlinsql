@@ -81,7 +81,7 @@ internal abstract class ColumnImpl<T:Any, S: ColumnType<T, S,C>, C:Column<T,S,C>
       if (binary) append(" BINARY")
       charset?.let { append(" CHARACTER SET ").append(it)}
       collation?.let { append(" COLLATE ").append(it)}
-      notnull?.let { append(if(it) " NOT NULL" else "NULL") }
+      notnull?.let { append(if(it) " NOT NULL" else " NULL") }
       default?.let { append(" DEFAULT ")
         if (it is CharSequence)
           append('\'').append(it).append('\'')
