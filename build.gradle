@@ -52,7 +52,7 @@ ext {
     if (! rootProject.hasProperty('myJavaVersion')) { myJavaVersion = JavaVersion.VERSION_1_7 }
 }
 
-version = '0.7.1'
+version = '0.7.2'
 group = 'net.devrieze'
 
 
@@ -71,7 +71,7 @@ bintray {
 
         version {
             name = project.version
-            desc = 'First released version. It should be stable, but it may be missing some API'
+            desc = 'Bugfix issue'
             released = new Date()
             vcsTag = "v$version"
         }
