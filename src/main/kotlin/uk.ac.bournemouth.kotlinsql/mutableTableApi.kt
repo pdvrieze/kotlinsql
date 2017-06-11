@@ -109,7 +109,7 @@ abstract class MutableTable private constructor(name: String?,
 
   /* When there is no body, the configuration subtype does not matter */
   /**
-   * Create column tht has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
+   * Create column that has the type of the referred to column. This does NOT copy block configuration such as AUTOINCREMENT or NULL-ability.
    * @param other The column whose type to copy
    */
   protected inline fun <T:Any, S:ColumnType<T,S,C>, C:Column<T,S,C>>reference(other: C): ColumnConfiguration<T,S,C,*> {

@@ -362,7 +362,7 @@ interface Column<T:Any, S: IColumnType<T, S,C>, C:Column<T,S,C>>: ColumnRef<T,S,
   fun matches(typeName: String, size: Int, notNull:Boolean?, autoincrement:Boolean?, default:String?, comment:String?): Boolean =
     this.type.typeName==typeName &&
     ((this !is LengthColumn) || length < 0 || length==size) &&
-    this.notnull==notNull &&
+    if (this.notnull==null) (notNull==null || notNull==false) else (this.notnull==notNull) &&
     this.autoincrement == autoincrement &&
     this.default == default &&
     this.comment == comment

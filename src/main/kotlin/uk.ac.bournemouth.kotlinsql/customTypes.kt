@@ -75,6 +75,9 @@ class CustomColumnType<U :Any,
     override fun copyConfiguration(newName: String?, owner: Table) =
       CustomColumnConfiguration(baseColumn.copyConfiguration(newName, owner) as CONF_T, this@CustomColumnType)
 
+    override fun toString(): String {
+      return "Custom column $name type:$type, underlying: $baseColumn"
+    }
   }
 
   override val typeName: String get() = baseColumnType.typeName
@@ -94,6 +97,9 @@ class CustomColumnType<U :Any,
 
   operator fun invoke(configurator: CONF_T.()->Unit) = CustomColumnConfiguration(baseConfiguration.copy().apply(configurator), this@CustomColumnType)
 
+  override fun toString(): String {
+    return "Custom Type $typeName (${type.java.simpleName})"
+  }
 }
 
 class CustomColumnConfiguration<U :Any, T: Any, S:IColumnType<T,S, C>, C:Column<T,S,C>, CONF_T: ColumnConfiguration<T, S, C, CONF_T>>(val baseConfiguration: CONF_T, type: CustomColumnType<U,T,S,C,CONF_T>):

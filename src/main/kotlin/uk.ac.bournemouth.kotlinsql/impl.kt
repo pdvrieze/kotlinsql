@@ -30,6 +30,7 @@ import uk.ac.bournemouth.kotlinsql.ColumnConfiguration.StorageFormat
 import uk.ac.bournemouth.kotlinsql.ColumnType.*
 import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import java.math.BigDecimal
+import java.sql.SQLException
 import java.sql.SQLWarning
 import java.util.*
 import kotlin.reflect.KProperty
@@ -364,7 +365,9 @@ abstract class AbstractTable: Table {
 
   override fun ref(): TableRef = TableRefImpl(_name)
 
-  override fun column(name:String) = _cols.firstOrNull {it.name==name}
+  override fun column(name:String) = name.toLowerCase(Locale.ENGLISH).let { nameLc ->
+    _cols.firstOrNull { it.name.toLowerCase(Locale.ENGLISH)==nameLc }
+  }
 
   operator fun getValue(thisRef: ImmutableTable, property: KProperty<*>): Column<*,*,*> {
     return column(property.name)!!
@@ -436,19 +439,24 @@ abstract class AbstractTable: Table {
 
   override fun ensureTable(connection: DBConnection, retainExtraColumns: Boolean) {
     val extraColumns = ArrayList<String>()
-    val missingColumns = HashSet<Column<*,*,*>>(_cols)
-
+    val missingColumns = mutableMapOf<String, Column<*,*,*>>()
+    _cols.associateByTo(missingColumns) { it.name.toLowerCase(Locale.ENGLISH) }
 
     connection.getMetaData().getColumns(null, null, _name, null).use { rs ->
       while (rs.next()) {
         val colName = rs.columnName
+        val colType = rs.dataType
         val col = column(colName)
-        missingColumns.remove(col)
+        missingColumns.remove(colName.toLowerCase(Locale.ENGLISH))
         if (col!=null) {
           val columnCorrect = col.matches(rs.typeName, rs.columnSize, rs.isNullable?.not(), rs.isAutoIncrement, rs.columnDefault, rs.remarks)
           if (columnCorrect == false) {
-            connection.prepareStatement("ALTER TABLE $_name MODIFY COLUMN ${col.toDDL()}") {
-              executeUpdate()
+            try {
+              connection.prepareStatement("ALTER TABLE $_name MODIFY COLUMN ${col.toDDL()}") {
+                executeUpdate()
+              }
+            } catch (e:SQLException) {
+              throw SQLException("Failure updating table $_name column ${colName} from ${colType} to ${col.type}", e)
             }
           }
         } else {
@@ -465,7 +473,7 @@ abstract class AbstractTable: Table {
       }
     }
 
-    for(missingColumn in missingColumns) {
+    for(missingColumn in missingColumns.values) {
       connection.prepareStatement("ALTER TABLE $_name ADD COLUMN ${missingColumn.toDDL()}") {
         executeUpdate()
       }
