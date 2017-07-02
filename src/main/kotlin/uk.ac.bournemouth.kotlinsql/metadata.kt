@@ -318,52 +318,47 @@ class ConnectionMetadata(private val metadata:DatabaseMetaData) {
     return ColumnsResults(metadata.getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern))
   }
 
-  fun getColumnPrivileges(catalog: String, schema: String, table: String, columnNamePattern: String): ResultSet {
-    // TODO wrap
-    return metadata.getColumnPrivileges(catalog, schema, table, columnNamePattern)
+  fun getColumnPrivileges(catalog: String, schema: String, table: String, columnNamePattern: String): ColumnPrivilegesResult {
+    return ColumnPrivilegesResult(metadata.getColumnPrivileges(catalog, schema, table, columnNamePattern))
   }
 
-  fun getTablePrivileges(catalog: String, schemaPattern: String, tableNamePattern: String): ResultSet {
-    // TODO wrap
-    return metadata.getTablePrivileges(catalog, schemaPattern, tableNamePattern)
+  fun getTablePrivileges(catalog: String, schemaPattern: String, tableNamePattern: String): TablePrivilegesResult {
+    return TablePrivilegesResult(metadata.getTablePrivileges(catalog, schemaPattern, tableNamePattern))
   }
 
-  fun getBestRowIdentifier(catalog: String, schema: String, table: String, scope: Int, nullable: Boolean): ResultSet {
-    // TODO wrap
-    return metadata.getBestRowIdentifier(catalog, schema, table, scope, nullable)
+  fun getBestRowIdentifier(catalog: String, schema: String, table: String, scope: Int, nullable: Boolean): BestRowIdentifierResult {
+    return BestRowIdentifierResult(metadata.getBestRowIdentifier(catalog, schema, table, scope, nullable))
   }
 
-  fun getVersionColumns(catalog: String, schema: String, table: String): ResultSet {
-    // TODO wrap
-    return metadata.getVersionColumns(catalog, schema, table)
+  fun getVersionColumns(catalog: String, schema: String, table: String): VersionColumnsResult {
+    return VersionColumnsResult(metadata.getVersionColumns(catalog, schema, table))
   }
 
-  fun getPrimaryKeys(catalog: String, schema: String, table: String): ResultSet {
-    // TODO wrap
-    return metadata.getPrimaryKeys(catalog, schema, table)
+  fun getUnsafePrimaryKeys(catalog: String, schema: String, table: String): PrimaryKeyResults {
+    return PrimaryKeyResults(metadata.getPrimaryKeys(catalog, schema, table))
   }
 
-  fun getImportedKeys(catalog: String, schema: String, table: String): ResultSet {
+  fun getUnsafeImportedKeys(catalog: String, schema: String, table: String): ResultSet {
     // TODO wrap
     return metadata.getImportedKeys(catalog, schema, table)
   }
 
-  fun getExportedKeys(catalog: String, schema: String, table: String): ResultSet {
+  fun getUnsafeExportedKeys(catalog: String, schema: String, table: String): ResultSet {
     // TODO wrap
     return metadata.getExportedKeys(catalog, schema, table)
   }
 
-  fun getCrossReference(parentCatalog: String, parentSchema: String, parentTable: String, foreignCatalog: String, foreignSchema: String, foreignTable: String): ResultSet {
+  fun getUnsafeCrossReference(parentCatalog: String, parentSchema: String, parentTable: String, foreignCatalog: String, foreignSchema: String, foreignTable: String): ResultSet {
     // TODO wrap
     return metadata.getCrossReference(parentCatalog, parentSchema, parentTable, foreignCatalog, foreignSchema, foreignTable)
   }
 
-  fun getTypeInfo(): ResultSet {
+  fun getUnsafeTypeInfo(): ResultSet {
     // TODO wrap
     return metadata.typeInfo
   }
 
-  fun getIndexInfo(catalog: String, schema: String, table: String, unique: Boolean, approximate: Boolean): ResultSet {
+  fun getUnsafeIndexInfo(catalog: String, schema: String, table: String, unique: Boolean, approximate: Boolean): ResultSet {
     // TODO wrap
     return metadata.getIndexInfo(catalog, schema, table, unique, approximate)
   }
@@ -671,16 +666,13 @@ class ProcedureResults(attributes: ResultSet) : AbstractReadonlyResultSet(attrib
 
 }
 
-class TableResults(rs:ResultSet) : AbstractReadonlyResultSet(rs) {
+class TableResults(rs:ResultSet) : TableMetaResultBase(rs) {
   enum class RefGeneration {
     SYSTEM,
     USER,
     DERIVED
   }
 
-  private val idxTableCat by lazy { resultSet.findColumn("TABLE_CAT") }
-  private val idxTableSchem by lazy { resultSet.findColumn("TABLE_SCHEM") }
-  private val idxTableName by lazy { resultSet.findColumn("TABLE_NAME") }
   private val idxTableType by lazy { resultSet.findColumn("TABLE_TYPE") }
   private val idxRemarks by lazy { resultSet.findColumn("REMARKS") }
   private val idxTypeCat by lazy { resultSet.findColumn("TYPE_CAT") }
@@ -689,9 +681,6 @@ class TableResults(rs:ResultSet) : AbstractReadonlyResultSet(rs) {
   private val idxSelfReferencingColName by lazy { resultSet.findColumn("SELF_REFERENCING_COL_NAME") }
   private val idxRefGeneration by lazy { resultSet.findColumn("REF_GENERATION") }
 
-  val tableCatalog:String? get() = resultSet.getString(idxTableCat)
-  val tableScheme:String? get() = resultSet.getString(idxTableSchem)
-  val tableName:String get() = resultSet.getString(idxTableName)
   val tableType:String get() = resultSet.getString(idxTableType)
   val remarks:String? get() = resultSet.getString(idxRemarks)
   val typeCatalog:String? get() = resultSet.getString(idxTypeCat)
@@ -701,7 +690,7 @@ class TableResults(rs:ResultSet) : AbstractReadonlyResultSet(rs) {
   val refGeneration:RefGeneration? get() = resultSet.getString(idxRefGeneration)?.let { RefGeneration.valueOf(it) }
 }
 
-class SchemaResults(rs:ResultSet) : AbstractReadonlyResultSet(rs) {
+open class SchemaResults(rs:ResultSet) : AbstractReadonlyResultSet(rs) {
   private val idxTableCat by lazy { resultSet.findColumn("TABLE_CAT") }
   val tableCatalog:String? get() = resultSet.getString(idxTableCat)
 
@@ -709,9 +698,15 @@ class SchemaResults(rs:ResultSet) : AbstractReadonlyResultSet(rs) {
   val tableScheme:String? get() = resultSet.getString(idxTableSchem)
 }
 
-class ColumnsResults(rs:ResultSet) : DataResults(rs) {
-  private val idxTableCat by lazy { resultSet.findColumn("TABLE_CAT") }
+abstract class TableMetaResultBase(rs:ResultSet): SchemaResults(rs) {
+  private val idxTableName by lazy { resultSet.findColumn("TABLE_NAME") }
+  val tableName:String get() = resultSet.getString(idxTableName)
+}
+
+class ColumnsResults(rs:ResultSet) : DataResults(rs) {//TableMetaResultBase
+private val idxTableCat by lazy { resultSet.findColumn("TABLE_CAT") }
   val tableCatalog:String? get() = resultSet.getString(idxTableCat)
+
   private val idxTableSchem by lazy { resultSet.findColumn("TABLE_SCHEM") }
   val tableScheme:String? get() = resultSet.getString(idxTableSchem)
   private val idxTableName by lazy { resultSet.findColumn("TABLE_NAME") }
@@ -734,6 +729,98 @@ class ColumnsResults(rs:ResultSet) : DataResults(rs) {
   val isAutoIncrement:Boolean? get() = resultSet.optionalBoolean(idxIsAutoIncrement)
   private val idxIsGeneratedColumn by lazy { resultSet.findColumn("IS_GENERATEDCOLUMN") }
   val isGeneratedColumn:Boolean? get() = resultSet.optionalBoolean(idxIsGeneratedColumn)
+}
+
+abstract class TableColumnResultBase(rs:ResultSet): TableMetaResultBase(rs) {
+  private val idxColumnName by lazy { resultSet.findColumn("COLUMN_NAME") }
+  val columnName:String get() = resultSet.getString(idxColumnName)
+}
+
+class ColumnPrivilegesResult(privileges: ResultSet): TableColumnResultBase(privileges) {
+  private val idxGrantor: Int by lazy { resultSet.findColumn("GRANTOR") }
+  val grantor get():String? = resultSet.getString(idxGrantor)
+  private val idxGrantee: Int by lazy { resultSet.findColumn("GRANTEE") }
+  val grantee get(): String = resultSet.getString(idxGrantee)
+  private val idxPrivilege: Int by lazy { resultSet.findColumn("PRIVILEGE") }
+  val privilege get():String = resultSet.getString(idxPrivilege)
+  private val idxIsGrantable: Int by lazy { resultSet.findColumn("IS_GRANTABLE") }
+  val isGrantable get():Boolean? = resultSet.getString(idxIsGrantable)?.let { if (it=="YES") true else if (it=="NO") false else null}
+}
+
+class TablePrivilegesResult(privileges: ResultSet): TableMetaResultBase(privileges) {
+  private val idxGrantor: Int by lazy { resultSet.findColumn("GRANTOR") }
+  val grantor get():String? = resultSet.getString(idxGrantor)
+  private val idxGrantee: Int by lazy { resultSet.findColumn("GRANTEE") }
+  val grantee get(): String = resultSet.getString(idxGrantee)
+  private val idxPrivilege: Int by lazy { resultSet.findColumn("PRIVILEGE") }
+  val privilege get():String = resultSet.getString(idxPrivilege)
+  private val idxIsGrantable: Int by lazy { resultSet.findColumn("IS_GRANTABLE") }
+}
+
+abstract class AbstractRowResult(rs: ResultSet): AbstractReadonlyResultSet(rs) {
+  enum class PseudoColumn {
+    bestRowUnknown,
+    bestRowNotPseudo,
+    bestRowPseudo
+  }
+
+  private val idxColumnName by lazy { resultSet.findColumn("COLUMN_NAME") }
+  private val idxDataType by lazy { resultSet.findColumn("DATA_TYPE") }
+  private val idxTypeName by lazy { resultSet.findColumn("TYPE_NAME") }
+  private val idxColumnSize by lazy { resultSet.findColumn("COLUMN_SIZE") }
+  private val idxDecimalDigits by lazy { resultSet.findColumn("DECIMAL_DIGITS") }
+  private val idxPseudoColumn by lazy { resultSet.findColumn("PSEUDO_COLUMN") }
+
+  val columnName:String get() = resultSet.getString(idxColumnName)
+  val dataType:String get() = resultSet.getString(idxDataType)
+  val typeName:String get() = resultSet.getString(idxTypeName)
+  val precision: String get() = resultSet.getString(idxColumnSize)
+  @Deprecated("Use precision as the column name, this is an alias", ReplaceWith("precision"))
+  inline val columnSize get() = precision
+  val decimalDigits: Short get() = resultSet.getShort(idxDecimalDigits)
+  val pseudoColumn: PseudoColumn = when(resultSet.getShort(idxPseudoColumn).toInt()) {
+    DatabaseMetaData.bestRowUnknown -> PseudoColumn.bestRowUnknown
+    DatabaseMetaData.bestRowPseudo -> PseudoColumn.bestRowPseudo
+    DatabaseMetaData.bestRowNotPseudo -> PseudoColumn.bestRowNotPseudo
+    else -> throw IllegalArgumentException("Unexpected pseudoColumn value ${resultSet.getShort(idxPseudoColumn)}")
+  }
+
+}
+
+class BestRowIdentifierResult(rs: ResultSet): AbstractRowResult(rs) {
+  enum class Scope {
+    bestRowTemporary,
+    bestRowTransaction,
+    bestRowSession
+  }
+
+  val idxScope by lazy { resultSet.findColumn("SCOPE") }
+
+  val scope: Scope get() = when (resultSet.getShort(idxScope).toInt()) {
+    DatabaseMetaData.bestRowTemporary -> Scope.bestRowTemporary
+    DatabaseMetaData.bestRowTransaction -> Scope.bestRowTransaction
+    DatabaseMetaData.bestRowSession -> Scope.bestRowSession
+    else -> throw IllegalArgumentException("Unexpected scope value ${resultSet.getShort(idxScope)}")
+  }
+}
+
+class VersionColumnsResult(rs: ResultSet): AbstractRowResult(rs) {
+  private val idxBufferSize by lazy { resultSet.findColumn("BUFFER_LENGTH") }
+
+  val bufferSize get() = resultSet.getInt(idxBufferSize)
+}
+
+class PrimaryKeyResults(rs: ResultSet): TableColumnResultBase(rs) {
+  private val idxKeySeq by lazy { resultSet.findColumn("KEY_SEQ") }
+  private val idxPkName by lazy { resultSet.findColumn("PK_NAME") }
+
+  val keySeq: Short get() = resultSet.getShort(idxKeySeq)
+  val pkName: String? get() = resultSet.getString(idxPkName)
+
+  /*
+  KEY_SEQ short => sequence number within primary key( a value of 1 represents the first column of the primary key, a value of 2 would represent the second column within the primary key).
+PK_NAME String => pri
+   */
 }
 
 class WrappedResultSetMetaData(private val metadata:ResultSetMetaData)
