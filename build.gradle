@@ -58,8 +58,10 @@ group = 'net.devrieze'
 
 
 bintray {
-    user = bintrayUser
-    key = bintrayApiKey
+    if (rootProject.hasProperty('bintrayUser')) {
+        user = bintrayUser
+        key = bintrayApiKey
+    }
     publications = ['MyPublication']
 
     pkg {
