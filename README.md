@@ -18,6 +18,11 @@ close to the metal. It provides typesafe abstractions without taking away the sq
   cause compilation issues.
 
 What this library is not:
+* An ORM
+
+## Example
+* As example of usage of this library have a look at https://github.com/pdvrieze/ProcessManager/blob/master/darwin-sql/src/main/kotlin/webauth.kt for a table definition.
+* A usage example is found in https://github.com/pdvrieze/ProcessManager/blob/master/accountcommon/src/main/kotlin/uk/ac/bournemouth/darwin/accounts/accounts.kt
 
 ##TODO
 Some features are not implemented yet
