@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016.
+ * Copyright (c) 2017.
  *
  * This file is part of ProcessManager.
  *
@@ -334,28 +334,24 @@ class ConnectionMetadata(private val metadata:DatabaseMetaData) {
     return VersionColumnsResult(metadata.getVersionColumns(catalog, schema, table))
   }
 
-  fun getUnsafePrimaryKeys(catalog: String, schema: String, table: String): PrimaryKeyResults {
+  fun getPrimaryKeys(catalog: String, schema: String, table: String): PrimaryKeyResults {
     return PrimaryKeyResults(metadata.getPrimaryKeys(catalog, schema, table))
   }
 
-  fun getUnsafeImportedKeys(catalog: String, schema: String, table: String): ResultSet {
-    // TODO wrap
-    return metadata.getImportedKeys(catalog, schema, table)
+  fun getImportedKeys(catalog: String, schema: String, table: String): KeysResult {
+    return KeysResult(metadata.getImportedKeys(catalog, schema, table))
   }
 
-  fun getUnsafeExportedKeys(catalog: String, schema: String, table: String): ResultSet {
-    // TODO wrap
-    return metadata.getExportedKeys(catalog, schema, table)
+  fun getExportedKeys(catalog: String, schema: String, table: String): KeysResult {
+    return KeysResult(metadata.getExportedKeys(catalog, schema, table))
   }
 
-  fun getUnsafeCrossReference(parentCatalog: String, parentSchema: String, parentTable: String, foreignCatalog: String, foreignSchema: String, foreignTable: String): ResultSet {
-    // TODO wrap
-    return metadata.getCrossReference(parentCatalog, parentSchema, parentTable, foreignCatalog, foreignSchema, foreignTable)
+  fun getCrossReference(parentCatalog: String, parentSchema: String, parentTable: String, foreignCatalog: String, foreignSchema: String, foreignTable: String): KeysResult {
+    return KeysResult(metadata.getCrossReference(parentCatalog, parentSchema, parentTable, foreignCatalog, foreignSchema, foreignTable))
   }
 
-  fun getUnsafeTypeInfo(): ResultSet {
-    // TODO wrap
-    return metadata.typeInfo
+  fun getTypeInfo(): TypeInfo {
+    return TypeInfo(metadata.typeInfo)
   }
 
   fun getUnsafeIndexInfo(catalog: String, schema: String, table: String, unique: Boolean, approximate: Boolean): ResultSet {
@@ -532,6 +528,9 @@ abstract class AbstractReadonlyResultSet(protected val resultSet: ResultSet) : C
   var fetchDirection : FetchDirection
     get() = fetchDirection(resultSet.fetchDirection)
     set(value) { resultSet.fetchDirection = value.sqlValue }
+
+  @Suppress("NOTHING_TO_INLINE")
+  protected inline fun lazyColIdx(name:String) = lazy { resultSet.findColumn(name) }
 }
 
 enum class Nullable(val sqlValue: Short) {
@@ -543,6 +542,27 @@ enum class Nullable(val sqlValue: Short) {
     @JvmStatic
     fun from(value:Short):Nullable {
       return values().first { value==it.sqlValue }
+    }
+  }
+}
+
+enum class Searchable(val sqlValue: Short) {
+  TYPE_PRED_NONE(DatabaseMetaData.typePredNone.toShort()),
+  TYPE_PRED_CHAR(DatabaseMetaData.typePredChar.toShort()),
+  TYPE_PRED_BASIC(DatabaseMetaData.typePredBasic.toShort()),
+  TYPE_SEARCHABLE(DatabaseMetaData.typeSearchable.toShort()),
+  ;
+
+  companion object {
+    @JvmStatic
+    fun from(value:Short): Searchable {
+      return when(value.toInt()) {
+        DatabaseMetaData.typePredNone -> Searchable.TYPE_PRED_NONE
+        DatabaseMetaData.typePredChar -> Searchable.TYPE_PRED_CHAR
+        DatabaseMetaData.typePredBasic -> Searchable.TYPE_PRED_BASIC
+        DatabaseMetaData.typeSearchable -> Searchable.TYPE_SEARCHABLE
+        else -> throw IllegalArgumentException("The value $this does not represent a valid searchability value")
+      }
     }
   }
 }
@@ -561,13 +581,13 @@ private fun ResultSet.toStrings():List<String> {
 }
 
 abstract class DataResults(rs:ResultSet) : AbstractReadonlyResultSet(rs) {
-  private val idxDataType by lazy { resultSet.findColumn("DATA_TYPE") }
-  private val idxTypeName by lazy { resultSet.findColumn("TYPE_NAME") }
-  private val idxNullable by lazy { resultSet.findColumn("NULLABLE") }
-  private val idxRemarks by lazy { resultSet.findColumn("REMARKS") }
-  private val idxCharOctetLength by lazy { resultSet.findColumn("CHAR_OCTET_LENGTH") }
-  private val idxOrdinalPosition by lazy { resultSet.findColumn("ORDINAL_POSITION") }
-  private val idxIsNullable by lazy { resultSet.findColumn("IS_NULLABLE") }
+  private val idxDataType by lazyColIdx("DATA_TYPE")
+  private val idxTypeName by lazyColIdx("TYPE_NAME")
+  private val idxNullable by lazyColIdx("NULLABLE")
+  private val idxRemarks by lazyColIdx("REMARKS")
+  private val idxCharOctetLength by lazyColIdx("CHAR_OCTET_LENGTH")
+  private val idxOrdinalPosition by lazyColIdx("ORDINAL_POSITION")
+  private val idxIsNullable by lazyColIdx("IS_NULLABLE")
 
   val dataType:IColumnType<*,*,*> get() = columnType(resultSet.getInt(idxDataType))
   val typeName:String get() = resultSet.getString(idxTypeName)
@@ -587,14 +607,14 @@ private fun ResultSet.optionalBoolean(pos:Int) = getString(pos).let { v -> when(
 } }
 
 class AttributeResults(attributes: ResultSet) : DataResults(attributes) {
-  private val idxTypeCat by lazy { resultSet.findColumn("TYPE_CAT") }
-  private val idxTypeSchem by lazy { resultSet.findColumn("TYPE_SCHEM") }
-  private val idxAttrName by lazy { resultSet.findColumn("ATTR_NAME") }
-  private val idxAttrTypeName by lazy { resultSet.findColumn("ATTR_TYPE_NAME") }
-  private val idxAttrSize by lazy { resultSet.findColumn("ATTR_SIZE") }
-  private val idxDecimalDigits by lazy { resultSet.findColumn("DECIMAL_DIGITS") }
-  private val idxNumPrecRadix by lazy { resultSet.findColumn("NUM_REC_RADIX") }
-  private val idxAttrDef by lazy { resultSet.findColumn("ATTR_DEF") }
+  private val idxTypeCat by lazyColIdx("TYPE_CAT")
+  private val idxTypeSchem by lazyColIdx("TYPE_SCHEM")
+  private val idxAttrName by lazyColIdx("ATTR_NAME")
+  private val idxAttrTypeName by lazyColIdx("ATTR_TYPE_NAME")
+  private val idxAttrSize by lazyColIdx("ATTR_SIZE")
+  private val idxDecimalDigits by lazyColIdx("DECIMAL_DIGITS")
+  private val idxNumPrecRadix by lazyColIdx("NUM_REC_RADIX")
+  private val idxAttrDef by lazyColIdx("ATTR_DEF")
 
   val typeCatalog:String? get() = resultSet.getString(idxTypeCat)
   val typeScheme:String? get() = resultSet.getString(idxTypeSchem)
@@ -608,19 +628,19 @@ class AttributeResults(attributes: ResultSet) : DataResults(attributes) {
 }
 
 class ProcedureColumnResults(rs:ResultSet) : DataResults(rs) {
-  private val idxProcedureCat by lazy { resultSet.findColumn("PROCEDURE_CAT") }
-  private val idxProcedureSchem by lazy { resultSet.findColumn("PROCEDURE_SCHEM") }
-  private val idxProcedureName by lazy { resultSet.findColumn("PROCEDURE_NAME") }
+  private val idxProcedureCat by lazyColIdx("PROCEDURE_CAT")
+  private val idxProcedureSchem by lazyColIdx("PROCEDURE_SCHEM")
+  private val idxProcedureName by lazyColIdx("PROCEDURE_NAME")
 
-  private val idxColumnName by lazy { resultSet.findColumn("COLUMN_NAME") }
-  private val idxColumnType by lazy { resultSet.findColumn("COLUMN_TYPE") }
-  private val idxPrecision by lazy { resultSet.findColumn("PRECISION") }
-  private val idxLength by lazy { resultSet.findColumn("LENGTH") }
-  private val idxScale by lazy { resultSet.findColumn("SCALE") }
-  private val idxRadix by lazy { resultSet.findColumn("RADIX") }
+  private val idxColumnName by lazyColIdx("COLUMN_NAME")
+  private val idxColumnType by lazyColIdx("COLUMN_TYPE")
+  private val idxPrecision by lazyColIdx("PRECISION")
+  private val idxLength by lazyColIdx("LENGTH")
+  private val idxScale by lazyColIdx("SCALE")
+  private val idxRadix by lazyColIdx("RADIX")
 
-  private val idxColumnDef by lazy { resultSet.findColumn("COLUMN_DEF") }
-  private val idxSpecificName by lazy { resultSet.findColumn("SPECIFIC_NAME") }
+  private val idxColumnDef by lazyColIdx("COLUMN_DEF")
+  private val idxSpecificName by lazyColIdx("SPECIFIC_NAME")
 
 
 
@@ -650,12 +670,12 @@ class ProcedureResults(attributes: ResultSet) : AbstractReadonlyResultSet(attrib
     PROCEDURE_RETURNS_RESULT(DatabaseMetaData.procedureReturnsResult.toShort())
   }
 
-  private val idxProcedureCat by lazy { resultSet.findColumn("PROCEDURE_CAT") }
-  private val idxProcedureSchem by lazy { resultSet.findColumn("PROCEDURE_SCHEM") }
-  private val idxProcedureName by lazy { resultSet.findColumn("PROCEDURE_NAME") }
-  private val idxSpecificName by lazy { resultSet.findColumn("SPECIFIC_NAME") }
-  private val idxProcedureType by lazy { resultSet.findColumn("PROCEDURE_TYPE") }
-  private val idxRemarks by lazy { resultSet.findColumn("REMARKS") }
+  private val idxProcedureCat by lazyColIdx("PROCEDURE_CAT")
+  private val idxProcedureSchem by lazyColIdx("PROCEDURE_SCHEM")
+  private val idxProcedureName by lazyColIdx("PROCEDURE_NAME")
+  private val idxSpecificName by lazyColIdx("SPECIFIC_NAME")
+  private val idxProcedureType by lazyColIdx("PROCEDURE_TYPE")
+  private val idxRemarks by lazyColIdx("REMARKS")
 
   val procedureCatalog:String? get() = resultSet.getString(idxProcedureCat)
   val procedureScheme:String? get() = resultSet.getString(idxProcedureSchem)
@@ -673,13 +693,13 @@ class TableResults(rs:ResultSet) : TableMetaResultBase(rs) {
     DERIVED
   }
 
-  private val idxTableType by lazy { resultSet.findColumn("TABLE_TYPE") }
-  private val idxRemarks by lazy { resultSet.findColumn("REMARKS") }
-  private val idxTypeCat by lazy { resultSet.findColumn("TYPE_CAT") }
-  private val idxTypeSchem by lazy { resultSet.findColumn("TYPE_SCHEM") }
-  private val idxTypeName by lazy { resultSet.findColumn("TYPE_NAME") }
-  private val idxSelfReferencingColName by lazy { resultSet.findColumn("SELF_REFERENCING_COL_NAME") }
-  private val idxRefGeneration by lazy { resultSet.findColumn("REF_GENERATION") }
+  private val idxTableType by lazyColIdx("TABLE_TYPE")
+  private val idxRemarks by lazyColIdx("REMARKS")
+  private val idxTypeCat by lazyColIdx("TYPE_CAT")
+  private val idxTypeSchem by lazyColIdx("TYPE_SCHEM")
+  private val idxTypeName by lazyColIdx("TYPE_NAME")
+  private val idxSelfReferencingColName by lazyColIdx("SELF_REFERENCING_COL_NAME")
+  private val idxRefGeneration by lazyColIdx("REF_GENERATION")
 
   val tableType:String get() = resultSet.getString(idxTableType)
   val remarks:String? get() = resultSet.getString(idxRemarks)
@@ -691,85 +711,85 @@ class TableResults(rs:ResultSet) : TableMetaResultBase(rs) {
 }
 
 open class SchemaResults(rs:ResultSet) : AbstractReadonlyResultSet(rs) {
-  private val idxTableCat by lazy { resultSet.findColumn("TABLE_CAT") }
+  private val idxTableCat by lazyColIdx("TABLE_CAT")
   val tableCatalog:String? get() = resultSet.getString(idxTableCat)
 
-  private val idxTableSchem by lazy { resultSet.findColumn("TABLE_SCHEM") }
+  private val idxTableSchem by lazyColIdx("TABLE_SCHEM")
   val tableScheme:String? get() = resultSet.getString(idxTableSchem)
 }
 
 abstract class TableMetaResultBase(rs:ResultSet): SchemaResults(rs) {
-  private val idxTableName by lazy { resultSet.findColumn("TABLE_NAME") }
+  private val idxTableName by lazyColIdx("TABLE_NAME")
   val tableName:String get() = resultSet.getString(idxTableName)
 }
 
 class ColumnsResults(rs:ResultSet) : DataResults(rs) {//TableMetaResultBase
-private val idxTableCat by lazy { resultSet.findColumn("TABLE_CAT") }
+private val idxTableCat by lazyColIdx("TABLE_CAT")
   val tableCatalog:String? get() = resultSet.getString(idxTableCat)
 
-  private val idxTableSchem by lazy { resultSet.findColumn("TABLE_SCHEM") }
+  private val idxTableSchem by lazyColIdx("TABLE_SCHEM")
   val tableScheme:String? get() = resultSet.getString(idxTableSchem)
-  private val idxTableName by lazy { resultSet.findColumn("TABLE_NAME") }
+  private val idxTableName by lazyColIdx("TABLE_NAME")
   val tableName:String get() = resultSet.getString(idxTableName)
-  private val idxTableType by lazy { resultSet.findColumn("TABLE_TYPE") }
+  private val idxTableType by lazyColIdx("TABLE_TYPE")
   val tableType:String get() = resultSet.getString(idxTableType)
-  private val idxColumnName by lazy { resultSet.findColumn("COLUMN_NAME") }
+  private val idxColumnName by lazyColIdx("COLUMN_NAME")
   val columnName:String get() = resultSet.getString(idxColumnName)
-  private val idxColumnSize by lazy { resultSet.findColumn("COLUMN_SIZE") }
+  private val idxColumnSize by lazyColIdx("COLUMN_SIZE")
   val columnSize:Int get() = resultSet.getInt(idxColumnSize)
-  private val idxBufferLength by lazy { resultSet.findColumn("BUFFER_LENGTH") }
+  private val idxBufferLength by lazyColIdx("BUFFER_LENGTH")
   val bufferLength:String get() = resultSet.getString(idxBufferLength)
-  private val idxDecimalDigits by lazy { resultSet.findColumn("DECIMAL_DIGITS") }
+  private val idxDecimalDigits by lazyColIdx("DECIMAL_DIGITS")
   val decimalDigits:Int get() = resultSet.getInt(idxDecimalDigits)
-  private val idxNumPrecRadix by lazy { resultSet.findColumn("NUM_REC_RADIX") }
+  private val idxNumPrecRadix by lazyColIdx("NUM_REC_RADIX")
   val numPrecRadix:Int get() = resultSet.getInt(idxNumPrecRadix)
-  private val idxColumnDef by lazy { resultSet.findColumn("COLUMN_DEF") }
+  private val idxColumnDef by lazyColIdx("COLUMN_DEF")
   val columnDefault:String? get() = resultSet.getString(idxColumnDef)
-  private val idxIsAutoIncrement by lazy { resultSet.findColumn("IS_AUTOINCREMENT") }
+  private val idxIsAutoIncrement by lazyColIdx("IS_AUTOINCREMENT")
   val isAutoIncrement:Boolean? get() = resultSet.optionalBoolean(idxIsAutoIncrement)
-  private val idxIsGeneratedColumn by lazy { resultSet.findColumn("IS_GENERATEDCOLUMN") }
+  private val idxIsGeneratedColumn by lazyColIdx("IS_GENERATEDCOLUMN")
   val isGeneratedColumn:Boolean? get() = resultSet.optionalBoolean(idxIsGeneratedColumn)
 }
 
 abstract class TableColumnResultBase(rs:ResultSet): TableMetaResultBase(rs) {
-  private val idxColumnName by lazy { resultSet.findColumn("COLUMN_NAME") }
+  private val idxColumnName by lazyColIdx("COLUMN_NAME")
   val columnName:String get() = resultSet.getString(idxColumnName)
 }
 
 class ColumnPrivilegesResult(privileges: ResultSet): TableColumnResultBase(privileges) {
-  private val idxGrantor: Int by lazy { resultSet.findColumn("GRANTOR") }
+  private val idxGrantor: Int by lazyColIdx("GRANTOR")
   val grantor get():String? = resultSet.getString(idxGrantor)
-  private val idxGrantee: Int by lazy { resultSet.findColumn("GRANTEE") }
+  private val idxGrantee: Int by lazyColIdx("GRANTEE")
   val grantee get(): String = resultSet.getString(idxGrantee)
-  private val idxPrivilege: Int by lazy { resultSet.findColumn("PRIVILEGE") }
+  private val idxPrivilege: Int by lazyColIdx("PRIVILEGE")
   val privilege get():String = resultSet.getString(idxPrivilege)
-  private val idxIsGrantable: Int by lazy { resultSet.findColumn("IS_GRANTABLE") }
+  private val idxIsGrantable: Int by lazyColIdx("IS_GRANTABLE")
   val isGrantable get():Boolean? = resultSet.getString(idxIsGrantable)?.let { if (it=="YES") true else if (it=="NO") false else null}
 }
 
 class TablePrivilegesResult(privileges: ResultSet): TableMetaResultBase(privileges) {
-  private val idxGrantor: Int by lazy { resultSet.findColumn("GRANTOR") }
+  private val idxGrantor: Int by lazyColIdx("GRANTOR")
   val grantor get():String? = resultSet.getString(idxGrantor)
-  private val idxGrantee: Int by lazy { resultSet.findColumn("GRANTEE") }
+  private val idxGrantee: Int by lazyColIdx("GRANTEE")
   val grantee get(): String = resultSet.getString(idxGrantee)
-  private val idxPrivilege: Int by lazy { resultSet.findColumn("PRIVILEGE") }
+  private val idxPrivilege: Int by lazyColIdx("PRIVILEGE")
   val privilege get():String = resultSet.getString(idxPrivilege)
-  private val idxIsGrantable: Int by lazy { resultSet.findColumn("IS_GRANTABLE") }
+  private val idxIsGrantable: Int by lazyColIdx("IS_GRANTABLE")
 }
 
 abstract class AbstractRowResult(rs: ResultSet): AbstractReadonlyResultSet(rs) {
   enum class PseudoColumn {
-    bestRowUnknown,
-    bestRowNotPseudo,
-    bestRowPseudo
+    BESTROWUNKNOWN,
+    BESTROWNOTPSEUDO,
+    BESTROWPSEUDO
   }
 
-  private val idxColumnName by lazy { resultSet.findColumn("COLUMN_NAME") }
-  private val idxDataType by lazy { resultSet.findColumn("DATA_TYPE") }
-  private val idxTypeName by lazy { resultSet.findColumn("TYPE_NAME") }
-  private val idxColumnSize by lazy { resultSet.findColumn("COLUMN_SIZE") }
-  private val idxDecimalDigits by lazy { resultSet.findColumn("DECIMAL_DIGITS") }
-  private val idxPseudoColumn by lazy { resultSet.findColumn("PSEUDO_COLUMN") }
+  private val idxColumnName by lazyColIdx("COLUMN_NAME")
+  private val idxDataType by lazyColIdx("DATA_TYPE")
+  private val idxTypeName by lazyColIdx("TYPE_NAME")
+  private val idxColumnSize by lazyColIdx("COLUMN_SIZE")
+  private val idxDecimalDigits by lazyColIdx("DECIMAL_DIGITS")
+  private val idxPseudoColumn by lazyColIdx("PSEUDO_COLUMN")
 
   val columnName:String get() = resultSet.getString(idxColumnName)
   val dataType:String get() = resultSet.getString(idxDataType)
@@ -779,9 +799,9 @@ abstract class AbstractRowResult(rs: ResultSet): AbstractReadonlyResultSet(rs) {
   inline val columnSize get() = precision
   val decimalDigits: Short get() = resultSet.getShort(idxDecimalDigits)
   val pseudoColumn: PseudoColumn = when(resultSet.getShort(idxPseudoColumn).toInt()) {
-    DatabaseMetaData.bestRowUnknown -> PseudoColumn.bestRowUnknown
-    DatabaseMetaData.bestRowPseudo -> PseudoColumn.bestRowPseudo
-    DatabaseMetaData.bestRowNotPseudo -> PseudoColumn.bestRowNotPseudo
+    DatabaseMetaData.bestRowUnknown -> PseudoColumn.BESTROWUNKNOWN
+    DatabaseMetaData.bestRowPseudo -> PseudoColumn.BESTROWPSEUDO
+    DatabaseMetaData.bestRowNotPseudo -> PseudoColumn.BESTROWNOTPSEUDO
     else -> throw IllegalArgumentException("Unexpected pseudoColumn value ${resultSet.getShort(idxPseudoColumn)}")
   }
 
@@ -789,30 +809,30 @@ abstract class AbstractRowResult(rs: ResultSet): AbstractReadonlyResultSet(rs) {
 
 class BestRowIdentifierResult(rs: ResultSet): AbstractRowResult(rs) {
   enum class Scope {
-    bestRowTemporary,
-    bestRowTransaction,
-    bestRowSession
+    BESTROWTEMPORARY,
+    BESTROWTRANSACTION,
+    BESTROWSESSION
   }
 
-  val idxScope by lazy { resultSet.findColumn("SCOPE") }
+  val idxScope by lazyColIdx("SCOPE")
 
   val scope: Scope get() = when (resultSet.getShort(idxScope).toInt()) {
-    DatabaseMetaData.bestRowTemporary -> Scope.bestRowTemporary
-    DatabaseMetaData.bestRowTransaction -> Scope.bestRowTransaction
-    DatabaseMetaData.bestRowSession -> Scope.bestRowSession
+    DatabaseMetaData.bestRowTemporary -> Scope.BESTROWTEMPORARY
+    DatabaseMetaData.bestRowTransaction -> Scope.BESTROWTRANSACTION
+    DatabaseMetaData.bestRowSession -> Scope.BESTROWSESSION
     else -> throw IllegalArgumentException("Unexpected scope value ${resultSet.getShort(idxScope)}")
   }
 }
 
 class VersionColumnsResult(rs: ResultSet): AbstractRowResult(rs) {
-  private val idxBufferSize by lazy { resultSet.findColumn("BUFFER_LENGTH") }
+  private val idxBufferSize by lazyColIdx("BUFFER_LENGTH")
 
   val bufferSize get() = resultSet.getInt(idxBufferSize)
 }
 
 class PrimaryKeyResults(rs: ResultSet): TableColumnResultBase(rs) {
-  private val idxKeySeq by lazy { resultSet.findColumn("KEY_SEQ") }
-  private val idxPkName by lazy { resultSet.findColumn("PK_NAME") }
+  private val idxKeySeq by lazyColIdx("KEY_SEQ")
+  private val idxPkName by lazyColIdx("PK_NAME")
 
   val keySeq: Short get() = resultSet.getShort(idxKeySeq)
   val pkName: String? get() = resultSet.getString(idxPkName)
@@ -821,6 +841,109 @@ class PrimaryKeyResults(rs: ResultSet): TableColumnResultBase(rs) {
   KEY_SEQ short => sequence number within primary key( a value of 1 represents the first column of the primary key, a value of 2 would represent the second column within the primary key).
 PK_NAME String => pri
    */
+}
+
+enum class KeyRule(val sqlValue: Short) {
+  IMPORTEDKEYNOACTION(DatabaseMetaData.importedKeyNoAction.toShort()),
+  IMPORTEDKEYCASCADE(DatabaseMetaData.importedKeyCascade.toShort()),
+  IMPORTEDKEYSETNULL(DatabaseMetaData.importedKeySetNull.toShort()),
+  IMPORTEDKEYSETDEFAULT(DatabaseMetaData.importedKeySetDefault.toShort()),
+  IMPORTEDKEYRESTRICT(DatabaseMetaData.importedKeyRestrict.toShort());
+  companion object {
+    @JvmStatic
+    fun from(value:Short) = when(value.toInt()) {
+      DatabaseMetaData.importedKeyNoAction -> KeyRule.IMPORTEDKEYNOACTION
+      DatabaseMetaData.importedKeyCascade -> KeyRule.IMPORTEDKEYCASCADE
+      DatabaseMetaData.importedKeySetNull -> KeyRule.IMPORTEDKEYSETNULL
+      DatabaseMetaData.importedKeySetDefault -> KeyRule.IMPORTEDKEYSETDEFAULT
+      DatabaseMetaData.importedKeyRestrict -> KeyRule.IMPORTEDKEYRESTRICT
+      else -> throw IllegalArgumentException("The value $this does not represent a valid key rule")
+    }
+  }
+}
+
+enum class KeyDeferrability(val sqlValue: Short) {
+  IMPORTEDKEYINITIALLYDEFERRED(DatabaseMetaData.importedKeyInitiallyDeferred.toShort()),
+  IMPORTEDKEYINITIALLYIMMEDIATE(DatabaseMetaData.importedKeyInitiallyImmediate.toShort()),
+  IMPORTEDKEYNOTDEFERRABLE(DatabaseMetaData.importedKeyNotDeferrable.toShort());
+
+  companion object {
+    @JvmStatic
+    fun from(value:Short) = when(value.toInt()) {
+      DatabaseMetaData.importedKeyInitiallyDeferred -> KeyDeferrability.IMPORTEDKEYINITIALLYDEFERRED
+      DatabaseMetaData.importedKeyInitiallyImmediate -> KeyDeferrability.IMPORTEDKEYINITIALLYIMMEDIATE
+      DatabaseMetaData.importedKeyNotDeferrable -> KeyDeferrability.IMPORTEDKEYNOTDEFERRABLE
+      else -> throw IllegalArgumentException("The value $this does not represent a valid key deferrability value")
+    }
+  }
+}
+
+class KeysResult(resultSet: ResultSet): AbstractReadonlyResultSet(resultSet) {
+  private val idxPkTableCat by lazyColIdx("PKTABLE_CAT")
+  private val idxPkTableSchem by lazyColIdx("PKTABLE_SCHEM")
+  private val idxPkTableName by lazyColIdx("PKTABLE_NAME")
+  private val idxPkColName by lazyColIdx("PKCOLUMN_NAME")
+  private val idxFkTableCat by lazyColIdx("FKTABLE_CAT")
+  private val idxFkTableSchem by lazyColIdx("FKTABLE_SCHEM")
+  private val idxFkTableName by lazyColIdx("FKTABLE_NAME")
+  private val idxFkColName by lazyColIdx("FKCOLUMN_NAME")
+  private val idxKeySeq by lazyColIdx("KEY_SEQ")
+  private val idxUpdateRule by lazyColIdx("UPDATE_RULE")
+  private val idxDeleterule by lazyColIdx("DELETE_RULE")
+  private val idxFkName by lazyColIdx("FK_NAME")
+  private val idxPkName by lazyColIdx("PK_NAME")
+  private val idxDeferrability by lazyColIdx("DEFERRABILITY")
+
+  val pkTableCat: String? get() = resultSet.getString(idxPkTableName)
+  val pkTableSchema: String? get() = resultSet.getString(idxPkTableSchem)
+  val pkTableName: String get() = resultSet.getString(idxPkTableName)
+  val pkColumnName: String get() = resultSet.getString(idxPkColName)
+  val fkTableCat: String? get() = resultSet.getString(idxFkTableName)
+  val fkTableSchema: String? get() = resultSet.getString(idxFkTableSchem)
+  val fkTableName: String get() = resultSet.getString(idxFkTableName)
+  val fkColumnName: String get() = resultSet.getString(idxFkColName)
+  val keySeq: Short get() = resultSet.getShort(idxKeySeq)
+  val updateRule: KeyRule get() = KeyRule.from(resultSet.getShort(idxUpdateRule))
+  val deleteRule: KeyRule get() = KeyRule.from(resultSet.getShort(idxDeleterule))
+  val fkName: String get() = resultSet.getString(idxFkName)
+  val pkName: String get() = resultSet.getString(idxPkName)
+  val deferrability: KeyDeferrability get() = KeyDeferrability.from(resultSet.getShort(idxDeferrability))
+}
+
+class TypeInfo(resultSet: ResultSet): AbstractReadonlyResultSet(resultSet) {
+  private val idxTypeName by lazyColIdx("TYPE_NAME")
+  private val idxDataType by lazyColIdx("DATA_TYPE")
+  private val idxPrecision by lazyColIdx("PRECISION")
+  private val idxLiteralPrefix by lazyColIdx("LITERAL_PREFIX")
+  private val idxLiteralSuffix by lazyColIdx("LITERAL_SUFFIX")
+  private val idxCreateParams by lazyColIdx("CREATE_PARAMS")
+  private val idxNullable by lazyColIdx("NULLABLE")
+  private val idxCaseSensitive by lazyColIdx("CASE_SENSITIVE")
+  private val idxSearchable by lazyColIdx("SEARCHABLE")
+  private val idxUnsignedAttribute by lazyColIdx("UNSIGNED_ATTRIBUTE")
+  private val idxFixedPrecScale by lazyColIdx("FIXED_PREC_SCALE")
+  private val idxAutoIncrement by lazyColIdx("AUTO_INCREMENT")
+  private val idxLocalTypeName by lazyColIdx("LOCAL_TYPE_NAME")
+  private val idxMinimumScale by lazyColIdx("MINIMUM_SCALE")
+  private val idxMaximumScale by lazyColIdx("MAXIMUM_SCALE")
+  private val idxNumPrecRadix by lazyColIdx("NUM_PREC_RADIX")
+
+  val typeName: String get() = resultSet.getString(idxTypeName)
+  val dataType: IColumnType<*, *, *> get() = columnType(resultSet.getInt(idxDataType))
+  val precision: Int get() = resultSet.getInt(idxPrecision)
+  val literalPrefix: String? get() = resultSet.getString(idxLiteralPrefix)
+  val literalSuffix: String? get() = resultSet.getString(idxLiteralSuffix)
+  val createParams: String? get() = resultSet.getString(idxCreateParams)
+  val nullable: Nullable get() = Nullable.from(resultSet.getShort (idxNullable))
+  val caseSensitive: Boolean get() = resultSet.getBoolean(idxCaseSensitive)
+  val searchable: Searchable get() = Searchable.from(resultSet.getShort(idxSearchable))
+  val unsignedAttribute: Boolean get() = resultSet.getBoolean(idxUnsignedAttribute)
+  val fixedPrecScale: Boolean get() = resultSet.getBoolean(idxFixedPrecScale)
+  val autoIncrement: Boolean get() = resultSet.getBoolean(idxAutoIncrement)
+  val localTypeName: String get() = resultSet.getString(idxLocalTypeName)
+  val minimumScale: Short get() = resultSet.getShort(idxMinimumScale)
+  val maximumScale: Short get() = resultSet.getShort(idxMaximumScale)
+  val numPrecRadix: Int get() = resultSet.getInt(idxNumPrecRadix)
 }
 
 class WrappedResultSetMetaData(private val metadata:ResultSetMetaData)

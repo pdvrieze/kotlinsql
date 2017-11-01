@@ -22,6 +22,7 @@ package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
 import java.sql.ResultSet
+import java.sql.Types
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
@@ -43,6 +44,7 @@ class CustomColumnType<U :Any,
   val baseConfiguration: CONF_T,
   val toDB: (U) -> T,
   val fromDb: (T) -> U): IColumnType<U, CustomColumnType<U,T,S,C,CONF_T>, CustomColumnType<U, T, S, C, CONF_T>.CustomColumn> {
+  override val javaType: Int get() = Types.OTHER
 
   val baseColumnType = baseConfiguration.type
 

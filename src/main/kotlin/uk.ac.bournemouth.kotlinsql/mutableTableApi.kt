@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016.
+ * Copyright (c) 2017.
  *
  * This file is part of ProcessManager.
  *
@@ -17,6 +17,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+@file:Suppress("ClassName")
 
 package uk.ac.bournemouth.kotlinsql
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016.
+ * Copyright (c) 2017.
  *
  * This file is part of ProcessManager.
  *
@@ -23,7 +23,6 @@ package uk.ac.bournemouth.kotlinsql
 import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import java.util.*
 import kotlin.properties.ReadOnlyProperty
-import kotlin.reflect.KProperty
 
 /**
  * A interface for tables. The properties have underscored names to reduce conflicts with members.

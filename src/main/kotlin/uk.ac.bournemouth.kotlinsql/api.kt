@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016.
+ * Copyright (c) 2017.
  *
  * This file is part of ProcessManager.
  *
@@ -104,6 +104,11 @@ interface IColumnType<T:Any, S: IColumnType<T, S, C>, C:Column<T,S,C>> {
    */
   val type: KClass<T>
 
+  /**
+   * The type value according to [Types] assigned to this type if any. On unknown types it is [Types.OTHER]
+   */
+  val javaType: Int
+
   fun cast(column: Column<*,*,*>): C {
     if (column.type.typeName == typeName) {
       @Suppress("UNCHECKED_CAST")
@@ -138,7 +143,10 @@ interface IColumnType<T:Any, S: IColumnType<T, S, C>, C:Column<T,S,C>> {
   }
 }
 
-sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override val typeName:String, override val type: KClass<T>): IColumnType<T,S,C> {
+@Suppress("ClassName")
+sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override val typeName:String,
+                                                                        override val type: KClass<T>,
+                                                                        override val javaType: Int): IColumnType<T,S,C> {
 
   @Suppress("UNCHECKED_CAST")
   fun asS() = this as S
@@ -146,33 +154,33 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
   // @formatter:off
   interface INumericColumnType<T:Any, S:INumericColumnType<T,S,C>, C:INumericColumn<T,S,C>>: IColumnType<T,S,C>
 
-  sealed class NumericColumnType<T:Any, S: NumericColumnType<T, S>>(typeName: String, type: KClass<T>):ColumnType<T,S, NumericColumn<T,S>>(typeName, type), INumericColumnType<T,S, NumericColumn<T,S>> {
-    object TINYINT_T   : NumericColumnType<Byte, TINYINT_T>("TINYINT", Byte::class){
+  sealed class NumericColumnType<T:Any, S: NumericColumnType<T, S>>(typeName: String, type: KClass<T>, javaType: Int):ColumnType<T,S, NumericColumn<T,S>>(typeName, type, javaType), INumericColumnType<T,S, NumericColumn<T,S>> {
+    object TINYINT_T   : NumericColumnType<Byte, TINYINT_T>("TINYINT", Byte::class, Types.TINYINT){
       override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getByte(pos).let { if (rs.wasNull()) null else it }
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Byte?){statementHelper.setByte(pos, value)}
     }
-    object SMALLINT_T  : NumericColumnType<Short, SMALLINT_T>("SMALLINT", Short::class){
+    object SMALLINT_T  : NumericColumnType<Short, SMALLINT_T>("SMALLINT", Short::class, Types.SMALLINT){
       override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getShort(pos).let { if (rs.wasNull()) null else it }
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Short?){statementHelper.setShort(pos, value)}
     }
-    object MEDIUMINT_T : NumericColumnType<Int, MEDIUMINT_T>("MEDIUMINT", Int::class){
+    object MEDIUMINT_T : NumericColumnType<Int, MEDIUMINT_T>("MEDIUMINT", Int::class, Types.OTHER){
       override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getInt(pos).let { if (rs.wasNull()) null else it }
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Int?){statementHelper.setInt(pos, value)}
     }
-    object INT_T       : NumericColumnType<Int, INT_T>("INT", Int::class){
+    object INT_T       : NumericColumnType<Int, INT_T>("INT", Int::class, Types.INTEGER){
       override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getInt(pos).let { if (rs.wasNull()) null else it }
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Int?){statementHelper.setInt(pos, value)}
     }
-    object BIGINT_T    : NumericColumnType<Long, BIGINT_T>("BIGINT", Long::class){
+    object BIGINT_T    : NumericColumnType<Long, BIGINT_T>("BIGINT", Long::class, Types.BIGINT){
       override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getLong(pos).let { if (rs.wasNull()) null else it }
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Long?){statementHelper.setLong(pos, value)}
     }
 
-    object FLOAT_T     : NumericColumnType<Float, FLOAT_T>("FLOAT", Float::class){
+    object FLOAT_T     : NumericColumnType<Float, FLOAT_T>("FLOAT", Float::class, Types.FLOAT){
       override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getFloat(pos).let { if (rs.wasNull()) null else it }
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Float?){statementHelper.setFloat(pos, value)}
     }
-    object DOUBLE_T    : NumericColumnType<Double, DOUBLE_T>("DOUBLE", Double::class){
+    object DOUBLE_T    : NumericColumnType<Double, DOUBLE_T>("DOUBLE", Double::class, Types.DOUBLE){
       override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getDouble(pos).let { if (rs.wasNull()) null else it }
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Double?){statementHelper.setDouble(pos, value)}
     }
@@ -182,7 +190,8 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
 
   }
 
-  sealed class DecimalColumnType<S:DecimalColumnType<S>>(typeName: String, type: KClass<BigDecimal>, val javaType:Int):ColumnType<BigDecimal,S, DecimalColumn<S>>(typeName, type), INumericColumnType<BigDecimal,S, DecimalColumn<S>> {
+  sealed class DecimalColumnType<S:DecimalColumnType<S>>(typeName: String, type: KClass<BigDecimal>, javaType:Int):ColumnType<BigDecimal,S, DecimalColumn<S>>(typeName, type, javaType), INumericColumnType<BigDecimal,S, DecimalColumn<S>> {
+
     override fun fromResultSet(rs: ResultSet, pos: Int): BigDecimal? = rs.getBigDecimal(pos)
 
     object DECIMAL_T   : DecimalColumnType<DECIMAL_T>("DECIMAL", BigDecimal::class, Types.DECIMAL) {
@@ -197,57 +206,57 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
     }
   }
 
-  sealed class SimpleColumnType<T:Any, S:SimpleColumnType<T,S>>(typeName: String, type: KClass<T>):ColumnType<T,S, SimpleColumn<T,S>>(typeName, type) {
+  sealed class SimpleColumnType<T:Any, S:SimpleColumnType<T,S>>(typeName: String, type: KClass<T>, javaType:Int):ColumnType<T,S, SimpleColumn<T,S>>(typeName, type, javaType) {
 
-    object BIT_T       : SimpleColumnType<Boolean, BIT_T>("BIT", Boolean::class), BoundedType {
+    object BIT_T       : SimpleColumnType<Boolean, BIT_T>("BIT", Boolean::class, Types.BIT), BoundedType {
       override val maxLen = 64
       override fun fromResultSet(rs: ResultSet, pos: Int) = rs.getBoolean(pos).let { if (rs.wasNull()) null else it }
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Boolean?) { statementHelper.setBoolean(pos, value) }
     }
 
-    object DATE_T      : SimpleColumnType<java.sql.Date, DATE_T>("DATE", java.sql.Date::class){
+    object DATE_T      : SimpleColumnType<java.sql.Date, DATE_T>("DATE", java.sql.Date::class, Types.DATE){
       override fun fromResultSet(rs: ResultSet, pos: Int): Date? = rs.getDate(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Date?) { statementHelper.setDate(pos, value) }
     }
-    object TIME_T      : SimpleColumnType<java.sql.Time, TIME_T>("TIME", java.sql.Time::class){
+    object TIME_T      : SimpleColumnType<java.sql.Time, TIME_T>("TIME", java.sql.Time::class, Types.TIME){
       override fun fromResultSet(rs: ResultSet, pos: Int): Time? = rs.getTime(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Time?) { statementHelper.setTime(pos, value) }
     }
-    object TIMESTAMP_T : SimpleColumnType<java.sql.Timestamp, TIMESTAMP_T>("TIMESTAMP", Timestamp::class){
+    object TIMESTAMP_T : SimpleColumnType<java.sql.Timestamp, TIMESTAMP_T>("TIMESTAMP", Timestamp::class, Types.TIMESTAMP){
       override fun fromResultSet(rs: ResultSet, pos: Int): Timestamp? = rs.getTimestamp(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Timestamp?) { statementHelper.setTimestamp(pos, value) }
     }
-    object DATETIME_T  : SimpleColumnType<java.sql.Timestamp, DATETIME_T>("DATETIME", Timestamp::class){
+    object DATETIME_T  : SimpleColumnType<java.sql.Timestamp, DATETIME_T>("DATETIME", Timestamp::class, Types.OTHER){
       override fun fromResultSet(rs: ResultSet, pos: Int): Timestamp? = rs.getTimestamp(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: Timestamp?) { statementHelper.setTimestamp(pos, value) }
     }
-    object YEAR_T      : SimpleColumnType<java.sql.Date, YEAR_T>("YEAR", java.sql.Date::class){
+    object YEAR_T      : SimpleColumnType<java.sql.Date, YEAR_T>("YEAR", java.sql.Date::class, Types.OTHER){
       override fun fromResultSet(rs: ResultSet, pos: Int): Date? = rs.getDate(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: java.sql.Date?) { statementHelper.setDate(pos, value) }
     }
 
-    object TINYBLOB_T  : SimpleColumnType<ByteArray, TINYBLOB_T>("TINYBLOB", ByteArray::class), BoundedType {
+    object TINYBLOB_T  : SimpleColumnType<ByteArray, TINYBLOB_T>("TINYBLOB", ByteArray::class, Types.OTHER), BoundedType {
       override val maxLen = 255
       override fun fromResultSet(rs: ResultSet, pos: Int): ByteArray? = rs.getBytes(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: ByteArray?) {
         statementHelper.setBlob(pos, if(value == null) null else ByteArrayInputStream(value))
       }
     }
-    object BLOB_T      : SimpleColumnType<ByteArray, BLOB_T>("BLOB", ByteArray::class), BoundedType {
+    object BLOB_T      : SimpleColumnType<ByteArray, BLOB_T>("BLOB", ByteArray::class, Types.BLOB ), BoundedType {
       override val maxLen = 0xffff
       override fun fromResultSet(rs: ResultSet, pos: Int): ByteArray? = rs.getBytes(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: ByteArray?) {
         statementHelper.setBlob(pos, if(value == null) null else ByteArrayInputStream(value))
       }
     }
-    object MEDIUMBLOB_T: SimpleColumnType<ByteArray, MEDIUMBLOB_T>("MEDIUMBLOB", ByteArray::class), BoundedType {
+    object MEDIUMBLOB_T: SimpleColumnType<ByteArray, MEDIUMBLOB_T>("MEDIUMBLOB", ByteArray::class, Types.OTHER), BoundedType {
       override val maxLen = 0xffffff
       override fun fromResultSet(rs: ResultSet, pos: Int): ByteArray? = rs.getBytes(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: ByteArray?) {
         statementHelper.setBlob(pos, if(value == null) null else ByteArrayInputStream(value))
       }
     }
-    object LONGBLOB_T  : SimpleColumnType<ByteArray, LONGBLOB_T>("LONGBLOB", ByteArray::class), BoundedType {
+    object LONGBLOB_T  : SimpleColumnType<ByteArray, LONGBLOB_T>("LONGBLOB", ByteArray::class, Types.OTHER), BoundedType {
       override val maxLen = Int.MAX_VALUE /*Actually it would be more*/
       override fun fromResultSet(rs: ResultSet, pos: Int): ByteArray? = rs.getBytes(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: ByteArray?) {
@@ -262,13 +271,13 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
 
   interface ICharColumnType<S:ICharColumnType<S, C>, C:ICharColumn<S, C>>: IColumnType<String,S,C>
 
-  sealed class CharColumnType<S:CharColumnType<S>>(typeName: String, type: KClass<String>):ColumnType<String,S, CharColumn<S>>(typeName, type), ICharColumnType<S, CharColumn<S>> {
+  sealed class CharColumnType<S:CharColumnType<S>>(typeName: String, type: KClass<String>, javaType: Int):ColumnType<String,S, CharColumn<S>>(typeName, type, javaType), ICharColumnType<S, CharColumn<S>> {
     override fun fromResultSet(rs: ResultSet, pos: Int): String? = rs.getString(pos)
 
-    object TINYTEXT_T  : CharColumnType<TINYTEXT_T>("TINYTEXT", String::class), BoundedType { override val maxLen:Int get() = 255 }
-    object TEXT_T      : CharColumnType<TEXT_T>("TEXT", String::class), BoundedType { override val maxLen:Int get() = 0xffff }
-    object MEDIUMTEXT_T: CharColumnType<MEDIUMTEXT_T>("MEDIUMTEXT", String::class), BoundedType { override val maxLen:Int get() = 0xffffff }
-    object LONGTEXT_T  : CharColumnType<LONGTEXT_T>("LONGTEXT", String::class), BoundedType { override val maxLen:Int get() = Int.MAX_VALUE /*Actually it would be more*/}
+    object TINYTEXT_T  : CharColumnType<TINYTEXT_T>("TINYTEXT", String::class, Types.OTHER), BoundedType { override val maxLen:Int get() = 255 }
+    object TEXT_T      : CharColumnType<TEXT_T>("TEXT", String::class, Types.OTHER), BoundedType { override val maxLen:Int get() = 0xffff }
+    object MEDIUMTEXT_T: CharColumnType<MEDIUMTEXT_T>("MEDIUMTEXT", String::class, Types.OTHER), BoundedType { override val maxLen:Int get() = 0xffffff }
+    object LONGTEXT_T  : CharColumnType<LONGTEXT_T>("LONGTEXT", String::class, Types.OTHER), BoundedType { override val maxLen:Int get() = Int.MAX_VALUE /*Actually it would be more*/}
 
     @Suppress("UNCHECKED_CAST")
     override fun newConfiguration(refColumn: CharColumn<S>) =
@@ -281,9 +290,9 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
 
   interface ILengthColumnType<T:Any, S:ILengthColumnType<T,S, C>, C:ILengthColumn<T,S,C>>: IColumnType<T,S,C>
 
-  sealed class LengthColumnType<T:Any, S:LengthColumnType<T,S>>(typeName: String, type: KClass<T>):ColumnType<T,S, LengthColumn<T,S>>(typeName, type), ILengthColumnType<T,S, LengthColumn<T,S>> {
+  sealed class LengthColumnType<T:Any, S:LengthColumnType<T,S>>(typeName: String, type: KClass<T>, javaType:Int):ColumnType<T,S, LengthColumn<T,S>>(typeName, type, javaType), ILengthColumnType<T,S, LengthColumn<T,S>> {
 
-    object BITFIELD_T  : LengthColumnType<BooleanArray, BITFIELD_T>("BIT", BooleanArray::class) {
+    object BITFIELD_T  : LengthColumnType<BooleanArray, BITFIELD_T>("BIT", BooleanArray::class, Types.OTHER) {
       @Suppress("UNCHECKED_CAST")
       override fun fromResultSet(rs: ResultSet, pos: Int) = (rs.getArray(pos).array as Array<Any>).let { array -> BooleanArray(array.size) { i -> array[i] as Boolean } }
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: BooleanArray?) {
@@ -291,14 +300,14 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
       }
     }
 
-    object BINARY_T    : LengthColumnType<ByteArray, BINARY_T>("BINARY", ByteArray::class), BoundedType {
+    object BINARY_T    : LengthColumnType<ByteArray, BINARY_T>("BINARY", ByteArray::class, Types.BINARY), BoundedType {
       override val maxLen = 255
       override fun fromResultSet(rs: ResultSet, pos: Int): ByteArray? = rs.getBytes(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: ByteArray?) {
         statementHelper.setBytes(pos, value)
       }
     }
-    object VARBINARY_T : LengthColumnType<ByteArray, VARBINARY_T>("VARBINARY", ByteArray::class), BoundedType {
+    object VARBINARY_T : LengthColumnType<ByteArray, VARBINARY_T>("VARBINARY", ByteArray::class, Types.VARBINARY), BoundedType {
       override val maxLen = 0xffff
       override fun fromResultSet(rs: ResultSet, pos: Int): ByteArray? = rs.getBytes(pos)
       override fun setParam(statementHelper: StatementHelper, pos: Int, value: ByteArray?) {
@@ -311,10 +320,10 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
           LengthColumnConfiguration(refColumn.name, this as S, refColumn.length)
   }
 
-  sealed class LengthCharColumnType<S:LengthCharColumnType<S>>(typeName: String, type: KClass<String>):ColumnType<String,S, LengthCharColumn<S>>(typeName, type), ILengthColumnType<String,S,LengthCharColumn<S>>, ICharColumnType<S,LengthCharColumn<S>> {
+  sealed class LengthCharColumnType<S:LengthCharColumnType<S>>(typeName: String, type: KClass<String>, javaType: Int):ColumnType<String,S, LengthCharColumn<S>>(typeName, type, javaType), ILengthColumnType<String,S,LengthCharColumn<S>>, ICharColumnType<S,LengthCharColumn<S>> {
 
-    object CHAR_T      : LengthCharColumnType<CHAR_T>("CHAR", String::class), BoundedType { override val maxLen:Int get() = 255 }
-    object VARCHAR_T   : LengthCharColumnType<VARCHAR_T>("VARCHAR", String::class), BoundedType { override val maxLen:Int get() = 0xffff }
+    object CHAR_T      : LengthCharColumnType<CHAR_T>("CHAR", String::class, Types.CHAR), BoundedType { override val maxLen:Int get() = 255 }
+    object VARCHAR_T   : LengthCharColumnType<VARCHAR_T>("VARCHAR", String::class, Types.VARCHAR), BoundedType { override val maxLen:Int get() = 0xffff }
 
     override fun newConfiguration(refColumn: LengthCharColumn<S>) =
           LengthCharColumnConfiguration(asS(), refColumn.name, refColumn.length)

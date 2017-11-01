@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016.
+ * Copyright (c) 2017.
  *
  * This file is part of ProcessManager.
  *
@@ -456,7 +456,7 @@ abstract class AbstractTable: Table {
                 executeUpdate()
               }
             } catch (e:SQLException) {
-              throw SQLException("Failure updating table $_name column ${colName} from ${colType} to ${col.type}", e)
+              throw SQLException("Failure updating table $_name column $colName from $colType to ${col.type}", e)
             }
           }
         } else {

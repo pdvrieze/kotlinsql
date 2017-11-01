@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016.
+ * Copyright (c) 2017.
  *
  * This file is part of ProcessManager.
  *
@@ -17,6 +17,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+@file:Suppress("ClassName")
 
 package uk.ac.bournemouth.kotlinsql
 
@@ -531,8 +533,8 @@ abstract class Database constructor(val _version:Int): DatabaseMethods() {
     }
 
     override fun execute(connection:DBConnection, block: (T1?)->Unit):Boolean {
-      return executeHelper(connection, block) { rs, block ->
-        block(col1.type.fromResultSet(rs, 1))
+      return executeHelper(connection, block) { rs, block2 ->
+        block2(col1.type.fromResultSet(rs, 1))
       }
     }
 
@@ -787,6 +789,7 @@ internal fun <T> Database.SelectStatement.executeHelper(connection: DBConnection
   }
 }
 
+@Suppress("EnumEntryName")
 enum class SqlComparisons(val str:String) {
   eq("="),
   ne("!="),
