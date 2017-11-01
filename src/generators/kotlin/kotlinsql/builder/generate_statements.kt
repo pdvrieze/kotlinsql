@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2016.
+ * Copyright (c) 2017.
  *
- * This file is part of kotlinsql.
+ * This file is part of ProcessManager.
  *
  * This file is licenced to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
@@ -74,9 +74,9 @@ class GenerateStatementsKt {
         append("  override fun execute(connection:DBConnection, block: (")
         (1..n).joinToString(",") {m -> "T$m?"}.apply { append(this) }
         appendln(")->Unit):Boolean {")
-        appendln("    return executeHelper(connection, block) { rs, block ->")
-        append("      block(")
-        (1..n).joinToString(",\n${" ".repeat(12)}") { m -> "select.col$m.type.fromResultSet(rs, $m)" }.apply { append(this) }
+        appendln("    return executeHelper(connection, block) { rs, block2 ->")
+        append("      block2(")
+        (1..n).joinToString(",\n${" ".repeat(13)}") { m -> "select.col$m.type.fromResultSet(rs, $m)" }.apply { append(this) }
 //        if (n==1) {
 //          append("select.col1.type.fromResultSet(rs, 1)")
 //        } else {
