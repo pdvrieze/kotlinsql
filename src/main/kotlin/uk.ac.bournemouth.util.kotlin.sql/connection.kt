@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016.
+ * Copyright (c) 2018.
  *
  * This file is part of ProcessManager.
  *
@@ -152,10 +152,10 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
 
    * @return the first `SQLWarning` object or `null`
    * *         if there are none
-   * *
+   *
    * @exception SQLException if a database access error occurs or
    * *            this method is called on a closed connection
-   * *
+   *
    * @see SQLWarning
    */
   val warningsIt: Iterator<SQLWarning> get() = WarningIterator(rawConnection.warnings)
