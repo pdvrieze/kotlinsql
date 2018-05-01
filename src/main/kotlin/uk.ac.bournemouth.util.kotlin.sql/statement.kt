@@ -101,6 +101,14 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
     inline operator fun plus(value: Boolean?): ParamHelper_ { sh.setParam(index++, value); return this }
     inline operator fun plus(value: Byte?): ParamHelper_ { sh.setParam(index++, value); return this }
     inline operator fun plus(value: Short?): ParamHelper_ { sh.setParam(index++, value); return this }
+
+    inline operator fun plus(intValue: Int): ParamHelper_ { sh.setInt(index++, intValue); return this }
+    inline operator fun plus(longValue: Long): ParamHelper_ { sh.setLong(index++, longValue); return this }
+      @JvmName("plusNotNull")
+    inline operator fun plus(stringValue: String): ParamHelper_ { sh.setString(index++, stringValue); return this }
+    inline operator fun plus(booleanValue: Boolean): ParamHelper_ { sh.setBoolean(index++, booleanValue); return this }
+    inline operator fun plus(byteValue: Byte): ParamHelper_ { sh.setByte(index++, byteValue); return this }
+    inline operator fun plus(shortValue: Short): ParamHelper_ { sh.setShort(index++, shortValue); return this }
   }
 
 //  inline fun <R> params(block: ParamHelper_.() -> R) = ParamHelper_(this).block()
@@ -158,6 +166,20 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
   inline fun params(value:Byte?):ParamHelper_ { setParam(1, value); return ParamHelper_(this) }
   /** Start setting parameters. This returns a helper for adding the next ones. */
   inline fun params(value:Short?):ParamHelper_ { setParam(1, value); return ParamHelper_(this) }
+
+  /** Start setting parameters. This returns a helper for adding the next ones. */
+  inline fun params(intValue:Int):ParamHelper_ { setInt(1, intValue); return ParamHelper_(this) }
+  /** Start setting parameters. This returns a helper for adding the next ones. */
+  inline fun params(longValue:Long):ParamHelper_ { setLong(1, longValue); return ParamHelper_(this) }
+  /** Start setting parameters. This returns a helper for adding the next ones. */
+  @JvmName("paramsNotNull")
+  inline fun params(stringValue:String):ParamHelper_ { setString(1, stringValue); return ParamHelper_(this) }
+  /** Start setting parameters. This returns a helper for adding the next ones. */
+  inline fun params(booleanValue:Boolean):ParamHelper_ { setBoolean(1, booleanValue); return ParamHelper_(this) }
+  /** Start setting parameters. This returns a helper for adding the next ones. */
+  inline fun params(byteValue:Byte):ParamHelper_ { setByte(1, byteValue); return ParamHelper_(this) }
+  /** Start setting parameters. This returns a helper for adding the next ones. */
+  inline fun params(shortValue:Short):ParamHelper_ { setShort(1, shortValue); return ParamHelper_(this) }
 
   inline fun <R> withResultSet(block: (ResultSet) -> R) = statement.resultSet.use(block)
 
