@@ -6,10 +6,10 @@
       <module name="buildSrc_test" target="1.6" />
       <module name="gradle-codegen_main" target="1.8" />
       <module name="gradle-codegen_test" target="1.8" />
-      <module name="kotlinsql_generators" target="1.7" />
-      <module name="kotlinsql_main" target="1.7" />
-      <module name="kotlinsql_test" target="1.7" />
-      <module name="kotlinsql_testGenerators" target="1.7" />
+      <module name="kotlinsql_generators" target="1.8" />
+      <module name="kotlinsql_main" target="1.8" />
+      <module name="kotlinsql_test" target="1.8" />
+      <module name="kotlinsql_testGenerators" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>
