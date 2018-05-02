@@ -151,7 +151,9 @@ sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override
   @Suppress("UNCHECKED_CAST")
   fun asS() = this as S
 
-  // @formatter:off
+    override fun toString() = "ColumnType: $typeName ($type)"
+
+    // @formatter:off
   interface INumericColumnType<T:Any, S:INumericColumnType<T,S,C>, C:INumericColumn<T,S,C>>: IColumnType<T,S,C>
 
   sealed class NumericColumnType<T:Any, S: NumericColumnType<T, S>>(typeName: String, type: KClass<T>, javaType: Int):ColumnType<T,S, NumericColumn<T,S>>(typeName, type, javaType), INumericColumnType<T,S, NumericColumn<T,S>> {
