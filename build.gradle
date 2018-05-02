@@ -25,6 +25,8 @@ buildscript {
     ext {
         if (! rootProject.hasProperty('kotlin_version') ) { kotlin_version = '1.1.51' }
         if (! rootProject.hasProperty('codegen_version') ) { codegen_version = '0.5.10' }
+        if (! rootProject.hasProperty('jupiterVersion') ) { jupiterVersion = '5.2.0' }
+        if (! rootProject.hasProperty('junit5_version') ) { junit5_version = '1.2.0' }
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -105,7 +107,7 @@ repositories {
 }
 
 test {
-    useTestNG()
+    useJUnitPlatform()
 }
 
 sourceSets {
@@ -149,7 +151,8 @@ dependencies {
 
     generatorsCompile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    testCompile 'org.testng:testng:6.9.13.8'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:$jupiterVersion"
 }
 
 idea{
