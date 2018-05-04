@@ -187,7 +187,13 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
 
   inline fun <R> execute(block: (ResultSet) -> R) = executeQuery().use(block)
 
-  /**
+
+  inline val Int.i get() = this
+  inline val Double.d get() = this
+  inline val Long.L get() = this
+  inline val Float.f get() = this
+
+    /**
    * Execute the block for every result in the ResultSet. This is [execute] and [Sequence.forEach] combined.
    */
   inline fun <R> executeEach(block: (ResultSet) -> R): List<R> = execute { resultSet ->
