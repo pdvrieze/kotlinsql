@@ -127,7 +127,7 @@ class CustomColumnConfiguration<U :Any, T: Any, S:IColumnType<T,S, C>, C:Column<
 
   override var autoincrement: Boolean
     get() = baseConfiguration.autoincrement
-    set(value) { baseConfiguration.autoincrement = autoincrement }
+    set(value) { baseConfiguration.autoincrement = value }
 
   override var default: U?
     get() = baseConfiguration.default?.let { type.fromDb(it) }
@@ -139,7 +139,7 @@ class CustomColumnConfiguration<U :Any, T: Any, S:IColumnType<T,S, C>, C:Column<
 
   override var columnFormat: ColumnConfiguration.ColumnFormat?
     get() = baseConfiguration.columnFormat
-    set(value) { baseConfiguration.columnFormat }
+    set(value) { baseConfiguration.columnFormat = value }
 
   override var storageFormat: ColumnConfiguration.StorageFormat?
     get() = baseConfiguration.storageFormat
