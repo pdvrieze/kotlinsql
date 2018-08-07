@@ -44,7 +44,7 @@ buildscript {
 
 plugins {
     id "com.gradle.plugin-publish" version "0.9.7"
-    id "com.jfrog.bintray" version "1.7.3"
+    id "com.jfrog.bintray" version "1.8.4"
     id 'maven-publish'
 }
 
@@ -57,7 +57,7 @@ ext {
     if (! rootProject.hasProperty('myJavaVersion')) { myJavaVersion = JavaVersion.VERSION_1_8 }
 }
 
-version = '0.7.3'
+version = '0.7.4-SNAPSHOT'
 group = 'net.devrieze'
 
 
