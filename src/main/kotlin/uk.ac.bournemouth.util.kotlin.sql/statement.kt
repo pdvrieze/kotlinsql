@@ -18,6 +18,8 @@
  * under the License.
  */
 
+@file:Suppress("ClassName", "unused")
+
 package uk.ac.bournemouth.util.kotlin.sql
 
 import java.math.BigDecimal
@@ -25,7 +27,7 @@ import java.sql.*
 import java.util.*
 
 @Suppress("NOTHING_TO_INLINE")
-class StatementHelper constructor(val statement: PreparedStatement, val queryString:String) : PreparedStatement by statement {
+class StatementHelper constructor(val statement: PreparedStatement, private val queryString:String) : PreparedStatement by statement {
   /**
    * Get raw access to the underlying prepared statement. This should normally not be needed, but is available when it is.
    */
@@ -50,7 +52,7 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
   val warningsIt: Iterator<SQLWarning>
     get() = warningsIterator()
 
-  fun warningsIterator(): Iterator<SQLWarning> = object : AbstractIterator<SQLWarning>() {
+  private fun warningsIterator(): Iterator<SQLWarning> = object : AbstractIterator<SQLWarning>() {
     override fun computeNext() {
       val w = statement.warnings
       if (w != null) {
@@ -61,7 +63,7 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
     }
   }
 
-  @Suppress("unused")
+  @Suppress("unused", "FunctionName")
   @Deprecated("Use the columntype instead. This doesn't do nulls", ReplaceWith("ColumnType::setParam(this, index, value)"), level = DeprecationLevel.ERROR)
   fun <T> setParam_(index: Int, value: T) = when (value) {
     null -> setNull(index, Types.NULL)
@@ -181,6 +183,7 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
   /** Start setting parameters. This returns a helper for adding the next ones. */
   inline fun params(shortValue:Short):ParamHelper_ { setShort(1, shortValue); return ParamHelper_(this) }
 
+  @Suppress("MemberVisibilityCanBePrivate")
   inline fun <R> withResultSet(block: (ResultSet) -> R) = statement.resultSet.use(block)
 
   inline fun <R> withGeneratedKeys(block: (ResultSet) -> R) = statement.generatedKeys.use(block)
@@ -190,6 +193,7 @@ class StatementHelper constructor(val statement: PreparedStatement, val queryStr
 
   inline val Int.i get() = this
   inline val Double.d get() = this
+  @Suppress("PropertyName")
   inline val Long.L get() = this
   inline val Float.f get() = this
 

@@ -24,6 +24,7 @@ import uk.ac.bournemouth.util.kotlin.sql.DBConnection
 import java.util.*
 import kotlin.properties.ReadOnlyProperty
 
+@Suppress("PropertyName")
 /**
  * A interface for tables. The properties have underscored names to reduce conflicts with members.
  *

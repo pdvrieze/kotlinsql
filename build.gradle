@@ -23,7 +23,7 @@
 buildscript {
 
     ext {
-        if (! rootProject.hasProperty('kotlin_version') ) { kotlin_version = '1.1.51' }
+        if (! rootProject.hasProperty('kotlin_version') ) { kotlin_version = '1.2.60' }
         if (! rootProject.hasProperty('codegen_version') ) { codegen_version = '0.5.10' }
         if (! rootProject.hasProperty('jupiterVersion') ) { jupiterVersion = '5.2.0' }
         if (! rootProject.hasProperty('junit5_version') ) { junit5_version = '1.2.0' }
@@ -57,7 +57,7 @@ ext {
     if (! rootProject.hasProperty('myJavaVersion')) { myJavaVersion = JavaVersion.VERSION_1_8 }
 }
 
-version = '0.7.2'
+version = '0.7.3'
 group = 'net.devrieze'
 
 

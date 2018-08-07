@@ -27,8 +27,9 @@ import java.util.*
 /**
  * Created by pdvrieze on 02/04/16.
  */
-class testTableDefs {
-  object db:Database( 1)
+class TestTableDefs {
+  @Suppress("ClassName")
+  object db: Database(1)
 
   @Test
   fun testSimpleDefine() {
@@ -60,6 +61,7 @@ class testTableDefs {
 
   @Test
   fun testCustomType() {
+    @Suppress("LocalVariableName")
     val X_UUID = customType({ VARCHAR(36)}, UUID::toString, UUID::fromString)
     val test = object: MutableTable("Testq", null) {
 
@@ -123,6 +125,7 @@ class testTableDefs {
 
   @Test
   fun testCustomReference() {
+    @Suppress("LocalVariableName")
     val X_UUID = customType({ VARCHAR(36)}, UUID::toString, UUID::fromString)
     val persons = object: MutableTable("persons", null) {
       val index by X_UUID

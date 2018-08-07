@@ -18,6 +18,8 @@
  * under the License.
  */
 
+@file:Suppress("PropertyName", "FunctionName")
+
 package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractCharColumnConfiguration.*

@@ -18,6 +18,8 @@
  * under the License.
  */
 
+@file:Suppress("unused", "PropertyName", "FunctionName")
+
 package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.kotlinsql.ColumnConfiguration.ColumnFormat
@@ -26,6 +28,7 @@ import uk.ac.bournemouth.kotlinsql.ColumnType.*
 import java.math.BigDecimal
 import kotlin.reflect.KProperty
 
+@Suppress("FunctionName")
 interface ColumnConfiguration<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>, out CONF_T : Any>
 {
   var name: String?
@@ -71,16 +74,16 @@ interface ColumnConfiguration<T : Any, S : IColumnType<T, S, C>, C : Column<T, S
 @Suppress("unused")
 abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Column<T, S, C>, out CONF_T:Any> : ColumnConfiguration<T, S, C, CONF_T>
 {
-  override var name: String?
-  override val type: S
-  override var notnull: Boolean?
-  override var unique: Boolean
-  override var autoincrement: Boolean
-  override var default: T?
-  override var comment:String?
-  override var columnFormat: ColumnFormat?
-  override var storageFormat: StorageFormat?
-  override var references: ColsetRef?
+  final override var name: String?
+  final override val type: S
+  final override var notnull: Boolean?
+  final override var unique: Boolean
+  final override var autoincrement: Boolean
+  final override var default: T?
+  final override var comment:String?
+  final override var columnFormat: ColumnFormat?
+  final override var storageFormat: StorageFormat?
+  final override var references: ColsetRef?
 
   constructor(type: S, name: String? = null) {
     this.name = name

@@ -18,6 +18,8 @@
  * under the License.
  */
 
+@file:Suppress("FunctionName", "unused")
+
 package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.*
@@ -426,7 +428,7 @@ interface LengthColumn<T:Any, S:LengthColumnType<T,S>>: ILengthColumn<T,S, Lengt
   override fun copyConfiguration(newName:String?, owner: Table): LengthColumnConfiguration<T,S>
 }
 
-class ForeignKey constructor(val fromCols:List<ColumnRef<*,*,*>>, val toTable:TableRef, val toCols:List<ColumnRef<*,*,*>>) {
+class ForeignKey constructor(private val fromCols:List<ColumnRef<*,*,*>>, internal val toTable:TableRef, private val toCols:List<ColumnRef<*,*,*>>) {
   internal fun toDDL(): CharSequence {
     val transform: (ColumnRef<*,*,*>) -> CharSequence = { it.name }
     val result = fromCols.joinTo(StringBuilder(), "`, `", "FOREIGN KEY (`", "`) REFERENCES ", transform = transform)
@@ -496,41 +498,42 @@ class TableConfiguration(override val _name:String, val extra:String?=null):Tabl
       name).add(block)
 
   /* Versions without configuration closure */
-  fun BIT(name: String) = NormalColumnConfiguration( BIT_T, name).add({})
-  fun BIT(name:String, length:Int) = LengthColumnConfiguration(name, BITFIELD_T, length).add({})
-  fun TINYINT(name: String) = NumberColumnConfiguration(TINYINT_T, name).add({})
-  fun SMALLINT(name:String) = NumberColumnConfiguration(SMALLINT_T, name).add({})
-  fun MEDIUMINT(name:String) = NumberColumnConfiguration(MEDIUMINT_T, name).add({})
-  fun INT(name: String) = NumberColumnConfiguration(INT_T, name).add({})
-  fun BIGINT(name:String) = NumberColumnConfiguration(BIGINT_T, name).add({})
-  fun FLOAT(name:String) = NumberColumnConfiguration(FLOAT_T, name).add({})
-  fun DOUBLE(name:String) = NumberColumnConfiguration(DOUBLE_T, name).add({})
+  fun BIT(name: String) = NormalColumnConfiguration( BIT_T, name).add {}
+  fun BIT(name:String, length:Int) = LengthColumnConfiguration(name, BITFIELD_T, length).add {}
+  fun TINYINT(name: String) = NumberColumnConfiguration(TINYINT_T, name).add {}
+  fun SMALLINT(name:String) = NumberColumnConfiguration(SMALLINT_T, name).add {}
+  fun MEDIUMINT(name:String) = NumberColumnConfiguration(MEDIUMINT_T, name).add {}
+  fun INT(name: String) = NumberColumnConfiguration(INT_T, name).add {}
+  fun BIGINT(name:String) = NumberColumnConfiguration(BIGINT_T, name).add {}
+  fun FLOAT(name:String) = NumberColumnConfiguration(FLOAT_T, name).add {}
+  fun DOUBLE(name:String) = NumberColumnConfiguration(DOUBLE_T, name).add {}
   fun DECIMAL(name:String, precision:Int=-1, scale:Int=-1) = DecimalColumnConfiguration(DECIMAL_T, name, precision,
-                                                                                        scale).add({})
+                                                                                        scale).add {}
   fun NUMERIC(name: String, precision: Int = -1, scale: Int = -1) = DecimalColumnConfiguration(NUMERIC_T, name,
-                                                                                               precision, scale).add({})
-  fun DATE(name: String) = NormalColumnConfiguration( DATE_T, name).add({})
-  fun TIME(name:String) = NormalColumnConfiguration( TIME_T, name).add({})
-  fun TIMESTAMP(name:String) = NormalColumnConfiguration( TIMESTAMP_T, name).add({})
-  fun DATETIME(name: String) = NormalColumnConfiguration( DATETIME_T, name).add({})
-  fun YEAR(name:String) = NormalColumnConfiguration( YEAR_T, name).add({})
-  fun CHAR(name:String, length:Int = -1) = LengthCharColumnConfiguration(CHAR_T, name, length).add({})
-  fun VARCHAR(name: String, length: Int) = LengthCharColumnConfiguration(VARCHAR_T, name, length).add({})
-  fun BINARY(name: String, length: Int) = LengthColumnConfiguration(name, BINARY_T, length).add({})
-  fun VARBINARY(name: String, length: Int) = LengthColumnConfiguration(name, VARBINARY_T, length).add({})
-  fun TINYBLOB(name: String) = NormalColumnConfiguration( TINYBLOB_T, name).add({})
-  fun BLOB(name:String) = NormalColumnConfiguration( BLOB_T, name).add({})
-  fun MEDIUMBLOB(name:String) = NormalColumnConfiguration( MEDIUMBLOB_T, name).add({})
-  fun LONGBLOB(name: String) = NormalColumnConfiguration( LONGBLOB_T, name).add({})
-  fun TINYTEXT(name:String) = CharColumnConfiguration(TINYTEXT_T, name).add({})
-  fun TEXT(name:String) = CharColumnConfiguration(TEXT_T, name).add({})
-  fun MEDIUMTEXT(name:String) = CharColumnConfiguration(MEDIUMTEXT_T, name).add({})
-  fun LONGTEXT(name: String) = CharColumnConfiguration(LONGTEXT_T, name).add({})
+                                                                                               precision, scale).add {}
+  fun DATE(name: String) = NormalColumnConfiguration( DATE_T, name).add {}
+  fun TIME(name:String) = NormalColumnConfiguration( TIME_T, name).add {}
+  fun TIMESTAMP(name:String) = NormalColumnConfiguration( TIMESTAMP_T, name).add {}
+  fun DATETIME(name: String) = NormalColumnConfiguration( DATETIME_T, name).add {}
+  fun YEAR(name:String) = NormalColumnConfiguration( YEAR_T, name).add {}
+  fun CHAR(name:String, length:Int = -1) = LengthCharColumnConfiguration(CHAR_T, name, length).add {}
+  fun VARCHAR(name: String, length: Int) = LengthCharColumnConfiguration(VARCHAR_T, name, length).add {}
+  fun BINARY(name: String, length: Int) = LengthColumnConfiguration(name, BINARY_T, length).add {}
+  fun VARBINARY(name: String, length: Int) = LengthColumnConfiguration(name, VARBINARY_T, length).add {}
+  fun TINYBLOB(name: String) = NormalColumnConfiguration( TINYBLOB_T, name).add {}
+  fun BLOB(name:String) = NormalColumnConfiguration( BLOB_T, name).add {}
+  fun MEDIUMBLOB(name:String) = NormalColumnConfiguration( MEDIUMBLOB_T, name).add {}
+  fun LONGBLOB(name: String) = NormalColumnConfiguration( LONGBLOB_T, name).add {}
+  fun TINYTEXT(name:String) = CharColumnConfiguration(TINYTEXT_T, name).add {}
+  fun TEXT(name:String) = CharColumnConfiguration(TEXT_T, name).add {}
+  fun MEDIUMTEXT(name:String) = CharColumnConfiguration(MEDIUMTEXT_T, name).add {}
+  fun LONGTEXT(name: String) = CharColumnConfiguration(LONGTEXT_T, name).add {}
 
   fun INDEX(col1: ColumnRef<*,*,*>, vararg cols: ColumnRef<*,*,*>) { indices.add(mutableListOf(col1).apply { addAll(cols) })}
   fun UNIQUE(col1: ColumnRef<*,*,*>, vararg cols: ColumnRef<*,*,*>) { uniqueKeys.add(mutableListOf(col1).apply { addAll(cols) })}
   fun PRIMARY_KEY(col1: ColumnRef<*,*,*>, vararg cols: ColumnRef<*,*,*>) { primaryKey = mutableListOf(col1).apply { addAll(cols) }}
 
+  @Suppress("ClassName")
   class __FOREIGN_KEY__6<T1:Any, S1: IColumnType<T1,S1,C1>, C1:Column<T1,S1,C1>,
                          T2:Any, S2: IColumnType<T2,S2,C2>, C2: Column<T2, S2, C2>,
                          T3:Any, S3: IColumnType<T3,S3,C3>, C3:Column<T3,S3,C3>,
@@ -562,6 +565,7 @@ class TableConfiguration(override val _name:String, val extra:String?=null):Tabl
       __FOREIGN_KEY__6(this, col1,col2,col3,col4,col5,col6)
 
 
+  @Suppress("ClassName")
   class __FOREIGN_KEY__5<T1:Any, S1: IColumnType<T1,S1,C1>, C1:Column<T1,S1,C1>,
                          T2:Any, S2: IColumnType<T2,S2,C2>, C2:Column<T2,S2,C2>,
                          T3:Any, S3: IColumnType<T3,S3,C3>, C3:Column<T3,S3,C3>,
@@ -579,6 +583,7 @@ class TableConfiguration(override val _name:String, val extra:String?=null):Tabl
               T5:Any, S5: IColumnType<T5,S5,C5>, C5:Column<T5,S5,C5>> FOREIGN_KEY(col1: ColumnRef<T1, S1, C1>, col2:ColumnRef<T2, S2, C2>, col3:ColumnRef<T3, S3, C3>, col4: ColumnRef<T4, S4, C4>, col5:ColumnRef<T5, S5, C5>) =
       __FOREIGN_KEY__5(this, col1,col2,col3,col4,col5)
 
+  @Suppress("ClassName")
   class __FOREIGN_KEY__4<T1:Any, S1: IColumnType<T1,S1,C1>, C1:Column<T1,S1,C1>,
                          T2:Any, S2: IColumnType<T2,S2,C2>, C2:Column<T2,S2,C2>,
                          T3:Any, S3: IColumnType<T3,S3,C3>, C3:Column<T3,S3,C3>,
@@ -594,6 +599,7 @@ class TableConfiguration(override val _name:String, val extra:String?=null):Tabl
               T4:Any, S4: IColumnType<T4,S4,C4>, C4:Column<T4,S4,C4>> FOREIGN_KEY(col1: ColumnRef<T1, S1, C1>, col2:ColumnRef<T2, S2, C2>, col3:ColumnRef<T3, S3, C3>, col4: ColumnRef<T4, S4, C4>) =
       __FOREIGN_KEY__4(this, col1,col2,col3,col4)
 
+  @Suppress("ClassName")
   class __FOREIGN_KEY__3<T1:Any, S1: IColumnType<T1,S1,C1>, C1:Column<T1,S1,C1>,
                          T2:Any, S2: IColumnType<T2,S2,C2>, C2:Column<T2,S2,C2>,
                          T3:Any, S3: IColumnType<T3,S3,C3>, C3:Column<T3,S3,C3>>(val configuration:TableConfiguration, val col1:ColumnRef<T1, S1, C1>, val col2:ColumnRef<T2, S2, C2>, val col3:ColumnRef<T3, S3, C3>) {
@@ -607,6 +613,7 @@ class TableConfiguration(override val _name:String, val extra:String?=null):Tabl
               T3:Any, S3: IColumnType<T3,S3,C3>, C3:Column<T3,S3,C3>> FOREIGN_KEY(col1: ColumnRef<T1, S1, C1>, col2:ColumnRef<T2, S2, C2>, col3:ColumnRef<T3, S3, C3>) =
       __FOREIGN_KEY__3(this, col1,col2,col3)
 
+  @Suppress("ClassName")
   class __FOREIGN_KEY__2<T1:Any, S1: IColumnType<T1,S1,C1>, C1:Column<T1,S1,C1>,
  T2:Any, S2: IColumnType<T2,S2,C2>, C2:Column<T2,S2,C2>>(val configuration:TableConfiguration, val col1:ColumnRef<T1, S1, C1>, val col2:ColumnRef<T2, S2, C2>) {
     inline fun REFERENCES(ref1:ColumnRef<T1, S1, C1>, ref2:ColumnRef<T2, S2, C2>) {
@@ -618,6 +625,7 @@ class TableConfiguration(override val _name:String, val extra:String?=null):Tabl
  T2:Any, S2: IColumnType<T2,S2,C2>, C2:Column<T2,S2,C2>> FOREIGN_KEY(col1: ColumnRef<T1, S1, C1>, col2:ColumnRef<T2, S2, C2>) =
       __FOREIGN_KEY__2(this, col1,col2)
 
+  @Suppress("ClassName")
   class __FOREIGN_KEY__1<T1:Any, S1: IColumnType<T1,S1,C1>, C1:Column<T1,S1,C1>>(val configuration:TableConfiguration, val col1:ColumnRef<T1, S1, C1>) {
     inline fun REFERENCES(ref1:ColumnRef<T1, S1, C1>) {
       configuration.foreignKeys.add(ForeignKey(listOf(col1), ref1.table, listOf(ref1)))
@@ -633,6 +641,7 @@ class TableConfiguration(override val _name:String, val extra:String?=null):Tabl
 @Suppress("unused")
 class DatabaseConfiguration {
 
+  @Suppress("ClassName")
   private class __AnonymousTable(name:String, extra: String?, block:TableConfiguration.()->Unit): ImmutableTable(name, extra, block)
 
   val tables = mutableListOf<ImmutableTable>()
@@ -687,7 +696,7 @@ abstract class ImmutableTable private constructor(override val _name: String,
                                                   override val _extra: String?) : AbstractTable() {
 
   @Suppress("unused")
-  private constructor(c: TableConfiguration):this(c._name, c.cols, c.primaryKey?.let {c.cols.resolveAll(it)}, c.foreignKeys, c.uniqueKeys.map({c.cols.resolveAll(it)}), c.indices.map({c.cols.resolveAll(it)}), c.extra)
+  private constructor(c: TableConfiguration):this(c._name, c.cols, c.primaryKey?.let {c.cols.resolveAll(it)}, c.foreignKeys, c.uniqueKeys.map {c.cols.resolveAll(it)}, c.indices.map {c.cols.resolveAll(it)}, c.extra)
 
   /**
    * The main use of this class is through inheriting this constructor.

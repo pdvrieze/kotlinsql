@@ -32,6 +32,7 @@ import javax.sql.DataSource
 /**
  * Create a new connection to the database and execute the block body on that connection. Close it after use.
  */
+@Suppress("unused")
 inline fun <R> DataSource.connection(db: Database, block: (DBConnection) -> R): R =
     this.connection.use {
       return DBConnection(connection, db).let(block)
@@ -40,6 +41,7 @@ inline fun <R> DataSource.connection(db: Database, block: (DBConnection) -> R): 
 
 //inline fun <R> DataSource.connection(username: String, password: String, block: (DBConnection) -> R) = getConnection(username, password).use { connection(it, block) }
 
+@Suppress("MemberVisibilityCanBePrivate", "unused", "PropertyName")
 open class DBConnection constructor(val rawConnection: Connection, val db: Database) {
 
   init {
@@ -119,7 +121,7 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
   @Deprecated("Don't use this, just use Connection's version", replaceWith = ReplaceWith("Connection.TRANSACTION_SERIALIZABLE", "java.sql.Connection"))
   val TRANSACTION_SERIALIZABLE = Connection.TRANSACTION_SERIALIZABLE
 
-  fun TransactionIsolation(jdbcValue:Int):TransactionIsolation {
+  fun transactionIsolation(jdbcValue:Int):TransactionIsolation {
     return DBConnection.TransactionIsolation.values().first { it.intValue==jdbcValue }
   }
 
@@ -132,7 +134,7 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
   }
 
   var transactionIsolation: TransactionIsolation
-    get() = TransactionIsolation(rawConnection.transactionIsolation)
+    get() = transactionIsolation(rawConnection.transactionIsolation)
     set(value) { rawConnection.transactionIsolation = value.intValue }
 
   /**
@@ -188,7 +190,7 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
 
   //--------------------------JDBC 3.0-----------------------------
 
-  fun Holdability(jdbc:Int):Holdability {
+  fun holdability(jdbc:Int):Holdability {
     return Holdability.values().first { it.jdbc == jdbc }
   }
 
@@ -342,6 +344,7 @@ open class DBConnection constructor(val rawConnection: Connection, val db: Datab
  */
 inline fun <T : Connection, R> T.use(block: (T) -> R) = useHelper({ it.close() }, block)
 
+@Suppress("unused")
 inline fun <T : Connection, R> T.useTransacted(block: (T) -> R): R = useHelper({ it.close() }) {
   it.autoCommit = false
   try {

@@ -58,7 +58,8 @@ import uk.ac.bournemouth.kotlinsql.ColumnType.*
  *                  engine or charset to use.
  */
 // Note that the overloadResolver parameter on the primary constructor is there purely to fix overload resolving
-@Suppress("NOTHING_TO_INLINE", "unused")
+@Suppress("NOTHING_TO_INLINE", "unused", "MemberVisibilityCanBePrivate", "FunctionName", "PropertyName",
+          "PrivatePropertyName")
 abstract class MutableTable private constructor(name: String?,
                                                 override val _extra: String?, @Suppress(
                 "UNUSED_PARAMETER") overloadResolver: Unit) : AbstractTable(), SqlTypesMixin {
@@ -111,7 +112,7 @@ abstract class MutableTable private constructor(name: String?,
     internal inline fun <T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>>
             add(column: C): Table.FieldAccessor<T, S, C> {
         if (isSealed) throw IllegalStateException("The table is sealed")
-        return column.apply { (_cols as MutableList<Column<*, *, *>>).add(this) }.let { name(column.name, it.type) }
+        return name(column.name, column.apply { (_cols as MutableList<Column<*, *, *>>).add(this) }.type)
     }
 
 
@@ -223,8 +224,8 @@ abstract class MutableTable private constructor(name: String?,
             C : Column<T, S, C>,
             CONF_T : AbstractColumnConfiguration<T, S, C, CONF_T>> reference(newName: String,
                                                                              other: CustomColumnType<U, T, S, C, CONF_T>.CustomColumn,
-                                                                             block: CONF_T.() -> Unit) = CustomColumnConfiguration<U, T, S, C, CONF_T>(
-            (other.baseColumn.copyConfiguration(newName, this) as CONF_T).apply(block), other.type)
+                                                                             block: CONF_T.() -> Unit) =
+            CustomColumnConfiguration((other.baseColumn.copyConfiguration(newName, this) as CONF_T).apply(block), other.type)
 
     protected fun <S : DecimalColumnType<S>> reference(newName: String,
                                                        other: DecimalColumn<S>,
@@ -276,6 +277,7 @@ abstract class MutableTable private constructor(name: String?,
         __primaryKey = __resolve(col1, *cols)
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     class __FOREIGN_KEY__6<T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>,
             T2 : Any, S2 : IColumnType<T2, S2, C2>, C2 : Column<T2, S2, C2>,
             T3 : Any, S3 : IColumnType<T3, S3, C3>, C3 : Column<T3, S3, C3>,
@@ -356,6 +358,7 @@ abstract class MutableTable private constructor(name: String?,
             col5: ColumnRef<T5, S5, C5>) =
             __FOREIGN_KEY__5(this, col1, col2, col3, col4, col5)
 
+    @Suppress("MemberVisibilityCanBePrivate")
     class __FOREIGN_KEY__4<T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>,
             T2 : Any, S2 : IColumnType<T2, S2, C2>, C2 : Column<T2, S2, C2>,
             T3 : Any, S3 : IColumnType<T3, S3, C3>, C3 : Column<T3, S3, C3>,
