@@ -62,20 +62,6 @@ group = 'net.devrieze'
 
 
 
-publishing {
-    publications {
-        KotlinSqlPublication(MavenPublication) {
-            from components.java
-            groupId group
-            artifactId 'kotlinsql'
-
-            artifact sourceJar {
-                classifier "sources"
-            }
-        }
-    }
-}
-
 bintray {
     if (rootProject.hasProperty('bintrayUser')) {
         user = bintrayUser
@@ -143,6 +129,21 @@ sourceSets {
 task sourceJar(type: Jar) {
     from sourceSets.main.allSource
     from files('LICENSE')
+}
+
+
+publishing {
+    publications {
+        KotlinSqlPublication(MavenPublication) {
+            from components.java
+            groupId group
+            artifactId 'kotlinsql'
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
 }
 
 dependencies {
