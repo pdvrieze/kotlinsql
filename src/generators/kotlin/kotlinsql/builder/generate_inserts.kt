@@ -43,12 +43,10 @@ class GenerateInsertsKt {
         import uk.ac.bournemouth.kotlinsql.Table
         import uk.ac.bournemouth.kotlinsql.Database._BaseInsert
         import uk.ac.bournemouth.kotlinsql.IColumnType
-        import javax.annotation.Generated
       """.trimIndent())
 
       for(n in 1..count) {
         appendln()
-        appendln("@Generated(\"${GenerateInsertsKt::class.java.name}\")")
         append("class _Insert$n<")
         (1..n).joinTo(output, ",\n${indent(n,15)}") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }
         appendln(">")

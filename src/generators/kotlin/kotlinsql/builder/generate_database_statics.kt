@@ -41,9 +41,7 @@ class GenerateDatabaseBaseKt {
       appendln("import uk.ac.bournemouth.kotlinsql.Database")
       appendln("import uk.ac.bournemouth.kotlinsql.TableRef")
       appendln("import uk.ac.bournemouth.kotlinsql.Table")
-      appendln("import javax.annotation.Generated")
       appendln()
-      appendln("@Generated(\"${GenerateDatabaseBaseKt::class.java.name}\")")
       appendln("abstract class DatabaseMethods {")
 //      appendln("  companion object {")
 

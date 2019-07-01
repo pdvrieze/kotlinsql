@@ -1,3 +1,4 @@
+out
 /gen
 build
 /.idea/libraries
@@ -8,3 +9,4 @@ build
 /.idea/misc.xml
 local.properties
 /.idea/kotlinsql.iml
+*.iml

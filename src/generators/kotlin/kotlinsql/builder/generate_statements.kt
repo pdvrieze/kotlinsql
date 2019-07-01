@@ -43,11 +43,9 @@ class GenerateStatementsKt {
       appendln("import uk.ac.bournemouth.kotlinsql.IColumnType")
       appendln("import uk.ac.bournemouth.util.kotlin.sql.DBConnection")
       appendln("import java.sql.SQLException")
-      appendln("import javax.annotation.Generated")
 
       for (n in 1..count) {
         appendln()
-        appendln("@Generated(\"${GenerateStatementsKt::class.java.name}\")")
         append("class _Statement$n<")
         (1..n).joinToString(",\n                  ") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }.apply { append(this) }
         append(">(${if (n==1) "" else "override val "}select:_Select$n<")
