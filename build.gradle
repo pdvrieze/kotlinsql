@@ -23,7 +23,7 @@
 buildscript {
 
     ext {
-        if (! rootProject.hasProperty('kotlin_version') ) { kotlin_version = '1.3.41' }
+        if (! rootProject.hasProperty('kotlin_version') ) { kotlin_version = '1.3.50' }
         if (! rootProject.hasProperty('codegen_version') ) { codegen_version = '0.5.10' }
         if (! rootProject.hasProperty('jupiterVersion') ) { jupiterVersion = '5.2.0' }
         if (! rootProject.hasProperty('junit5_version') ) { junit5_version = '1.2.0' }
@@ -57,7 +57,7 @@ ext {
     if (! rootProject.hasProperty('myJavaVersion')) { myJavaVersion = JavaVersion.VERSION_1_8 }
 }
 
-version = '0.7.4-SNAPSHOT'
+version = '0.8.0-SNAPSHOT'
 group = 'net.devrieze'
 
 
@@ -78,7 +78,7 @@ bintray {
 
         version {
             name = project.version
-            desc = 'Bugfix issue'
+            desc = 'Add monads'
             released = new Date()
             vcsTag = "v$version"
         }
@@ -131,6 +131,11 @@ task sourceJar(type: Jar) {
     from files('LICENSE')
 }
 
+compileKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ["-Xuse-experimental=kotlin.Experimental"]
+    }
+}
 
 publishing {
     publications {

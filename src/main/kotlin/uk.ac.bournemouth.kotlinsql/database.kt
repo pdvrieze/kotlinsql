@@ -23,13 +23,14 @@
 package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.kotlinsql.ColumnType.NumericColumnType.INT_T
-import uk.ac.bournemouth.util.kotlin.sql.DBConnection
-import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
+import uk.ac.bournemouth.util.kotlin.sql.*
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.DatabaseMethods
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen._Statement1
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
+import java.sql.Connection
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.util.*
@@ -346,7 +347,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
     interface ParameterizedQuery : Query, ParameterizedStatement
 
     interface UpdatingStatement : Statement {
-        fun executeUpdate(connection: DBConnection): Int
+        fun executeUpdate(connection: DBConnection2<*>): Int
     }
 
 
@@ -355,8 +356,9 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
 
         fun toSQL(): String
 
-        fun executeList(connection: DBConnection,
-                        resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit): Boolean
+        fun executeList(
+            connection: DBConnection2<*>,
+            resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit): Boolean
     }
 
     abstract class WhereValue internal constructor() {
@@ -379,7 +381,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
         /**
          * Get a single (optional) result
          */
-        override fun getSingleOrNull(connection: DBConnection): T1? {
+        override fun getSingleOrNull(connection: DBConnection2<*>): T1? {
             return connection.prepareStatement(toSQL()) {
                 setParams(this)
                 execute { rs ->
@@ -393,14 +395,14 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
             }
         }
 
-        override fun hasRows(connection: DBConnection): Boolean {
+        override fun hasRows(connection: DBConnection2<*>): Boolean {
             return connection.prepareStatement(toSQL()) {
                 setParams(this)
                 executeHasRows()
             }
         }
 
-        override fun getSingle(connection: DBConnection): T1 {
+        override fun getSingle(connection: DBConnection2<*>): T1 {
             return getSingleOrNull(connection) ?: throw NoSuchElementException()
         }
 
@@ -429,7 +431,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
          * @return The amount of rows changed
          * @see java.sql.PreparedStatement.executeUpdate
          */
-        override fun executeUpdate(connection: DBConnection): Int {
+        override fun executeUpdate(connection: DBConnection2<*>): Int {
             return connection.prepareStatement(toSQL()) {
                 setParams(this)
                 executeUpdate()
@@ -453,8 +455,9 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
         override fun setParams(statementHelper: StatementHelper, first: Int) =
                 where.setParameters(statementHelper, first)
 
-        override fun executeList(connection: DBConnection,
-                                 resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit): Boolean {
+        override fun executeList(
+            connection: DBConnection2<*>,
+            resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit): Boolean {
             return executeHelper(connection, resultHandler) { rs, block ->
                 val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i + 1) }
                 block(select.columns.asList(), data)
@@ -514,8 +517,9 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
 
         override fun createTablePrefixMap() = createTablePrefixMap(tableNames())
 
-        override fun executeList(connection: DBConnection,
-                                 resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit): Boolean {
+        override fun executeList(
+            connection: DBConnection2<*>,
+            resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit): Boolean {
             return executeHelper(connection, resultHandler) { rs, block ->
                 val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i + 1) }
                 block(select.columns.asList(), data)
@@ -528,7 +532,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
          * @return The amount of rows changed
          * @see java.sql.PreparedStatement.executeUpdate
          */
-        fun execute(connection: DBConnection): Boolean {
+        fun execute(connection: DBConnection2<*>): Boolean {
             connection.prepareStatement(toSQL()) {
                 setParams(this)
                 return execute()
@@ -541,16 +545,16 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
     interface Select1<T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>> : SelectStatement {
         override val select: _Select1<T1, S1, C1>
 
-        fun getSingle(connection: DBConnection): T1
-        fun getSingleOrNull(connection: DBConnection): T1?
-        fun getList(connection: DBConnection): List<T1?>
+        fun getSingle(connection: DBConnection2<*>): T1
+        fun getSingleOrNull(connection: DBConnection2<*>): T1?
+        fun getList(connection: DBConnection2<*>): List<T1?>
 
         @Deprecated("This can be done outside the function", ReplaceWith("getList(connection).filterNotNull()"),
                     DeprecationLevel.ERROR)
-        fun getSafeList(connection: DBConnection): List<T1> = getList(connection).filterNotNull()
+        fun getSafeList(connection: DBConnection2<*>): List<T1> = getList(connection).filterNotNull()
 
-        fun execute(connection: DBConnection, block: (T1?) -> Unit): Boolean
-        fun hasRows(connection: DBConnection): Boolean
+        fun execute(connection: DBConnection2<*>, block: (T1?) -> Unit): Boolean
+        fun hasRows(connection: DBConnection2<*>): Boolean
 
     }
 
@@ -577,20 +581,20 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
          * @return The amount of rows changed
          * @see java.sql.PreparedStatement.executeUpdate
          */
-        fun execute(connection: DBConnection): Boolean {
+        fun execute(connection: DBConnection2<*>): Boolean {
             return connection.prepareStatement(toSQL()) {
                 setParams(this)
                 execute()
             }
         }
 
-        override fun execute(connection: DBConnection, block: (T1?) -> Unit): Boolean {
+        override fun execute(connection: DBConnection2<*>, block: (T1?) -> Unit): Boolean {
             return executeHelper(connection, block) { rs, block2 ->
                 block2(col1.type.fromResultSet(rs, 1))
             }
         }
 
-        override fun getSingleOrNull(connection: DBConnection): T1? {
+        override fun getSingleOrNull(connection: DBConnection2<*>): T1? {
             return connection.prepareStatement(toSQL()) {
                 setParams(this)
                 execute { rs ->
@@ -604,32 +608,33 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
             }
         }
 
-        override fun hasRows(connection: DBConnection): Boolean {
+        override fun hasRows(connection: DBConnection2<*>): Boolean {
             return connection.prepareStatement(toSQL()) {
                 setParams(this)
                 executeHasRows()
             }
         }
 
-        override fun getSingle(connection: DBConnection): T1 {
+        override fun getSingle(connection: DBConnection2<*>): T1 {
             return getSingleOrNull(connection) ?: throw NoSuchElementException()
         }
 
-        override fun executeList(connection: DBConnection,
-                                 resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit): Boolean {
+        override fun executeList(
+            connection: DBConnection2<*>,
+            resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit): Boolean {
             return executeHelper(connection, resultHandler) { rs, block ->
                 val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i + 1) }
                 block(select.columns.asList(), data)
             }
         }
 
-        fun <R> getList(connection: DBConnection, factory: (T1?) -> R): List<R> {
+        fun <R> getList(connection: DBConnection2<*>, factory: (T1?) -> R): List<R> {
             val result = mutableListOf<R>()
             execute(connection) { p1 -> result.add(factory(p1)) }
             return result
         }
 
-        override fun getList(connection: DBConnection): List<T1?> {
+        override fun getList(connection: DBConnection2<*>): List<T1?> {
             val result = mutableListOf<T1?>()
             execute(connection) { p1 -> result.add(p1) }
             return result
@@ -650,7 +655,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
             return "DELETE FROM ${table._name}"
         }
 
-        override fun executeUpdate(connection: DBConnection): Int {
+        override fun executeUpdate(connection: DBConnection2<*>): Int {
             connection.prepareStatement(toSQL(createTablePrefixMap())) {
                 return executeUpdate()
             }
@@ -669,8 +674,8 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
             return first + sets.size
         }
 
-        override fun executeUpdate(connection: DBConnection): Int {
-            throw UnsupportedOperationException()
+        override fun executeUpdate(connection: DBConnection2<*>): Int {
+            throw UnsupportedOperationException("Raw update without where is not supported yet")
         }
     }
 
@@ -694,8 +699,8 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
     interface Insert : UpdatingStatement {
         fun toSQL(): String
 
-        fun <T : Any, R> execute(connection: DBConnection, key: Column<T, *, *>, autogeneratedKeys: (T?) -> R): List<R>
-        fun <T : Any> execute(connection: DBConnection, key: Column<T, *, *>): List<T?>
+        fun <T : Any, R> execute(connection: DBConnection2<*>, key: Column<T, *, *>, autogeneratedKeys: (T?) -> R): List<R>
+        fun <T : Any> execute(connection: DBConnection2<*>, key: Column<T, *, *>): List<T?>
     }
 
     abstract class _BaseInsert(val table: Table, private val update: Boolean, vararg val columns: ColumnRef<*, *, *>) : Insert {
@@ -746,7 +751,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
          * @return The amount of rows changed
          * @see java.sql.PreparedStatement.executeUpdate
          */
-        override fun executeUpdate(connection: DBConnection): Int {
+        override fun executeUpdate(connection: DBConnection2<*>): Int {
             if (batch.isEmpty()) {
                 return 0
             }
@@ -770,9 +775,10 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
          * @return A list of the results.
          * @see java.sql.PreparedStatement.executeUpdate
          */
-        override fun <T : Any, R> execute(connection: DBConnection,
-                                          key: Column<T, *, *>,
-                                          autogeneratedKeys: (T?) -> R): List<R> {
+        override fun <T : Any, R> execute(
+            connection: DBConnection2<*>,
+            key: Column<T, *, *>,
+            autogeneratedKeys: (T?) -> R): List<R> {
             if (batch.isEmpty()) {
                 throw IllegalStateException("There are no values to add")
             }
@@ -803,7 +809,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
          * @return A list with the resulting rows.
          * @see java.sql.PreparedStatement.executeUpdate
          */
-        override fun <T : Any> execute(connection: DBConnection, key: Column<T, *, *>): List<T?> {
+        override fun <T : Any> execute(connection: DBConnection2<*>, key: Column<T, *, *>): List<T?> {
             if (batch.isEmpty()) {
                 throw IllegalStateException("There are no values to add")
             }
@@ -836,7 +842,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
 
 }
 
-internal fun <T> Database.SelectStatement.executeHelper(connection: DBConnection,
+internal fun <T> Database.SelectStatement.executeHelper(connection: DBConnection2<*>,
                                                         block: T,
                                                         invokeHelper: (ResultSet, T) -> Unit): Boolean {
     return connection.prepareStatement(toSQL()) {
@@ -855,18 +861,6 @@ internal fun <T> Database.SelectStatement.executeHelper(connection: DBConnection
     }
 }
 
-@Suppress("EnumEntryName")
-enum class SqlComparisons(private val str: String) {
-    eq("="),
-    ne("!="),
-    lt("<"),
-    le("<="),
-    gt(">"),
-    ge(">=");
-
-    override fun toString() = str
-}
-
 /**
  * Get a single element or a null value according to the conversion function passed. This will throw if the result count
  * is larger than 1.
@@ -876,7 +870,7 @@ enum class SqlComparisons(private val str: String) {
  *
  * @throws SQLException If there are more results than expected, or if there is an underlying SQL error.
  */
-fun <R> Database.SelectStatement.getSingleListOrNull(connection: DBConnection,
+fun <R> Database.SelectStatement.getSingleListOrNull(connection: DBConnection2<*>,
                                                      resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R): R? {
     connection.prepareStatement(toSQL()) {
         setParams(this)
@@ -892,13 +886,75 @@ fun <R> Database.SelectStatement.getSingleListOrNull(connection: DBConnection,
     }
 }
 
+
+inline fun <DB: Database, R> DB.connect(datasource: DataSource, block: DBTransactionBase<DB, Unit>.() -> R): R {
+    val connection = datasource.connection
+    var doCommit = true
+    try {
+        return DBConnection2(connection, this).block()
+    } catch (e: Exception) {
+        try {
+            connection.rollback()
+        } finally {
+            connection.close()
+            doCommit = false
+        }
+        throw e
+    } finally {
+        if (doCommit) connection.commit()
+        connection.close()
+    }
+}
+
+
+fun <DB : Database, In> DBTransactionBase<DB, In>.listSequence(queryGen: DB.(In)-> Database.SelectStatement): DBTransaction<DB, Sequence<List<Any?>>> {
+    return sequenceHelper(queryGen) { query, rs ->
+        query.select.columns.mapIndexed { index, col ->
+            col.fromResultSet(rs, index + 1)
+        }
+    }
+}
+
+fun <DB : Database, In, T : Any, C : Column<T, *, C>> DBTransactionBase<DB, In>.query(queryGen: DB.(In) -> Database.Select1<T, *, C>): DBTransaction<DB, Sequence<T>> {
+    return sequenceHelper(queryGen) { query, rs -> query.select.col1.fromResultSet(rs, 1)!! }
+}
+
+fun <DB: Database, T> DBTransactionBase<DB, T>.update(stmtGen: DB.(T)-> Database.UpdatingStatement): DBTransaction<DB, Int> {
+    return map { db.stmtGen(it).executeUpdate(connection) }
+}
+
+
+internal fun <S: Database.SelectStatement, DB : Database, In, T> DBTransactionBase<DB, In>.sequenceHelper(
+    queryGen: DB.(In) -> S,
+    resultSetToSequence: (S, ResultSet) -> T
+                                                                                                          ): DBTransaction<DB, Sequence<T>> {
+    return map {
+        val query = db.queryGen(it)
+        val sql = query.toSQL()
+        connection.rawConnection.prepareStatement(sql).use<PreparedStatement,Sequence<T>> { rawPrepStatement ->
+            val statement = StatementHelper(rawPrepStatement, sql)
+            query.setParams(statement)
+            val rs = statement.executeQuery().also { closeOnFinish(it) }
+            if (rs.next()) {
+                sequence {
+                    do {
+                        yield(resultSetToSequence(query, rs))
+                    } while (rs.next())
+                }
+            } else {
+                emptySequence()
+            }
+        }
+    }
+}
+
 @Suppress("unused")
         /**
          * Get a single result item, but don't accept an empty result. Otherwise this is the same as [getSingleListOrNull].
          *
          * @see getSingleListOrNull
          */
-fun <R> Database.SelectStatement.getSingleList(connection: DBConnection,
+fun <R> Database.SelectStatement.getSingleList(connection: DBConnection2<*>,
                                                resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R): R {
     return getSingleListOrNull(connection, resultHandler) ?: throw NoSuchElementException()
 }
@@ -917,4 +973,16 @@ interface TableRef {
     @Suppress("PropertyName")
             /** The name of the table. */
     val _name: String
+}
+
+@Suppress("EnumEntryName")
+enum class SqlComparisons(private val str: String) {
+    eq("="),
+    ne("!="),
+    lt("<"),
+    le("<="),
+    gt(">"),
+    ge(">=");
+
+    override fun toString() = str
 }

@@ -41,7 +41,7 @@ class GenerateStatementsKt {
 //      appendln("import uk.ac.bournemouth.kotlinsql.Database")
       appendln("import uk.ac.bournemouth.kotlinsql.Database.*")
       appendln("import uk.ac.bournemouth.kotlinsql.IColumnType")
-      appendln("import uk.ac.bournemouth.util.kotlin.sql.DBConnection")
+      appendln("import uk.ac.bournemouth.util.kotlin.sql.DBConnection2")
       appendln("import java.sql.SQLException")
 
       for (n in 1..count) {
@@ -69,7 +69,7 @@ class GenerateStatementsKt {
         }
 
         appendln()
-        append("  override fun execute(connection:DBConnection, block: (")
+        append("  override fun execute(connection:DBConnection2<*>, block: (")
         (1..n).joinToString(",") {m -> "T$m?"}.apply { append(this) }
         appendln(")->Unit):Boolean {")
         appendln("    return executeHelper(connection, block) { rs, block2 ->")
@@ -85,7 +85,7 @@ class GenerateStatementsKt {
 
         if (n>1) {
           appendln()
-          append("  override fun getSingle(connection:DBConnection)")
+          append("  override fun getSingle(connection:DBConnection2<*>)")
           append(" = getSingle(connection) { ")
           (1..n).joinTo(this,",") { "p$it" }
           append(" -> Result(")
@@ -93,7 +93,7 @@ class GenerateStatementsKt {
           appendln(")}")
 
           appendln()
-          append("  override fun <R> getSingle(connection:DBConnection, factory:")
+          append("  override fun <R> getSingle(connection:DBConnection2<*>, factory:")
           appendFactorySignature(n)
           appendln("):R? {")
           appendln("    return connection.prepareStatement(toSQL()) {")
@@ -113,7 +113,7 @@ class GenerateStatementsKt {
 
         appendln()
         if (n==1) {
-          appendln("  override fun getList(connection: DBConnection): List<T1?> {")
+          appendln("  override fun getList(connection: DBConnection2<*>): List<T1?> {")
           appendln("    val result=mutableListOf<T1?>()")
           append("    execute(connection) { ")
           (1..n).joinToString { "p$it" }.apply { append(this) }
@@ -121,7 +121,7 @@ class GenerateStatementsKt {
           (1..n).joinToString { "p$it" }.apply { append(this) }
           appendln(") }")
         } else {
-          append("  override fun <R> getList(connection: DBConnection, factory:")
+          append("  override fun <R> getList(connection: DBConnection2<*>, factory:")
           appendFactorySignature(n)
           appendln("): List<R> {")
           appendln("    val result=mutableListOf<R>()")

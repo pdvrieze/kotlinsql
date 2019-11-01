@@ -38,10 +38,14 @@ class GenerateSelectClasses {
       appendln("import java.sql.SQLException")
       appendln()
       appendln("import uk.ac.bournemouth.kotlinsql.Column")
+      appendln("import uk.ac.bournemouth.kotlinsql.Database")
       appendln("import uk.ac.bournemouth.kotlinsql.Database.*")
       appendln("import uk.ac.bournemouth.kotlinsql.IColumnType")
-      appendln("import uk.ac.bournemouth.util.kotlin.sql.DBConnection")
+      appendln("import uk.ac.bournemouth.util.kotlin.sql.DBConnection2")
+      appendln("import uk.ac.bournemouth.util.kotlin.sql.DBTransaction")
+      appendln("import uk.ac.bournemouth.util.kotlin.sql.DBTransactionBase")
       appendln("import uk.ac.bournemouth.kotlinsql.executeHelper")
+      appendln("import uk.ac.bournemouth.kotlinsql.sequenceHelper")
 
       for (n in 2..count) {
         appendln()
@@ -53,28 +57,55 @@ class GenerateSelectClasses {
         (1..n).joinTo(this,",") { m -> "T$m,S$m,C$m" }
         appendln(">")
         appendln()
-        append("  fun <R>getList(connection: DBConnection, factory:")
+        append("  fun <R>getList(connection: DBConnection2<*>, factory:")
         appendFactorySignature(n)
         appendln("): List<R>")
         if (n>1) {
           appendln()
-          append("  fun getSingle(connection:DBConnection): _Statement$n.Result<")
+          append("  fun getSingle(connection:DBConnection2<*>): _Statement$n.Result<")
           (1..n).joinTo(this,",") { m-> "T$m" }
           appendln(">?")
 
           appendln()
-          append("  fun <R> getSingle(connection:DBConnection, factory:")
+          append("  fun <R> getSingle(connection:DBConnection2<*>, factory:")
           appendFactorySignature(n)
           appendln("):R?")
 
           appendln()
-          append("  fun execute(connection:DBConnection, block: (")
+          append("  fun execute(connection:DBConnection2<*>, block: (")
           (1..n).joinToString(",") {m -> "T$m?"}.apply { append(this) }
           appendln(")->Unit):Boolean")
         }
 
         appendln("}")
 
+        if (n>1) {
+          appendln()
+
+          append("fun <DB: Database, In, ")
+          (1..n).joinTo(this, ", ") { m -> "T$m: Any, C$m: Column<T$m, *, C$m>" }
+          append(", R> DBTransactionBase<DB, In>.sequence(queryGen: DB.(In)->Select$n<")
+          (1..n).joinTo(this, ", ") { m -> "T$m, *, C$m"}
+          append(">, combine: (")
+          (1..n).joinTo(this, ", ") { m -> "T$m?" }
+          appendln(") -> R): DBTransaction<DB, Sequence<R>> {")
+
+          appendln("    return sequenceHelper(queryGen) { query, rs ->")
+
+          appendln("        val s = query.select")
+
+          append  ("        combine(")
+          (1..n).joinTo(this, ", ") { m-> "s.col$m.fromResultSet(rs, $m)" }
+          appendln(") }")
+
+          appendln("}")
+          /*
+        fun <DB : Database, T : Any, C : Column<T, *, C>> DBTransactionBase<DB, *>.sequence(query: Database.Select1<T, *, C>): DBTransaction<DB, Sequence<T>> {
+    return sequenceHelper(query) { query, rs -> query.select.col1.fromResultSet(rs, 1)!! }
+}
+
+         */
+        }
         appendln()
         appendln("@Suppress(\"UNCHECKED_CAST\")")
         append("class _Select$n<")
@@ -100,7 +131,7 @@ class GenerateSelectClasses {
         appendln("        _Where().config()?.let { _Statement$n(this, it) } ?: this")
 
         appendln()
-        append("    override fun execute(connection:DBConnection, block: (")
+        append("    override fun execute(connection:DBConnection2<*>, block: (")
         (1..n).joinToString(",") {m -> "T$m?"}.apply { append(this) }
         appendln(")->Unit):Boolean {")
         appendln("        return executeHelper(connection, block) { rs, block2 ->")
@@ -115,7 +146,7 @@ class GenerateSelectClasses {
         appendln("    }")
 
         appendln()
-        append("    override fun <R>getList(connection: DBConnection, factory:")
+        append("    override fun <R>getList(connection: DBConnection2<*>, factory:")
         appendFactorySignature(n)
         appendln("): List<R> {")
         appendln("        val result=mutableListOf<R>()")
@@ -129,7 +160,7 @@ class GenerateSelectClasses {
 
         if (n>1) {
           appendln()
-          append("    override fun getSingle(connection:DBConnection)")
+          append("    override fun getSingle(connection:DBConnection2<*>)")
           append(" = getSingle(connection) { ")
           (1..n).joinTo(this,",") { "p$it" }
           append(" -> _Statement$n.Result(")
@@ -138,7 +169,7 @@ class GenerateSelectClasses {
 
 
           appendln()
-          append("    override fun <R> getSingle(connection:DBConnection, factory:")
+          append("    override fun <R> getSingle(connection:DBConnection2<*>, factory:")
           appendFactorySignature(n)
           appendln("):R? {")
           appendln("      return connection.prepareStatement(toSQL()) {")
