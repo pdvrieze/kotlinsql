@@ -18,6 +18,8 @@
  * under the License.
  */
 
+@file:Suppress("unused")
+
 package uk.ac.bournemouth.util.kotlin.sql
 
 import uk.ac.bournemouth.kotlinsql.*
@@ -29,7 +31,8 @@ import javax.sql.DataSource
 /**
  * Create a new connection to the database and execute the block body on that connection. Close it after use.
  */
-@Suppress("unused")
+@Suppress("unused", "DEPRECATION")
+@Deprecated("Use new version", ReplaceWith("this.withConnection(db, block)", "uk.ac.bournemouth.util.kotlin.sql.withConnection"))
 inline fun <R> DataSource.connection(db: Database, block: (DBConnection) -> R): R =
     this.connection.use {
         return DBConnection(connection, db).let(block)
@@ -43,15 +46,27 @@ inline fun <DB : Database, R> DataSource.withConnection(db: DB, block: (DBConnec
 interface DBTransactionBase<DB : Database, T> {
     fun <Output> map(action: DBAction<DB, T, Output>): DBTransaction<DB, Output>
 
-    interface ActionContext<DB : Database> {
+    fun <Output> flatmap(action: DBAction<DB, T, DBTransaction<DB,Output>>): DBTransaction<DB, Output> = map {
+        action(it).commit()
+    }
+
+    fun <Output> apply(action: DBAction<DB, T, Output>): Output {
+        return map(action).commit()
+    }
+
+    interface ActionContext<DB : Database>: DBTransactionBase<DB, Unit> {
         val db: DB
         val connection: DBConnection2<DB>
 
         // fun commit() // should intermediate commit be allowed?
-        fun rollback(): Unit
+        fun rollback()
 
         fun onCommit(action: ActionContext<DB>.() -> Unit)
         fun onRollback(action: ActionContext<DB>.() -> Unit)
+
+        fun <R> withMetaData(action: ConnectionMetadata.() -> R): R {
+            return ConnectionMetadata(connection.rawConnection.metaData).action()
+        }
 
         fun onFinish(action: ActionContext<DB>.() -> Unit) {
             onCommit(action)
@@ -63,6 +78,15 @@ interface DBTransactionBase<DB : Database, T> {
 
 }
 
+
+fun <DB: Database> DBTransactionBase.ActionContext<DB>.hasTable(tableRef: TableRef): Boolean {
+    return withMetaData {
+        getTables(null, null, tableRef._name, null).use { rs ->
+            rs.next()
+        }
+    }
+}
+
 interface DBTransaction<DB : Database, T> : DBTransactionBase<DB, T> {
     fun commit(): T
 }
@@ -72,12 +96,14 @@ interface DBTransaction<DB : Database, T> : DBTransactionBase<DB, T> {
 @Deprecated("Use DBConnection2 with monadic access", ReplaceWith("DBConnection2<*>", "uk.ac.bournemouth.util.kotlin.sql.DBConnection2"))
 open class DBConnection constructor(rawConnection: Connection, db: Database) :
     DBConnection2<Database>(rawConnection, db) {
+    @Suppress("DEPRECATION")
     fun <R> use(block: (DBConnection) -> R): R = useHelper({ it.rawConnection.close() }) {
         return transaction(block)
     }
 
     fun <R> raw(block: (Connection) -> R): R = block(rawConnection)
 
+    @Suppress("DEPRECATION")
     fun <R> transaction(block: (DBConnection) -> R): R {
         rawConnection.autoCommit = false
         val savePoint = rawConnection.setSavepoint()
@@ -260,6 +286,10 @@ open class DBConnection2<DB : Database> constructor(val rawConnection: Connectio
             throw RollbackException()
         }
 
+        override fun <Output> map(action: DBAction<DB, Unit, Output>): DBTransaction<DB, Output> {
+            return DBTransactionImpl(connection, db, action)
+        }
+
         fun commit(): Any? {
             var data: Any? = Unit
             val rawConnection = connection.rawConnection
@@ -353,10 +383,12 @@ open class DBConnection2<DB : Database> constructor(val rawConnection: Connectio
     @Throws(SQLException::class)
     fun getCatalog(): String = rawConnection.catalog
 
+    @Suppress("DEPRECATION")
     fun transactionIsolation(jdbcValue: Int): DBConnection.TransactionIsolation {
         return DBConnection.TransactionIsolation.values().first { it.intValue == jdbcValue }
     }
 
+    @Suppress("DEPRECATION")
     var transactionIsolation: DBConnection.TransactionIsolation
         get() = transactionIsolation(rawConnection.transactionIsolation)
         set(value) {

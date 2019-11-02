@@ -20,7 +20,7 @@
 
 package uk.ac.bournemouth.kotlinsql
 
-import uk.ac.bournemouth.util.kotlin.sql.DBConnection
+import uk.ac.bournemouth.util.kotlin.sql.DBConnection2
 import java.util.*
 import kotlin.properties.ReadOnlyProperty
 
@@ -55,11 +55,11 @@ interface Table:TableRef {
   fun appendDDL(appendable: Appendable)
 
   /** Create the table if it does not exist yet. */
-  fun createTransitive(connection: DBConnection, ifNotExists: Boolean = false)
+  fun createTransitive(connection: DBConnection2<*>, ifNotExists: Boolean = false)
 
-  fun dropTransitive(connection: DBConnection, ifExists: Boolean = false)
+  fun dropTransitive(connection: DBConnection2<*>, ifExists: Boolean = false)
 
-  fun ensureTable(connection: DBConnection, retainExtraColumns: Boolean = true)
+  fun ensureTable(connection: DBConnection2<*>, retainExtraColumns: Boolean = true)
 
 }
 

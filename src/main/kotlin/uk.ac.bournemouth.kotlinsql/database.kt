@@ -29,7 +29,6 @@ import uk.ac.bournemouth.util.kotlin.sql.impl.gen._Statement1
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
-import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -170,20 +169,25 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
         }
     }
 
-    fun ensureTables(connection: DBConnection, retainExtraColumns: Boolean = true) {
+    fun ensureTables(connection: DBConnection2<*>, retainExtraColumns: Boolean = true) {
         val missingTables = _tables.map { it._name }.toMutableSet()
         val tablesToVerify = ArrayList<String>()
         val notUsedTables = mutableListOf<String>()
 
-        connection.getMetaData().getTables(null, null, null, arrayOf("TABLE")).use { rs ->
-            while (rs.next()) {
-                val tableName = rs.tableName
-                if (missingTables.remove(tableName)) {
+        connection.apply {
+            withMetaData {
+                getTables(null, null, null, arrayOf("TABLE")).use { rs ->
+                    while (rs.next()) {
+                        val tableName = rs.tableName
+                        if (missingTables.remove(tableName)) {
 
-                    tablesToVerify.add(tableName)
-                } else {
-                    notUsedTables.add(tableName)
+                            tablesToVerify.add(tableName)
+                        } else {
+                            notUsedTables.add(tableName)
+                        }
+                    }
                 }
+
             }
         }
 

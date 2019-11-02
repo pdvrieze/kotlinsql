@@ -28,7 +28,8 @@ import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberCol
 import uk.ac.bournemouth.kotlinsql.ColumnConfiguration.ColumnFormat
 import uk.ac.bournemouth.kotlinsql.ColumnConfiguration.StorageFormat
 import uk.ac.bournemouth.kotlinsql.ColumnType.*
-import uk.ac.bournemouth.util.kotlin.sql.DBConnection
+import uk.ac.bournemouth.util.kotlin.sql.DBConnection2
+import uk.ac.bournemouth.util.kotlin.sql.hasTable
 import java.math.BigDecimal
 import java.sql.SQLException
 import java.sql.SQLWarning
@@ -428,8 +429,8 @@ abstract class AbstractTable : Table {
         appendable.append(';')
     }
 
-    override fun createTransitive(connection: DBConnection, ifNotExists: Boolean) {
-        if (ifNotExists && connection.hasTable(this)) return // Make sure to check first to prevent loops
+    override fun createTransitive(connection: DBConnection2<*>, ifNotExists: Boolean) {
+        if (ifNotExists && connection.apply { hasTable(this@AbstractTable) }) return // Make sure to check first to prevent loops
 
         val db = connection.db
         val neededTables = (_cols.asSequence().mapNotNull { col -> col.references?.table } +
@@ -442,12 +443,12 @@ abstract class AbstractTable : Table {
         }
     }
 
-    override fun dropTransitive(connection: DBConnection, ifExists: Boolean) {
+    override fun dropTransitive(connection: DBConnection2<*>, ifExists: Boolean) {
         fun tableReferencesThis(table: Table): Boolean {
             return table._foreignKeys.any { fk -> fk.toTable._name == _name }
         }
 
-        if (ifExists && !connection.hasTable(this)) return
+        if (ifExists && !connection.apply { hasTable(this@AbstractTable) }) return
         val db = connection.db
 
         db._tables.filter(::tableReferencesThis).forEach { it.dropTransitive(connection, true) }
@@ -455,32 +456,37 @@ abstract class AbstractTable : Table {
         connection.prepareStatement("DROP TABLE $_name") { execute() }
     }
 
-    override fun ensureTable(connection: DBConnection, retainExtraColumns: Boolean) {
+    override fun ensureTable(connection: DBConnection2<*>, retainExtraColumns: Boolean) {
         val extraColumns = ArrayList<String>()
         val missingColumns = mutableMapOf<String, Column<*, *, *>>()
         _cols.associateByTo(missingColumns) { it.name.toLowerCase(Locale.ENGLISH) }
 
-        connection.getMetaData().getColumns(null, null, _name, null).use { rs ->
-            while (rs.next()) {
-                val colName = rs.columnName
-                val colType = rs.dataType
-                val col = column(colName)
-                missingColumns.remove(colName.toLowerCase(Locale.ENGLISH))
-                if (col != null) {
-                    val columnCorrect = col.matches(rs.typeName, rs.columnSize, rs.isNullable?.not(),
-                                                    rs.isAutoIncrement, rs.columnDefault, rs.remarks)
-                    if (!columnCorrect) {
-                        try {
-                            connection.prepareStatement("ALTER TABLE $_name MODIFY COLUMN ${col.toDDL()}") {
-                                executeUpdate()
+        connection.apply {
+            withMetaData {
+                getColumns(null, null, _name, null).use { rs ->
+                    while (rs.next()) {
+                        val colName = rs.columnName
+                        val colType = rs.dataType
+                        val col = column(colName)
+                        missingColumns.remove(colName.toLowerCase(Locale.ENGLISH))
+                        if (col != null) {
+                            val columnCorrect = col.matches(rs.typeName, rs.columnSize, rs.isNullable?.not(),
+                                                            rs.isAutoIncrement, rs.columnDefault, rs.remarks)
+                            if (!columnCorrect) {
+                                try {
+                                    connection.prepareStatement("ALTER TABLE $_name MODIFY COLUMN ${col.toDDL()}") {
+                                        executeUpdate()
+                                    }
+                                } catch (e: SQLException) {
+                                    throw SQLException(
+                                        "Failure updating table $_name column $colName from $colType to ${col.type}", e)
+                                }
                             }
-                        } catch (e: SQLException) {
-                            throw SQLException(
-                                    "Failure updating table $_name column $colName from $colType to ${col.type}", e)
+                        } else {
+                            extraColumns.add(colName)
                         }
                     }
-                } else {
-                    extraColumns.add(colName)
+
                 }
             }
         }
