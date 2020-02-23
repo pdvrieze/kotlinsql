@@ -20,7 +20,10 @@
 
 package uk.ac.bournemouth.kotlinsql
 
+import uk.ac.bournemouth.util.kotlin.sql.DBAction
 import uk.ac.bournemouth.util.kotlin.sql.DBConnection2
+import uk.ac.bournemouth.util.kotlin.sql.DBTransaction
+import uk.ac.bournemouth.util.kotlin.sql.DBTransactionBase
 import java.util.*
 import kotlin.properties.ReadOnlyProperty
 
@@ -36,31 +39,51 @@ import kotlin.properties.ReadOnlyProperty
  * @property _extra Extra table configuration to be appended after the definition. This contains information such as the
  *                  engine or charset to use.
  */
-interface Table:TableRef {
-  val _cols: List<Column<*, *, *>>
-  val _primaryKey: List<Column<*, *, *>>?
-  val _foreignKeys: List<ForeignKey>
-  val _uniqueKeys: List<List<Column<*, *, *>>>
-  val _indices: List<List<Column<*, *, *>>>
-  val _extra: String?
+interface Table : TableRef {
+    val _cols: List<Column<*, *, *>>
+    val _primaryKey: List<Column<*, *, *>>?
+    val _foreignKeys: List<ForeignKey>
+    val _uniqueKeys: List<List<Column<*, *, *>>>
+    val _indices: List<List<Column<*, *, *>>>
+    val _extra: String?
 
-  fun column(name:String): Column<*,*,*>?
-  fun ref(): TableRef
-  fun resolve(ref: ColumnRef<*,*,*>): Column<*,*,*>
+    fun column(name: String): Column<*, *, *>?
+    fun ref(): TableRef
+    fun resolve(ref: ColumnRef<*, *, *>): Column<*, *, *>
 
-  interface FieldAccessor<T:Any, S: IColumnType<T,S,C>, C:Column<T,S,C>>: ReadOnlyProperty<Table, C> {
-    override operator fun getValue(thisRef: Table, property: kotlin.reflect.KProperty<*>): C
-  }
+    interface FieldAccessor<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>> : ReadOnlyProperty<Table, C> {
+        override operator fun getValue(thisRef: Table, property: kotlin.reflect.KProperty<*>): C
+    }
 
-  fun appendDDL(appendable: Appendable)
+    fun appendDDL(appendable: Appendable)
 
-  /** Create the table if it does not exist yet. */
-  fun createTransitive(connection: DBConnection2<*>, ifNotExists: Boolean = false)
+    /** Create the table if it does not exist yet. */
+    fun <DB : Database> createTransitive(connection: DBConnection2<DB>, ifNotExists: Boolean = false) {
+        connection.flatmap { db.createTransitive(ifNotExists) }.commit()
+    }
 
-  fun dropTransitive(connection: DBConnection2<*>, ifExists: Boolean = false)
+    fun dropTransitive(connection: DBConnection2<*>, ifExists: Boolean = false) =
+        connection.dropTransitive(ifExists).evaluateNow()
 
-  fun ensureTable(connection: DBConnection2<*>, retainExtraColumns: Boolean = true)
+    fun ensureTable(connection: DBConnection2<*>, retainExtraColumns: Boolean = true) =
+        connection.ensureTable(retainExtraColumns).evaluateNow()
+
+    fun <DB : Database> DB.createTransitive(
+        ifNotExists: Boolean,
+        pending: MutableCollection<Table> = mutableListOf()
+                                           ): Iterable<DBAction<DB, Unit, Unit>>
+
+    /** Create the table if it does not exist yet. */
+    fun <DB : Database> DBTransactionBase<DB, *>.createTransitiveOld(
+        ifNotExists: Boolean = false,
+        pending: MutableCollection<Table> = mutableSetOf()
+                                                                    ): DBTransaction<DB, Unit>
+
+    fun <DB : Database> DBTransactionBase<DB, *>.dropTransitive(ifExists: Boolean = false): DBTransaction<DB, Unit>
+
+    fun <DB : Database> DBTransactionBase<DB, *>.ensureTable(retainExtraColumns: Boolean = true): DBTransaction<DB, Unit>
 
 }
 
-operator fun Table.get(name:String) = this.column(name) ?: throw NoSuchElementException("The column with the name $name does not exist")
+operator fun Table.get(name: String) =
+    this.column(name) ?: throw NoSuchElementException("The column with the name $name does not exist")

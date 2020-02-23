@@ -28,8 +28,7 @@ import uk.ac.bournemouth.kotlinsql.AbstractColumnConfiguration.AbstractNumberCol
 import uk.ac.bournemouth.kotlinsql.ColumnConfiguration.ColumnFormat
 import uk.ac.bournemouth.kotlinsql.ColumnConfiguration.StorageFormat
 import uk.ac.bournemouth.kotlinsql.ColumnType.*
-import uk.ac.bournemouth.util.kotlin.sql.DBConnection2
-import uk.ac.bournemouth.util.kotlin.sql.hasTable
+import uk.ac.bournemouth.util.kotlin.sql.*
 import java.math.BigDecimal
 import java.sql.SQLException
 import java.sql.SQLWarning
@@ -429,65 +428,112 @@ abstract class AbstractTable : Table {
         appendable.append(';')
     }
 
-    override fun createTransitive(connection: DBConnection2<*>, ifNotExists: Boolean) {
-        if (ifNotExists && connection.apply { hasTable(this@AbstractTable) }) return // Make sure to check first to prevent loops
+    override fun <DB : Database> DB.createTransitive(ifNotExists: Boolean, pending: MutableCollection<Table>): Iterable<DBAction<DB, Unit, Unit>> {
+        val tableNames = (_cols.asSequence().mapNotNull { col -> col.references?.table } +
+                _foreignKeys.asSequence().mapNotNull(ForeignKey::toTable)).toList()
+        val neededTables = tableNames
+            .map { this[it._name] }
+            .filter { it !in pending }
+            .toSet()
 
-        val db = connection.db
-        val neededTables = (_cols.asSequence().mapNotNull { col -> col.references?.table } +
-                            _foreignKeys.asSequence().mapNotNull(ForeignKey::toTable)).map { db[it._name] }.toSet()
+        val operations = mutableListOf<DBAction<DB, Unit, Unit>>()
+        for(table in neededTables) {
+            pending.add(table)
+            operations.addAll(table.run { createTransitive(true, pending) })
+        }
+        pending.add(this@AbstractTable)
+        if (ifNotExists) {
+            operations.add(CREATE_TABLE_IF_NOT_EXISTS)
+        } else {
+            operations.add(CREATE_TABLE)
+        }
 
-        neededTables.forEach { if (it != this) it.createTransitive(connection, true) }
+        return operations
+    }
 
+    private val _CREATE_TABLE: DBAction<Database, Unit, Unit> = {
         connection.prepareStatement(buildString { appendDDL(this) }) {
             execute()
         }
     }
 
-    override fun dropTransitive(connection: DBConnection2<*>, ifExists: Boolean) {
+    @Suppress("UNCHECKED_CAST")
+    private val <DB: Database> DB.CREATE_TABLE: DBAction<DB, Unit, Unit> get() = _CREATE_TABLE as DBAction<DB, Unit, Unit>
+
+    private val _CREATE_TABLE_IF_NOT_EXISTS: DBAction<Database, Unit, Unit> = {
+        if (! hasTable(this@AbstractTable)) {
+            connection.prepareStatement(buildString { appendDDL(this) }) {
+                execute()
+            }
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private val <DB: Database> DB.CREATE_TABLE_IF_NOT_EXISTS: DBAction<DB, Unit, Unit> get() = _CREATE_TABLE_IF_NOT_EXISTS as DBAction<DB, Unit, Unit>
+
+    override fun <DB : Database> DBTransactionBase<DB, *>.createTransitiveOld(ifNotExists: Boolean, pending: MutableCollection<Table>): DBTransaction<DB, Unit> = map {
+        val tableNames = (_cols.asSequence().mapNotNull { col -> col.references?.table } +
+                _foreignKeys.asSequence().mapNotNull(ForeignKey::toTable)).toList()
+        val neededTables = tableNames
+            .map { db[it._name] }
+            .filter { it !in pending }
+            .toSet()
+        for(table in neededTables) {
+            if (!ifNotExists || !hasTable(this@AbstractTable)) { // Make sure to check first to prevent loops
+                pending.add(table)
+                table.run { createTransitiveOld(true, pending).get() }
+            }
+        }
+        connection.prepareStatement(buildString { appendDDL(this) }) {
+            execute()
+        }
+        Unit
+    }
+
+    override fun <DB : Database> DBTransactionBase<DB, *>.dropTransitive(ifExists: Boolean): DBTransaction<DB, Unit> = map {
         fun tableReferencesThis(table: Table): Boolean {
             return table._foreignKeys.any { fk -> fk.toTable._name == _name }
         }
+        if (!ifExists || hasTable(this@AbstractTable)) {
+            // Create all tables this one depends on
+            db._tables
+                .filter(::tableReferencesThis)
+                .forEach { it.apply { dropTransitive(true).evaluateNow() } }
 
-        if (ifExists && !connection.apply { hasTable(this@AbstractTable) }) return
-        val db = connection.db
-
-        db._tables.filter(::tableReferencesThis).forEach { it.dropTransitive(connection, true) }
-
-        connection.prepareStatement("DROP TABLE $_name") { execute() }
+            connection.prepareStatement("DROP TABLE $_name") { execute() }
+        }
     }
 
-    override fun ensureTable(connection: DBConnection2<*>, retainExtraColumns: Boolean) {
+    override fun <DB : Database> DBTransactionBase<DB, *>.ensureTable(retainExtraColumns: Boolean): DBTransaction<DB, Unit> = map {
         val extraColumns = ArrayList<String>()
         val missingColumns = mutableMapOf<String, Column<*, *, *>>()
         _cols.associateByTo(missingColumns) { it.name.toLowerCase(Locale.ENGLISH) }
 
-        connection.apply {
-            withMetaData {
-                getColumns(null, null, _name, null).use { rs ->
-                    while (rs.next()) {
-                        val colName = rs.columnName
-                        val colType = rs.dataType
-                        val col = column(colName)
-                        missingColumns.remove(colName.toLowerCase(Locale.ENGLISH))
-                        if (col != null) {
-                            val columnCorrect = col.matches(rs.typeName, rs.columnSize, rs.isNullable?.not(),
-                                                            rs.isAutoIncrement, rs.columnDefault, rs.remarks)
-                            if (!columnCorrect) {
-                                try {
-                                    connection.prepareStatement("ALTER TABLE $_name MODIFY COLUMN ${col.toDDL()}") {
-                                        executeUpdate()
-                                    }
-                                } catch (e: SQLException) {
-                                    throw SQLException(
-                                        "Failure updating table $_name column $colName from $colType to ${col.type}", e)
+        withMetaData {
+            getColumns(null, null, _name, null).use { rs ->
+                while (rs.next()) {
+                    val colName = rs.columnName
+                    val colType = rs.dataType
+                    val col = column(colName)
+                    missingColumns.remove(colName.toLowerCase(Locale.ENGLISH))
+                    if (col != null) {
+                        val columnCorrect = col.matches(rs.typeName, rs.columnSize, rs.isNullable?.not(),
+                                                        rs.isAutoIncrement, rs.columnDefault, rs.remarks)
+                        if (!columnCorrect) {
+                            try {
+                                connection.prepareStatement("ALTER TABLE $_name MODIFY COLUMN ${col.toDDL()}") {
+                                    executeUpdate()
                                 }
+                            } catch (e: SQLException) {
+                                throw SQLException(
+                                    "Failure updating table $_name column $colName from $colType to ${col.type}", e)
                             }
-                        } else {
-                            extraColumns.add(colName)
                         }
+                    } else {
+                        extraColumns.add(colName)
                     }
-
                 }
+
             }
         }
 
@@ -504,7 +550,9 @@ abstract class AbstractTable : Table {
                 executeUpdate()
             }
         }
+
     }
+
 }
 
 

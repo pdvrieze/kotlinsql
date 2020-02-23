@@ -43,23 +43,44 @@ inline fun <DB : Database, R> DataSource.withConnection(db: DB, block: (DBConnec
         return DBConnection2(connection, db).let(block)
     }
 
-interface DBTransactionBase<DB : Database, T> {
-    fun <Output> map(action: DBAction<DB, T, Output>): DBTransaction<DB, Output>
+interface DBContext<DB: Database> {
+    val db: DB
+}
 
-    fun <Output> flatmap(action: DBAction<DB, T, DBTransaction<DB,Output>>): DBTransaction<DB, Output> = map {
-        action(it).commit()
+interface DBTransactionBase<DB : Database, T>: DBContext<DB> {
+
+    fun <Output> map(action: DBAction<DB, in T, Output>): DBTransaction<DB, Output>
+
+    fun <Output> flatmap(actions: DBContext<DB>.() -> Iterable<DBAction<DB, Unit, Output>>): DBTransaction<DB, Output>  {
+        @Suppress("UNCHECKED_CAST")
+        val iterable = actions() as Iterable<DBAction<DB, Any?, T>>
+
+        return iterable.fold(this) { accum, act ->
+            accum.map(act)
+        } as DBTransaction<DB, Output>
     }
 
+    @Deprecated("At the very least it is the wrong name")
+    fun <Output> flatmapOld(action: DBAction<DB, T, DBTransaction<DB,Output>>): DBTransaction<DB, Output> = map {
+        action(it).evaluateNow()
+    }
+
+    /**
+     * Apply a single action to the transaction. This should commit if at top level,
+     * but not if done from a context
+     */
     fun <Output> apply(action: DBAction<DB, T, Output>): Output {
         return map(action).commit()
     }
 
     interface ActionContext<DB : Database>: DBTransactionBase<DB, Unit> {
-        val db: DB
+        override val db: DB
         val connection: DBConnection2<DB>
 
         // fun commit() // should intermediate commit be allowed?
         fun rollback()
+
+        fun <T> DBTransaction<DB, T>.get(): T
 
         fun onCommit(action: ActionContext<DB>.() -> Unit)
         fun onRollback(action: ActionContext<DB>.() -> Unit)
@@ -74,6 +95,17 @@ interface DBTransactionBase<DB : Database, T> {
         }
 
         fun closeOnFinish(resultSet: ResultSet) = onFinish { resultSet.close() }
+
+        val warningsIt: Iterator<SQLWarning> get() = WarningIterator(connection.rawConnection.warnings)
+        val warnings: Sequence<SQLWarning>
+            get() = object : Sequence<SQLWarning> {
+                override fun iterator(): Iterator<SQLWarning> = warningsIt
+            }
+
+        fun DB.ensuretables(retainExtraColumns: Boolean = true) {
+            this.ensureTables(connection, retainExtraColumns)
+        }
+
     }
 
 }
@@ -88,7 +120,17 @@ fun <DB: Database> DBTransactionBase.ActionContext<DB>.hasTable(tableRef: TableR
 }
 
 interface DBTransaction<DB : Database, T> : DBTransactionBase<DB, T> {
+    fun evaluateNow(): T
+
     fun commit(): T
+}
+
+inline fun <DB : Database, T> DBTransaction<DB, T>.require(crossinline condition: (T)-> Boolean, crossinline lazyMessage: DBTransactionBase.ActionContext<DB>.()-> String) = map {
+    require(condition(it)) { lazyMessage() }
+}
+
+inline fun <DB : Database> DBTransaction<DB, Int>.requireNonZero(crossinline lazyMessage: DBTransactionBase.ActionContext<DB>.() -> String) = map {
+    require(it > 0) { lazyMessage() }
 }
 
 //inline fun <R> DataSource.connection(username: String, password: String, block: (DBConnection) -> R) = getConnection(username, password).use { connection(it, block) }
@@ -261,100 +303,19 @@ open class DBConnection constructor(rawConnection: Connection, db: Database) :
 
 }
 
-private typealias DBAction<DB, In, Out> = DBTransactionBase.ActionContext<DB>.(In) -> Out
+internal typealias DBAction<DB, In, Out> = DBTransactionBase.ActionContext<DB>.(In) -> Out
+internal typealias DBActionObj<DB, In, Out> = Function2<DBTransactionBase.ActionContext<DB>, In, Out>
 
 @Suppress("MemberVisibilityCanBePrivate", "unused", "PropertyName")
-open class DBConnection2<DB : Database> constructor(val rawConnection: Connection, val db: DB) :
+open class DBConnection2<DB : Database> constructor(val rawConnection: Connection, override val db: DB) :
     DBTransactionBase<DB, Unit> {
 
     init {
         rawConnection.autoCommit = false
     }
 
-    private class RollbackException: Exception()
-
-    private class ContextImpl<DB : Database>(
-        override val connection: DBConnection2<DB>,
-        override val db: DB,
-        action: DBAction<DB, Unit, *>
-                                            ) : DBTransactionBase.ActionContext<DB> {
-        private val actions = ArrayDeque<DBAction<DB, *, *>>().apply { add(action) }
-        private val onCommitActions = mutableListOf<DBTransactionBase.ActionContext<DB>.() -> Unit>()
-        private val onRollbackActions = mutableListOf<DBTransactionBase.ActionContext<DB>.() -> Unit>()
-
-        override fun rollback(): Nothing {
-            throw RollbackException()
-        }
-
-        override fun <Output> map(action: DBAction<DB, Unit, Output>): DBTransaction<DB, Output> {
-            return DBTransactionImpl(connection, db, action)
-        }
-
-        fun commit(): Any? {
-            var data: Any? = Unit
-            val rawConnection = connection.rawConnection
-            rawConnection.autoCommit = false
-            val savePoint = rawConnection.setSavepoint()
-            try {
-                while (actions.isNotEmpty()) {
-                    @Suppress("UNCHECKED_CAST")
-                    val nextAction = actions.removeFirst() as DBAction<DB, Any?, Any?>
-
-                    data = nextAction(data)
-                }
-                for(action in onCommitActions) {
-                    action()
-                }
-                rawConnection.commit()
-            } catch (e: Exception) {
-                for (action in onRollbackActions) {
-                    try {
-                        action()
-                    } catch (f: Exception) {
-                        e.addSuppressed(f)
-                    }
-                }
-                rawConnection.rollback(savePoint)
-                throw e
-            }
-            onCommitActions.clear()
-            onRollbackActions.clear()
-            return when (data) { // special case sequences
-                is Sequence<*> -> data.toList().asSequence()
-                else -> data
-            }
-        }
-
-        override fun onCommit(action: DBTransactionBase.ActionContext<DB>.() -> Unit) {
-            onCommitActions.add(action)
-        }
-
-        override fun onRollback(action: DBTransactionBase.ActionContext<DB>.() -> Unit) {
-            onRollbackActions.add(action)
-        }
-
-        fun addAction(action: DBAction<DB, *, *>) {
-            actions.add(action)
-        }
-    }
-
-    private class DBTransactionImpl<DB : Database, T>(
-        connection: DBConnection2<DB>,
-        db: DB,
-        action: DBAction<DB, Unit, T>
-                                                     ) : DBTransaction<DB, T> {
-        private val context = ContextImpl(connection, db, action)
-
-        override fun commit(): T {
-            @Suppress("UNCHECKED_CAST")
-            return context.commit() as T
-        }
-
-        override fun <O> map(action: DBAction<DB, T, O>): DBTransaction<DB, O> {
-            context.addAction(action)
-            @Suppress("UNCHECKED_CAST")
-            return this as DBTransaction<DB, O>
-        }
+    fun close() {
+        rawConnection.close()
     }
 
     override fun <O> map(action: DBTransactionBase.ActionContext<DB>.(Unit) -> O): DBTransaction<DB, O> {
@@ -515,6 +476,157 @@ open class DBConnection2<DB : Database> constructor(val rawConnection: Connectio
     @Throws(SQLException::class)
     fun <R> prepareStatement(sql: String, columnNames: Array<out String>, block: StatementHelper.() -> R): R {
         return rawConnection.prepareStatement(sql, columnNames).use { StatementHelper(it, sql).block() }
+    }
+
+    private class RollbackException: Exception()
+
+    private class ContextImpl<DB : Database>(
+        override val connection: DBConnection2<DB>,
+        override val db: DB,
+        action: DBActionObj<DB, Unit, *>
+                                            ) : DBTransactionBase.ActionContext<DB> {
+        private val actions = ArrayDeque<DBActionObj<DB, *, *>>().apply { add(action) }
+        private val onCommitActions = mutableListOf<DBTransactionBase.ActionContext<DB>.() -> Unit>()
+        private val onRollbackActions = mutableListOf<DBTransactionBase.ActionContext<DB>.() -> Unit>()
+        var data: Any? = Unit
+
+        override fun rollback(): Nothing {
+            throw RollbackException()
+        }
+
+        override fun <Output> map(action: DBAction<DB, Unit, Output>): DBTransaction<DB, Output> {
+            return DBTransactionImpl(connection, db, action)
+        }
+
+        /**
+         * In this context, don't commit yet
+         */
+        override fun <Output> apply(action: DBAction<DB, Unit, Output>): Output {
+            return map(action).evaluateNow()
+        }
+
+        override fun <T> DBTransaction<DB, T>.get(): T {
+            return evaluateNow()
+        }
+
+        private inline fun evalImpl(afterEval: (Connection, Boolean) -> Unit) {
+            val rawConnection = connection.rawConnection
+            val oldAutoCommit = rawConnection.autoCommit
+            if (oldAutoCommit) { rawConnection.autoCommit = false }
+            var savePoint = rawConnection.setSavepoint()
+            try {
+                while(actions.isNotEmpty()) {
+                    val nextAction = actions.removeFirst() as DBAction<DB, Any?, Any?>
+
+                    data = nextAction(this, data)
+                }
+                afterEval(rawConnection, oldAutoCommit)
+                rawConnection.releaseSavepoint(savePoint)
+                savePoint = null
+            } catch (e: Exception) {
+                for (action in onRollbackActions) {
+                    try {
+                        action()
+                    } catch (f: Exception) {
+                        e.addSuppressed(f)
+                    }
+                }
+                try {
+                    rawConnection.rollback(savePoint)
+                } catch (f: Exception) {
+//                    rawConnection.rollback() // Savepoint is invalid
+                    e.addSuppressed(f)
+                    throw e
+                }
+                throw e
+            } finally {
+                if (oldAutoCommit) rawConnection.autoCommit = oldAutoCommit
+            }
+            onRollbackActions.clear()
+        }
+
+        fun evaluateNow(): Any? {
+            evalImpl { rawConnection, oldAutoCommit ->
+                // If we were in an autocommit context, commit otherwise it breaks a lot.
+                if (oldAutoCommit) rawConnection.commit()
+            }
+            return data
+        }
+
+        fun commit(): Any? {
+            evalImpl { rawConnection, _ ->
+                for (action in onCommitActions) {
+                    action()
+                }
+                rawConnection.commit()
+            }
+            onCommitActions.clear()
+
+            return when (val data = data) { // special case sequences
+                is Sequence<*> -> data.toList().asSequence()
+                else -> data
+            }
+        }
+
+        override fun onCommit(action: DBTransactionBase.ActionContext<DB>.() -> Unit) {
+            onCommitActions.add(action)
+        }
+
+        override fun onRollback(action: DBTransactionBase.ActionContext<DB>.() -> Unit) {
+            onRollbackActions.add(action)
+        }
+
+        fun addAction(action: DBAction<DB, *, *>) {
+            actions.add(action)
+        }
+
+        fun prependActions(sourceContext: DBConnection2.ContextImpl<DB>) {
+            for(action in sourceContext.actions) {
+                actions.addFirst(action)
+            }
+            sourceContext.actions.clear()
+        }
+    }
+
+    private class DBTransactionImpl<DB : Database, T>(
+        connection: DBConnection2<DB>,
+        db: DB,
+        action: DBAction<DB, Unit, T>
+                                                     ) : DBTransaction<DB, T> {
+        private val context = ContextImpl(connection, db, action)
+
+        override val db: DB get() = context.db
+
+        override fun evaluateNow(): T {
+            return context.evaluateNow() as T
+        }
+
+        override fun commit(): T {
+            @Suppress("UNCHECKED_CAST")
+            return context.commit() as T
+        }
+
+        override fun <O> map(action: DBAction<DB, T, O>): DBTransaction<DB, O> {
+            context.addAction(action)
+            @Suppress("UNCHECKED_CAST")
+            return this as DBTransaction<DB, O>
+        }
+
+        override fun <Output> flatmap(actions: DBContext<DB>.() -> Iterable<DBAction<DB, Unit, Output>>): DBTransaction<DB, Output> {
+            actions().forEach { context.addAction(it) }
+            @Suppress("UNCHECKED_CAST")
+            return this as DBTransaction<DB, Output>
+        }
+
+        override fun <Output> flatmapOld(action: DBAction<DB, T, DBTransaction<DB,Output>>): DBTransaction<DB, Output> = map {
+            when (val actionResult = action(it)) {
+                is DBTransactionImpl -> {
+                    context.prependActions(actionResult.context)
+                    Unit as Output // We have just injected further actions, but they have unit as input
+                }
+                else                 -> actionResult.evaluateNow()
+            } //as DBTransaction<DB, Output>
+        }
     }
 
 }
