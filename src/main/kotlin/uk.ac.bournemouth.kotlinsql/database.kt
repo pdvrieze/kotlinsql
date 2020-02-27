@@ -24,6 +24,7 @@ package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.kotlinsql.ColumnType.NumericColumnType.INT_T
 import uk.ac.bournemouth.util.kotlin.sql.*
+import uk.ac.bournemouth.util.kotlin.sql.impl.DBConnection2
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.DatabaseMethods
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen._Statement1
 import java.lang.reflect.Field
@@ -862,8 +863,8 @@ inline fun <D: Database, R> D.connect2(datasource: DataSource, block: DBConnecti
         }
         throw e
     } finally {
-        if (doCommit) connection.commit()
-        connection.close()
+        if (doCommit) conn.rawConnection.commit()
+        conn.close()
     }
 }
 

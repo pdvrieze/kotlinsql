@@ -33,6 +33,7 @@ class TestCreateTransitive {
     fun testFakeQuery() {
         val source = DummyDataSource()
         WebAuthDB.connect2(source) {
+
             val names = query { SELECT(WebAuthDB.users.fullname) }.evaluateNow().toList()
         }
         val c = source.lastConnection!!

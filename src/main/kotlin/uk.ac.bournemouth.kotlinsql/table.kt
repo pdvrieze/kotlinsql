@@ -21,7 +21,7 @@
 package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.util.kotlin.sql.DBAction
-import uk.ac.bournemouth.util.kotlin.sql.DBConnection2
+import uk.ac.bournemouth.util.kotlin.sql.impl.DBConnection2
 import uk.ac.bournemouth.util.kotlin.sql.DBTransaction
 import uk.ac.bournemouth.util.kotlin.sql.DBTransactionBase
 import java.util.*

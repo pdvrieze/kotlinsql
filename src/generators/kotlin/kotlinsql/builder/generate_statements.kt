@@ -41,7 +41,7 @@ class GenerateStatementsKt {
 //      appendln("import uk.ac.bournemouth.kotlinsql.Database")
       appendln("import uk.ac.bournemouth.kotlinsql.Database.*")
       appendln("import uk.ac.bournemouth.kotlinsql.IColumnType")
-      appendln("import uk.ac.bournemouth.util.kotlin.sql.DBConnection2")
+      appendln("import uk.ac.bournemouth.util.kotlin.sql.impl.DBConnection2")
       appendln("import java.sql.SQLException")
 
       for (n in 1..count) {
