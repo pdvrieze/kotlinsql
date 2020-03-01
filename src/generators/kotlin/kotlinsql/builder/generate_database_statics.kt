@@ -47,7 +47,7 @@ class GenerateDatabaseBaseKt {
 
       appendln("abstract operator fun get(key:TableRef):Table")
 
-      appendFunctionGroup("SELECT","_Select", count)
+      appendFunctionGroup("SELECT","_Select", count, "_Select")
       appendFunctionGroup("INSERT","_Insert", count)
       appendFunctionGroup("INSERT_OR_UPDATE","_Insert", count)
 
@@ -56,7 +56,7 @@ class GenerateDatabaseBaseKt {
     }
   }
 
-  private fun Writer.appendFunctionGroup(funName: String, className: String, count: Int) {
+  private fun Writer.appendFunctionGroup(funName: String, className: String, count: Int, interfaceName: String = className) {
     for (n in 1..count) {
       appendln()
   //        appendln("    @JvmStatic")
@@ -70,7 +70,13 @@ class GenerateDatabaseBaseKt {
       }
       append("> $funName(")
       (1..n).joinToString { m -> "col$m: C$m" }.apply { append(this) }
-      appendln(")=")
+      append("): ")
+      if (n==1 && funName=="SELECT") {
+        append("Database.$interfaceName$n<T1, S1, C1>")
+      } else {
+        (1..n).joinTo(this, prefix="$interfaceName$n<", postfix = ">") {m-> "T$m, S$m, C$m"}
+      }
+      appendln(" =")
       if (className=="_Insert") {
         val update = funName=="INSERT_OR_UPDATE"
         append("            $className$n(get(col1.table), $update, ")

@@ -19,6 +19,7 @@ package uk.ac.bournemouth.kotlinsql
 
 import uk.ac.bournemouth.kotlinsql.Database
 import uk.ac.bournemouth.kotlinsql.MutableTable
+import uk.ac.bournemouth.util.kotlin.sql.DBContext
 
 /**
  * Code definition of the webauth database.
@@ -109,3 +110,11 @@ object WebAuthDB: Database(1) {
   }
 
 }
+
+val DBContext<WebAuthDB>.users get() = WebAuthDB.users
+val DBContext<WebAuthDB>.roles get() = WebAuthDB.roles
+val DBContext<WebAuthDB>.user_roles get() = WebAuthDB.user_roles
+val DBContext<WebAuthDB>.tokens get() = WebAuthDB.tokens
+val DBContext<WebAuthDB>.app_perms get() = WebAuthDB.app_perms
+val DBContext<WebAuthDB>.pubkeys get() = WebAuthDB.pubkeys
+val DBContext<WebAuthDB>.challenges get() = WebAuthDB.challenges

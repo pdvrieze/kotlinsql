@@ -26,28 +26,44 @@ import uk.ac.bournemouth.kotlinsql.test.AbstractDummyPreparedStatement
 import uk.ac.bournemouth.kotlinsql.test.AbstractDummyResultSet
 import uk.ac.bournemouth.kotlinsql.test.DummyConnection
 import uk.ac.bournemouth.kotlinsql.test.DummyDataSource
+import uk.ac.bournemouth.util.kotlin.sql.impl.connect2
+import uk.ac.bournemouth.util.kotlin.sql.impl.map
+import uk.ac.bournemouth.util.kotlin.sql.impl.withSource
 
 class TestCreateTransitive {
 
     @Test
     fun testFakeQuery() {
         val source = DummyDataSource()
-        WebAuthDB.connect2(source) {
-
-            val names = query { SELECT(WebAuthDB.users.fullname) }.evaluateNow().toList()
+//        WebAuthDB.connect2(source) {
+//            val names = query { SELECT(WebAuthDB.users.fullname) }.evaluateNow().toList()
+//        }
+        val names = WebAuthDB.withSource(source) {
+            SELECT(users.fullname)
+                .map { seq -> seq.toList() }
+                .commit()
         }
+
         val c = source.lastConnection!!
         val q = "SELECT `fullname` FROM `users`"
         val expectedActions = listOf(
             DummyConnection.SetAutoCommit.FALSE,
-            DummyConnection.DummySavePoint(1),
+//            DummyConnection.DummySavePoint(1),
             c.DummyPreparedStatement(q),
             c.DummyResultSet(q),
             AbstractDummyResultSet.Close,
             AbstractDummyPreparedStatement.Close(q),
-            DummyConnection.ReleaseSavepoint(1),
-            DummyConnection.Commit
+//            DummyConnection.ReleaseSavepoint(1),
+            DummyConnection.Commit,
+            DummyConnection.StringAction("Connection.close()")
                                     )
-        assertEquals(expectedActions, c.actions.filter { it !is DummyConnection.StringAction || !it.string.startsWith("getAutoCommit()") })
+
+        val filterText = listOf("getAutoCommit()", "isAfterLast()", "isLast()")
+        val filteredActions =
+            c.actions.filter { action ->
+                action !is DummyConnection.StringAction ||
+                        filterText.none { t -> t in action.string }
+            }
+        assertEquals(expectedActions, filteredActions)
     }
 }

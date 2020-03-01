@@ -479,6 +479,9 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
         }
     }
 
+    /**
+     * The select part out of a select statement
+     */
     interface Select : SelectStatement {
         val columns: Array<out Column<*, *, *>>
         fun WHERE(config: _Where.() -> WhereClause?): SelectStatement
@@ -846,26 +849,6 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
 
     fun SELECT(columns: List<Column<*, *, *>>) = _ListSelect(columns)
 
-}
-
-
-inline fun <D: Database, R> D.connect2(datasource: DataSource, block: DBConnection2<D>.() -> R): R {
-    var doCommit = true
-    val conn = DBConnection2(datasource.connection, this)
-    try {
-        return conn.block()
-    } catch (e: Exception) {
-        try {
-            conn.rawConnection.rollback()
-        } finally {
-            conn.close()
-            doCommit = false
-        }
-        throw e
-    } finally {
-        if (doCommit) conn.rawConnection.commit()
-        conn.close()
-    }
 }
 
 

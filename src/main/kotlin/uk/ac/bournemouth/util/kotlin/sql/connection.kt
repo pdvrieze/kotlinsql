@@ -24,6 +24,7 @@ package uk.ac.bournemouth.util.kotlin.sql
 
 import uk.ac.bournemouth.kotlinsql.*
 import uk.ac.bournemouth.util.kotlin.sql.impl.DBConnection2
+import uk.ac.bournemouth.util.kotlin.sql.impl.use
 import java.sql.*
 import javax.sql.DataSource
 
@@ -37,100 +38,22 @@ inline fun <R> DataSource.connection(db: Database, block: (DBConnection) -> R): 
         return DBConnection(connection, db).let(block)
     }
 
-inline fun <DB : Database, R> DataSource.withConnection(db: DB, block: (DBConnection2<DB>) -> R): R =
-    this.connection.use {
-        return DBConnection2(connection, db).let(block)
-    }
-
-interface DBContext<DB: Database> {
-    val db: DB
-}
-
-interface DBTransactionBase<DB : Database, T>: DBContext<DB> {
-
-    fun <Output> map(action: DBAction<DB, in T, Output>): DBTransaction<DB, Output>
-
-    fun <Output> flatmap(actions: DBContext<DB>.() -> Iterable<DBAction<DB, Unit, Output>>): DBTransaction<DB, Output>  {
-        @Suppress("UNCHECKED_CAST")
-        val iterable = actions() as Iterable<DBAction<DB, Any?, T>>
-
-        return iterable.fold(this) { accum, act ->
-            accum.map(act)
-        } as DBTransaction<DB, Output>
-    }
-
-    @Deprecated("At the very least it is the wrong name")
-    fun <Output> flatmapOld(action: DBAction<DB, T, DBTransaction<DB,Output>>): DBTransaction<DB, Output> = map {
-        action(it).evaluateNow()
-    }
-
-    /**
-     * Apply a single action to the transaction. This should commit if at top level,
-     * but not if done from a context
-     */
-    fun <Output> apply(action: DBAction<DB, T, Output>): Output {
-        return map(action).commit()
-    }
-
-    interface ActionContext<DB : Database>: DBTransactionBase<DB, Unit> {
-        override val db: DB
-        val connection: DBConnection2<DB>
-
-        // fun commit() // should intermediate commit be allowed?
-        fun rollback()
-
-        fun <T> DBTransaction<DB, T>.get(): T
-
-        fun onCommit(action: ActionContext<DB>.() -> Unit)
-        fun onRollback(action: ActionContext<DB>.() -> Unit)
-
-        fun <R> withMetaData(action: ConnectionMetadata.() -> R): R {
-            return ConnectionMetadata(connection.rawConnection.metaData).action()
+inline fun <DB : Database, R> DataSource.withConnection(db: DB, block: (DBConnection2<DB>) -> R): R {
+    val c = connection
+    val conn : DBConnection2<DB>
+    try {
+        conn = DBConnection2(c, db)
+    } catch (e: Exception) {
+        try {
+            c.close()
+        } catch (f: Exception) {
+            e.addSuppressed(f)
         }
-
-        fun onFinish(action: ActionContext<DB>.() -> Unit) {
-            onCommit(action)
-            onRollback(action)
-        }
-
-        fun closeOnFinish(resultSet: ResultSet) = onFinish { resultSet.close() }
-
-        val warningsIt: Iterator<SQLWarning> get() = WarningIterator(connection.rawConnection.warnings)
-        val warnings: Sequence<SQLWarning>
-            get() = object : Sequence<SQLWarning> {
-                override fun iterator(): Iterator<SQLWarning> = warningsIt
-            }
-
-        fun DB.ensuretables(retainExtraColumns: Boolean = true) {
-            this.ensureTables(connection, retainExtraColumns)
-        }
-
+        throw e
     }
-
+    return conn.use(block)
 }
 
-
-fun <DB: Database> DBTransactionBase.ActionContext<DB>.hasTable(tableRef: TableRef): Boolean {
-    return withMetaData {
-        getTables(null, null, tableRef._name, null).use { rs ->
-            rs.next()
-        }
-    }
-}
-
-interface DBTransaction<DB : Database, T> : DBTransactionBase<DB, T> {
-    fun evaluateNow(): T
-
-    fun commit(): T
-}
-
-inline fun <DB : Database, T> DBTransaction<DB, T>.require(crossinline condition: (T)-> Boolean, crossinline lazyMessage: DBTransactionBase.ActionContext<DB>.()-> String) = map {
-    require(condition(it)) { lazyMessage() }
-}
-
-inline fun <DB : Database> DBTransaction<DB, Int>.requireNonZero(crossinline lazyMessage: DBTransactionBase.ActionContext<DB>.() -> String) = map {
-    require(it > 0) { lazyMessage() }
-}
 
 //inline fun <R> DataSource.connection(username: String, password: String, block: (DBConnection) -> R) = getConnection(username, password).use { connection(it, block) }
 
@@ -301,9 +224,6 @@ open class DBConnection constructor(rawConnection: Connection, db: Database) :
     }
 
 }
-
-internal typealias DBAction<DB, In, Out> = DBTransactionBase.ActionContext<DB>.(In) -> Out
-internal typealias DBActionObj<DB, In, Out> = Function2<DBTransactionBase.ActionContext<DB>, In, Out>
 
 /**
  * Executes the given [block] function on this resource and then closes it down correctly whether an exception

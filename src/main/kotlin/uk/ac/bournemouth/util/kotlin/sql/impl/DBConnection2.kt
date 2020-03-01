@@ -27,6 +27,8 @@ import uk.ac.bournemouth.util.kotlin.sql.DBActionObj
 import java.sql.*
 import java.util.*
 import java.util.concurrent.Executor
+import javax.sql.DataSource
+import javax.xml.crypto.Data
 
 @Suppress("MemberVisibilityCanBePrivate", "unused", "PropertyName")
 open class DBConnection2<DB : Database> constructor(val rawConnection: Connection, override val db: DB) :
@@ -380,3 +382,26 @@ open class DBConnection2<DB : Database> constructor(val rawConnection: Connectio
     }
 
 }
+
+inline fun <C: DBConnection2<*>, R> C.use(block: (C) -> R): R = useHelper({it.close()}, block)
+
+
+inline fun <D: Database, R> D.connect2(datasource: DataSource, block: DBConnection2<D>.() -> R): R {
+    var doCommit = true
+    val conn = DBConnection2(datasource.connection, this)
+    try {
+        return conn.block()
+    } catch (e: Exception) {
+        try {
+            conn.rawConnection.rollback()
+        } finally {
+            conn.close()
+            doCommit = false
+        }
+        throw e
+    } finally {
+        if (doCommit) conn.rawConnection.commit()
+        conn.close()
+    }
+}
+

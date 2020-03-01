@@ -22,6 +22,7 @@ package uk.ac.bournemouth.kotlinsql.test
 
 import java.io.InputStream
 import java.io.Reader
+import java.lang.Exception
 import java.math.BigDecimal
 import java.net.URL
 import java.sql.*
@@ -29,10 +30,35 @@ import java.sql.Array
 import java.sql.Date
 import java.util.*
 
-abstract class AbstractDummyResultSet(val query: String): ResultSet {
+abstract class AbstractDummyResultSet(val query: String, private val data: List<kotlin.Array<Any?>> = emptyList()) : ResultSet {
+
+    private var pos: Int = 0
 
     protected abstract fun recordAction(action: DummyConnection.Action)
 
+    protected inline fun <R> record(args: kotlin.Array<Any?> = emptyArray(), action: () -> R): R {
+        return action().also { recordRes2(it, args) }
+    }
+
+    open protected fun <R> recordRes2(result: R, args: kotlin.Array<Any?>): R {
+        val calledFunction = Exception().stackTrace[2].methodName
+        val ac = DummyConnection.StringAction("$this.$calledFunction(${args.joinToString()}) -> $result")
+        recordAction(ac)
+        return result
+    }
+
+    open protected fun <R> recordRes(result: R, vararg args: Any?): R {
+        val calledFunction = Exception().stackTrace[1].methodName
+        val ac = DummyConnection.StringAction("$this.$calledFunction(${args.joinToString()}) -> $result")
+        recordAction(ac)
+        return result
+    }
+
+    open protected fun record(vararg args: Any?) {
+        val calledFunction = Exception().stackTrace[1].methodName
+        val ac = DummyConnection.StringAction("$this.$calledFunction(${args.joinToString()})")
+        recordAction(ac)
+    }
 
     override fun findColumn(columnLabel: String?): Int {
         TODO("not implemented")
@@ -139,7 +165,8 @@ abstract class AbstractDummyResultSet(val query: String): ResultSet {
     }
 
     override fun beforeFirst() {
-        TODO("not implemented")
+        record()
+        pos = 0
     }
 
     override fun close() {
@@ -162,8 +189,8 @@ abstract class AbstractDummyResultSet(val query: String): ResultSet {
         TODO("not implemented")
     }
 
-    override fun isFirst(): Boolean {
-        TODO("not implemented")
+    override fun isFirst(): Boolean = record {
+        pos == 1
     }
 
     override fun getBigDecimal(columnIndex: Int, scale: Int): BigDecimal {
@@ -190,8 +217,8 @@ abstract class AbstractDummyResultSet(val query: String): ResultSet {
         TODO("not implemented")
     }
 
-    override fun isLast(): Boolean {
-        TODO("not implemented")
+    override fun isLast(): Boolean = record {
+        pos == data.size
     }
 
     override fun insertRow() {
@@ -218,12 +245,13 @@ abstract class AbstractDummyResultSet(val query: String): ResultSet {
         TODO("not implemented")
     }
 
-    override fun last(): Boolean {
-        TODO("not implemented")
+    override fun last(): Boolean = record {
+        pos = data.size
+        data.isNotEmpty()
     }
 
-    override fun isAfterLast(): Boolean {
-        TODO("not implemented")
+    override fun isAfterLast(): Boolean = record {
+        pos > data.size
     }
 
     override fun relative(rows: Int): Boolean {
@@ -246,8 +274,9 @@ abstract class AbstractDummyResultSet(val query: String): ResultSet {
         TODO("not implemented")
     }
 
-    override fun next(): Boolean {
-        return false
+    override fun next(): Boolean = record {
+        pos++
+        pos <= data.size
     }
 
     override fun getFloat(columnIndex: Int): Float {
@@ -266,8 +295,9 @@ abstract class AbstractDummyResultSet(val query: String): ResultSet {
         TODO("not implemented")
     }
 
-    override fun first(): Boolean {
-        TODO("not implemented")
+    override fun first(): Boolean = record {
+        pos = 1
+        pos <= data.size
     }
 
     override fun updateAsciiStream(columnIndex: Int, x: InputStream?, length: Int) {
@@ -815,8 +845,8 @@ abstract class AbstractDummyResultSet(val query: String): ResultSet {
         return "ResultSet($query)"
     }
 
-    object Close: DummyConnection.Action {
-        override fun toString(): String ="ResultSet.close()"
+    object Close : DummyConnection.Action {
+        override fun toString(): String = "ResultSet.close()"
     }
 
 }
