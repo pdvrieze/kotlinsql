@@ -23,7 +23,7 @@ package kotlinsql.builder
 fun Appendable.appendCopyright():Appendable {
   append("""
       /*
-       * Copyright (c) 2016.
+       * Copyright (c) 2016-2020.
        *
        * This file is part of kotlinsql.
        *

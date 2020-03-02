@@ -20,23 +20,11 @@
 
 package uk.ac.bournemouth.util.kotlin.sql.impl
 
-import uk.ac.bournemouth.kotlinsql.Column
 import uk.ac.bournemouth.kotlinsql.Database
-import uk.ac.bournemouth.kotlinsql.IColumnType
-import uk.ac.bournemouth.util.kotlin.sql.DBContext
 import javax.sql.DataSource
+import uk.ac.bournemouth.util.kotlin.sql.impl.gen.withSource as genWithSource
 
-interface ConnectionSource<DB : Database> : DBContext<DB> {
-
-    val datasource: DataSource
-
-    fun <T1:Any, S1: IColumnType<T1, S1, C1>, C1: Column<T1, S1, C1>> SELECT(col1: C1): DBAction2.Select<Database.Select1<T1, S1, C1>>
-
-    fun <O> DBAction2<O>.commit() {
-        commit(this@ConnectionSource)
-    }
-
-}
+typealias ConnectionSource<DB> = uk.ac.bournemouth.util.kotlin.sql.impl.gen.ConnectionSource<DB>
 
 internal inline fun <DB: Database, R> ConnectionSource<DB>.use(action: DBConnection2<DB>.() -> R):R {
     var doCommit = true
@@ -57,15 +45,7 @@ internal inline fun <DB: Database, R> ConnectionSource<DB>.use(action: DBConnect
     }
 }
 
-private class ConnectionSourceImpl<DB : Database>(
-    override val db: DB,
-    override val datasource: DataSource
-                                                 ) : ConnectionSource<DB> {
-    override fun <T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>> SELECT(col1: C1): DBAction2.Select<Database.Select1<T1, S1, C1>> {
-        return DBAction2.Select(Database._Select1(col1))
-    }
-}
-
-fun <DB : Database, R> DB.withSource(datasource: DataSource, action: ConnectionSource<DB>.() -> R): R {
-    return ConnectionSourceImpl(this, datasource).action()
+@Suppress("NOTHING_TO_INLINE")
+inline fun <DB : Database, R> DB.withSource(datasource: DataSource, noinline action: ConnectionSource<DB>.() -> R): R {
+    return genWithSource(datasource, action)
 }
