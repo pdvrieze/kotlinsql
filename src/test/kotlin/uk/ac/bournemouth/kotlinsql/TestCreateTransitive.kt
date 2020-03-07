@@ -26,19 +26,15 @@ import uk.ac.bournemouth.kotlinsql.test.AbstractDummyPreparedStatement
 import uk.ac.bournemouth.kotlinsql.test.AbstractDummyResultSet
 import uk.ac.bournemouth.kotlinsql.test.DummyConnection
 import uk.ac.bournemouth.kotlinsql.test.DummyDataSource
-import uk.ac.bournemouth.util.kotlin.sql.impl.connect2
 import uk.ac.bournemouth.util.kotlin.sql.impl.map
-import uk.ac.bournemouth.util.kotlin.sql.impl.withSource
+import uk.ac.bournemouth.util.kotlin.sql.impl.invoke
 
 class TestCreateTransitive {
 
     @Test
     fun testFakeQuery() {
         val source = DummyDataSource()
-//        WebAuthDB.connect2(source) {
-//            val names = query { SELECT(WebAuthDB.users.fullname) }.evaluateNow().toList()
-//        }
-        val names = WebAuthDB.withSource(source) {
+        val names = WebAuthDB(source) {
             SELECT(users.fullname)
                 .map { seq -> seq.toList() }
                 .commit()
@@ -65,5 +61,13 @@ class TestCreateTransitive {
                         filterText.none { t -> t in action.string }
             }
         assertEquals(expectedActions, filteredActions)
+    }
+
+    @Test
+    fun testCreateTransitive() {
+        val source = DummyDataSource()
+        val x = WebAuthDB(source) {
+            ensureTables()
+        }
     }
 }

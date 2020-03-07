@@ -45,7 +45,7 @@ class GenerateDatabaseBaseKt {
       appendln("abstract class DatabaseMethods {")
 //      appendln("  companion object {")
 
-      appendln("abstract operator fun get(key:TableRef):Table")
+      appendln("    abstract operator fun get(key:TableRef):Table")
 
       appendFunctionGroup("SELECT","_Select", count, "_Select")
       appendFunctionGroup("INSERT","_Insert", count)
@@ -68,7 +68,7 @@ class GenerateDatabaseBaseKt {
           append(this)
         }
       }
-      append("> $funName(")
+      append(">\n        $funName(")
       (1..n).joinToString { m -> "col$m: C$m" }.apply { append(this) }
       append("): ")
       if (n==1 && funName=="SELECT") {

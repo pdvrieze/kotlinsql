@@ -23,12 +23,20 @@ package uk.ac.bournemouth.util.kotlin.sql.impl
 import uk.ac.bournemouth.kotlinsql.Column
 import uk.ac.bournemouth.kotlinsql.Database
 import uk.ac.bournemouth.kotlinsql.IColumnType
+import uk.ac.bournemouth.util.kotlin.sql.impl.gen.ConnectionSource
+import uk.ac.bournemouth.util.kotlin.sql.use
+import uk.ac.bournemouth.util.kotlin.sql.useTransacted
 import uk.ac.bournemouth.util.kotlin.sql.withConnection
 import java.sql.ResultSet
 
 interface InternalResultSet
 
-sealed class DBAction2<O> {
+@DslMarker
+annotation class DbActionDSL
+
+@DbActionDSL
+sealed class DBAction2<out O> {
+    @DbActionDSL
     class Select<S: Database.SelectStatement>(val query: S): DBAction2<InternalResultSet>() {
         override fun <R> eval(connection: DBConnection2<*>, action: (InternalResultSet) -> R): R {
             val realAction = action as (ResultSet) -> R
@@ -44,7 +52,8 @@ sealed class DBAction2<O> {
         }
     }
 
-    class Transform<I, O>(val source: DBAction2<I>, val transform: (I) -> O): DBAction2<O>() {
+    @DbActionDSL
+    class Transform<I, out O>(val source: DBAction2<I>, val transform: (I) -> O): DBAction2<O>() {
         override fun <R> eval(connection: DBConnection2<*>, block: (O) -> R): R {
             return source.eval(connection) { input ->
                 block(transform(input))
@@ -52,16 +61,39 @@ sealed class DBAction2<O> {
         }
     }
 
-    class ResultSetTransform<O>(val source: DBAction2<InternalResultSet>, private val action: (ResultSet) -> O): DBAction2<O>() {
+    @DbActionDSL
+    class ResultSetTransform<out O>(val source: DBAction2<InternalResultSet>, private val action: (ResultSet) -> O): DBAction2<O>() {
         override fun <R> eval(connection: DBConnection2<*>, block: (O) -> R): R {
             return source.eval(connection, action as ((InternalResultSet) -> R))
         }
     }
 
-    class Source<O>(private val s: () -> O): DBAction2<O>() {
+    @DbActionDSL
+    class Source<out O>(private val s: () -> O): DBAction2<O>() {
         override fun <R> eval(connection: DBConnection2<*>, block: (O) -> R): R = block(s())
 
         override fun <DB : Database> commit(connectionSource: ConnectionSource<DB>): O = s()
+    }
+
+    @DbActionDSL
+    class Transaction<out O>(val actions: List<DBAction2<*>>): DBAction2<O>() {
+
+        override fun <R> eval(connection: DBConnection2<*>, block: (O) -> R): R {
+            connection.rawConnection.autoCommit = false
+            var doCommit = true
+            try {
+                var last: Any? = Unit
+                for (action in actions) {
+                    last = action.eval(connection) { it }
+                }
+                return block(last as O).also {
+                    connection.rawConnection.commit()
+                }
+            } catch (e: Exception) {
+                connection.rawConnection.rollback()
+                throw e
+            }
+        }
     }
 
     protected abstract fun <R> eval(connection: DBConnection2<*>, block: (O) -> R): R
@@ -70,8 +102,11 @@ sealed class DBAction2<O> {
     fun rollback() = Unit // by default no need to undo anything
     open fun <DB: Database> commit(connectionSource: ConnectionSource<DB>): O {
         return connectionSource.datasource.withConnection(connectionSource.db) { conn ->
+            val origAutoCommit = conn.rawConnection.autoCommit
+            if (origAutoCommit) conn.rawConnection.autoCommit = false
             eval(conn) { it }.also {
                 conn.rawConnection.commit()
+                if (origAutoCommit) conn.rawConnection.autoCommit = true
             }
         }
     }

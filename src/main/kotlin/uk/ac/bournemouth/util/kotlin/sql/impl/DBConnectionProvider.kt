@@ -21,10 +21,59 @@
 package uk.ac.bournemouth.util.kotlin.sql.impl
 
 import uk.ac.bournemouth.kotlinsql.Database
+import uk.ac.bournemouth.util.kotlin.sql.impl.gen.ConnectionSource
+import uk.ac.bournemouth.util.kotlin.sql.impl.gen.invoke as genInvoke
+import uk.ac.bournemouth.util.kotlin.sql.use
 import javax.sql.DataSource
-import uk.ac.bournemouth.util.kotlin.sql.impl.gen.withSource as genWithSource
 
-typealias ConnectionSource<DB> = uk.ac.bournemouth.util.kotlin.sql.impl.gen.ConnectionSource<DB>
+interface ConnectionSourceBase<DB : Database> {
+    val datasource: DataSource
+    val db: DB
+    fun ensureTables()
+}
+
+
+inline fun <DB: Database, R> ConnectionSource<DB>.transaction(config: TransactionBuilder<DB>.() -> DBAction2<R>): DBAction2.Transaction<R> {
+    return TransactionBuilder(db).run {
+        toTransaction(config())
+    }
+}
+
+inline fun <DB: Database> ConnectionSource<DB>.unitTransaction(config: TransactionBuilder<DB>.() -> Unit): DBAction2.Transaction<*> {
+    return TransactionBuilder(db).apply { config() }.toTransaction()
+}
+
+class TransactionBuilder<DB: Database>(val db: DB) {
+    private val actions = mutableListOf<DBAction2<Any?>>()
+
+    @PublishedApi
+    internal fun <R> toTransaction(lastAction: DBAction2<R>): DBAction2.Transaction<R> {
+        val actions = actions.toMutableList<DBAction2<*>>()
+        if (actions.last()!=lastAction)
+            actions.add(lastAction)
+        return DBAction2.Transaction(actions)
+    }
+
+    @PublishedApi
+    internal fun toTransaction(): DBAction2.Transaction<*> {
+        return DBAction2.Transaction<Any?>(actions)
+    }
+
+
+}
+
+internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSource<DB> {
+    override fun ensureTables() {
+        unitTransaction {
+            Unit
+        }
+        datasource.connection.use { conn ->
+            conn.autoCommit = false
+
+            conn.commit()
+        }
+    }
+}
 
 internal inline fun <DB: Database, R> ConnectionSource<DB>.use(action: DBConnection2<DB>.() -> R):R {
     var doCommit = true
@@ -46,6 +95,6 @@ internal inline fun <DB: Database, R> ConnectionSource<DB>.use(action: DBConnect
 }
 
 @Suppress("NOTHING_TO_INLINE")
-inline fun <DB : Database, R> DB.withSource(datasource: DataSource, noinline action: ConnectionSource<DB>.() -> R): R {
-    return genWithSource(datasource, action)
+inline operator fun <DB : Database, R> DB.invoke(datasource: DataSource, noinline action: ConnectionSource<DB>.() -> R): R {
+    return genInvoke(datasource, action)
 }
