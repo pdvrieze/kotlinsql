@@ -26,6 +26,7 @@ import uk.ac.bournemouth.kotlinsql.test.AbstractDummyPreparedStatement
 import uk.ac.bournemouth.kotlinsql.test.AbstractDummyResultSet
 import uk.ac.bournemouth.kotlinsql.test.DummyConnection
 import uk.ac.bournemouth.kotlinsql.test.DummyDataSource
+import uk.ac.bournemouth.util.kotlin.sql.impl.gen.VALUES
 import uk.ac.bournemouth.util.kotlin.sql.impl.map
 import uk.ac.bournemouth.util.kotlin.sql.impl.invoke
 
@@ -64,10 +65,54 @@ class TestCreateTransitive {
     }
 
     @Test
+    fun testInsert() {
+        val source = DummyDataSource()
+        val insertCount: Int = WebAuthDB(source) {
+            INSERT(users.user, users.fullname, users.alias)
+                .VALUES("jdoe", "John Doe", "John")
+                .VALUES("janie", "Jane Doe", "Jane")
+                .commit()
+        }
+
+        val c = source.lastConnection!!
+        assertEquals(2,insertCount)
+
+        val q = "INSERT INTO `users` (`user`, `fullname`, `alias`) VALUES (?, ?, ?)"
+        val psstr = "DummyPreparedStatement(\"$q\")"
+        val expectedActions = listOf(
+            DummyConnection.SetAutoCommit.FALSE,
+            c.DummyPreparedStatement(q),
+            DummyConnection.StringAction("$psstr.setString(1, \"jdoe\")"),
+            DummyConnection.StringAction("$psstr.setString(2, \"John Doe\")"),
+            DummyConnection.StringAction("$psstr.setString(3, \"John\")"),
+            DummyConnection.StringAction("$psstr.addBatch()"),
+            DummyConnection.StringAction("$psstr.setString(1, \"janie\")"),
+            DummyConnection.StringAction("$psstr.setString(2, \"Jane Doe\")"),
+            DummyConnection.StringAction("$psstr.setString(3, \"Jane\")"),
+            DummyConnection.StringAction("$psstr.addBatch()"),
+            DummyConnection.StringAction("$psstr.executeBatch() -> [1, 1]"),
+            AbstractDummyPreparedStatement.Close(q),
+            DummyConnection.Commit,
+            DummyConnection.StringAction("Connection.close()")
+                                    )
+
+        val filterText = listOf("getAutoCommit()", "isAfterLast()", "isLast()")
+        val filteredActions =
+            c.actions.filter { action ->
+                action !is DummyConnection.StringAction ||
+                        filterText.none { t -> t in action.string }
+            }
+        assertEquals(expectedActions, filteredActions)
+
+    }
+/*
+
+    @Test
     fun testCreateTransitive() {
         val source = DummyDataSource()
         val x = WebAuthDB(source) {
             ensureTables()
         }
     }
+*/
 }

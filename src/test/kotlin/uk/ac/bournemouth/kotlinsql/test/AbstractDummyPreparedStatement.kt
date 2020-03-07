@@ -38,9 +38,15 @@ abstract class AbstractDummyPreparedStatement(
                                              ) :
     AbstractDummyStatement(connection, resultSetType, resultSetConcurrency), PreparedStatement {
 
+    private var curParamRow = 0
+    val params = mutableListOf<MutableList<Any?>>()
+
     override fun <R> recordRes(result: R, vararg args: Any?): R {
         val calledFunction = Exception().stackTrace[1].methodName
-        val ac = DummyConnection.StringAction("\"$sql\" -- $calledFunction(${args.joinToString()}) -> $result")
+        val ac = when(result) {
+            Unit -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}})")
+            else -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}}) -> ${result.stringify()}")
+        }
         recordAction(ac)
         return result
     }
@@ -83,26 +89,20 @@ abstract class AbstractDummyPreparedStatement(
 
     override fun setObject(parameterIndex: Int, x: Any?, targetSqlType: Int) = record(parameterIndex, x, targetSqlType)
 
-    override fun setObject(parameterIndex: Int, x: Any?)
-            = record(parameterIndex, x)
+    override fun setObject(parameterIndex: Int, x: Any?) = record(parameterIndex, x)
 
-    override fun setObject(parameterIndex: Int, x: Any?, targetSqlType: Int, scaleOrLength: Int)
-            = record(parameterIndex, x, targetSqlType, scaleOrLength)
+    override fun setObject(parameterIndex: Int, x: Any?, targetSqlType: Int, scaleOrLength: Int) =
+        record(parameterIndex, x, targetSqlType, scaleOrLength)
 
-    override fun setBytes(parameterIndex: Int, x: ByteArray?)
-            = record(parameterIndex, x)
+    override fun setBytes(parameterIndex: Int, x: ByteArray?) = record(parameterIndex, x)
 
-    override fun setLong(parameterIndex: Int, x: Long)
-            = record(parameterIndex, x)
+    override fun setLong(parameterIndex: Int, x: Long) = record(parameterIndex, x)
 
-    override fun setClob(parameterIndex: Int, x: Clob?)
-            = record(parameterIndex, x)
+    override fun setClob(parameterIndex: Int, x: Clob?) = record(parameterIndex, x)
 
-    override fun setClob(parameterIndex: Int, reader: Reader?, length: Long)
-            = record(parameterIndex, reader, length)
+    override fun setClob(parameterIndex: Int, reader: Reader?, length: Long) = record(parameterIndex, reader, length)
 
-    override fun setClob(parameterIndex: Int, reader: Reader?)
-            = record(parameterIndex, reader)
+    override fun setClob(parameterIndex: Int, reader: Reader?) = record(parameterIndex, reader)
 
     override fun executeQuery(): ResultSet {
         return connection.DummyResultSet(sql).also { recordAction(it) }
@@ -156,8 +156,8 @@ abstract class AbstractDummyPreparedStatement(
         TODO("not implemented")
     }
 
-    override fun executeBatch(): IntArray {
-        TODO("not implemented")
+    override fun executeBatch(): IntArray = record {
+        IntArray(params.size) { 1 }
     }
 
     override fun getQueryTimeout(): Int {
@@ -212,8 +212,8 @@ abstract class AbstractDummyPreparedStatement(
         TODO("not implemented")
     }
 
-    override fun executeUpdate(): Int {
-        TODO("not implemented")
+    override fun executeUpdate(): Int = record {
+        params.size
     }
 
     override fun executeUpdate(sql: String?): Int {
@@ -248,8 +248,15 @@ abstract class AbstractDummyPreparedStatement(
         TODO("not implemented")
     }
 
-    override fun setString(parameterIndex: Int, x: String?) {
-        TODO("not implemented")
+    override fun setString(parameterIndex: Int, x: String?) = record(arrayOf(parameterIndex, x)) {
+        while (params.size <= curParamRow) {
+            params.add(mutableListOf())
+        }
+        val l = params[curParamRow]
+        while (l.size < parameterIndex) {
+            l.add(null)
+        }
+        l[parameterIndex - 1] = x
     }
 
     override fun setAsciiStream(parameterIndex: Int, x: InputStream?, length: Int) {
@@ -348,8 +355,8 @@ abstract class AbstractDummyPreparedStatement(
         TODO("not implemented")
     }
 
-    override fun addBatch() {
-        TODO("not implemented")
+    override fun addBatch(): Unit = record {
+        curParamRow++
     }
 
     override fun addBatch(sql: String?) {
@@ -385,7 +392,7 @@ abstract class AbstractDummyPreparedStatement(
     }
 
 
-    class Close(private val sql: String): DummyConnection.Action {
+    class Close(private val sql: String) : DummyConnection.Action {
         override fun toString(): String {
             return "PreparedStatement($sql).close()"
         }

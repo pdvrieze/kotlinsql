@@ -50,24 +50,21 @@ class GenerateConnectionSource {
             appendln("import java.sql.SQLException")
             appendln("import javax.sql.DataSource")
 
-            appendln()
             appendln("@DbActionDSL")
-            appendln("interface DBActionable {")
-            for (n in 1..count) {
-                append("\n    ")
-                generateSelectSignature(n)
-                appendln()
-            }
-            appendln("}")
-            appendln()
-
-            appendln("interface ConnectionSource<DB : Database> : ConnectionSourceBase<DB>, DBContext<DB>, DBActionable {")
+            appendln("interface ConnectionSource<DB : Database> : ConnectionSourceBase<DB>, DBContext<DB> {")
             appendln()
             appendln("    override val datasource: DataSource")
             appendln()
-            appendln("    fun <O> DBAction2<O>.commit() {")
-            appendln("        commit(this@ConnectionSource)")
+            appendln("    fun <O> DBAction2<O>.commit(): O {")
+            appendln("        return commit(this@ConnectionSource)")
             appendln("    }")
+            for (operation in Operation.values()) {
+                for (n in 1..count) {
+                    append("\n    ")
+                    generateOperationSignature(n, operation)
+                    appendln()
+                }
+            }
             appendln("}") // interface
             appendln()
             appendln("private class ConnectionSourceImpl<DB : Database>(")
@@ -75,15 +72,17 @@ class GenerateConnectionSource {
             appendln("    override val datasource: DataSource")
             appendln("                                                 ) : ConnectionSourceImplBase<DB>() {")
 
-            for (n in 1..count) {
-                appendln()
-                append("\n    override ")
-                generateSelectSignature(n)
-                appendln(" {")
-                append("        return DBAction2.Select(db.SELECT(")
-                (1..n).joinTo(this){ n -> "col$n"}
-                appendln("))")
-                appendln("    }")
+            for (op in Operation.values()) {
+                for (n in 1..count) {
+                    appendln()
+                    append("\n    override ")
+                    generateOperationSignature(n, op)
+                    appendln(" {")
+                    append("        return DBAction2.${op.action}(db.${op.name}(")
+                    (1..n).joinTo(this) { n -> "col$n" }
+                    appendln("))")
+                    appendln("    }")
+                }
             }
 
 
@@ -93,28 +92,49 @@ class GenerateConnectionSource {
             appendln("operator fun <DB : Database, R> DB.invoke(datasource: DataSource, action: ConnectionSource<DB>.() -> R): R {")
             appendln("    return ConnectionSourceImpl(this, datasource).action()")
             appendln("}")
+
+            for(op in arrayOf(Operation.INSERT)) {
+                for (n in 1..count) {
+                    appendln()
+
+                    generateColumnOperationSignature(
+                        n,
+                        "VALUES",
+                        "T",
+                        "DBAction2.Insert<_Insert$n<",
+                        "DBAction2.InsertCommon<_Insert$n<",
+                        nullableParam=true
+                                                    )
+                    appendln("{")
+                    append("    return DBAction2.Insert(insert.VALUES(")
+                    (1..n).joinTo(this) {"col$it"}
+                    appendln("))")
+                    appendln("}")
+                    /*
+fun <T1:Any, S1: IColumnType<T1, S1, C1>, C1: Column<T1, S1, C1>>
+        DBAction2.InsertStart<_Insert1<T1, S1, C1>>.VALUES(col1: T1): DBAction2.Insert<_Insert1<T1, S1, C1>> {
+    return DBAction2.Insert(this.insert.VALUES(col1))
+}
+                     */
+                }
+            }
         }
     }
 
-    private fun Writer.generateSelectSignature(n: Int, baseIndent: String = "    ") {
-        append("fun <")
-        (1..n).joinTo(this, ",\n${baseIndent}     ") { n ->
-            "T$n:Any, S$n: IColumnType<T$n, S$n, C$n>, C$n: Column<T$n, S$n, C$n>"
-        }
-        appendln(">")
-
-        append("${baseIndent}    SELECT(")
-        (1..n).joinTo(this) { n -> "col$n: C$n" }
-        if (n == 1) {
-            append("): DBAction2.Select<Database.Select1<")
+    private fun Writer.generateOperationSignature(n: Int, op: Operation, baseIndent: String = "    ") {
+        if (n == 1 && op == Operation.SELECT) {
+            generateColumnOperationSignature(n, op.name, "C", "DBAction2.Select<Database.Select1<")
         } else {
-            append("): DBAction2.Select<Select$n<\n${baseIndent}            ")
+            generateColumnOperationSignature(n, op.name, "C", "DBAction2.${op.action}<${op.base}$n<")
         }
-        (1..n).joinTo(this, ",\n${baseIndent}            ") { n ->
-            "T$n, S$n, C$n"
-        }
-        append(">>")
     }
 
+}
+
+private enum class Operation(val action: String, val base: String = action) {
+    SELECT("Select"),
+    INSERT("InsertStart", "_Insert"),
+    INSERT_OR_UPDATE("InsertStart","_Insert"),
+//    UPDATE("Update")
 }
 

@@ -35,11 +35,29 @@ abstract class AbstractDummyStatement(
     @get:JvmName("getIsClosed")
     protected var isClosed = false
 
+    protected inline fun <R> record(args: kotlin.Array<Any?> = emptyArray(), action: () -> R): R {
+        return action().also { recordRes2(it, args) }
+    }
+
     protected abstract fun recordAction(action: DummyConnection.Action)
 
     open protected fun <R> recordRes(result: R, vararg args: Any?): R {
         val calledFunction = Exception().stackTrace[1].methodName
-        val ac = DummyConnection.StringAction("$this.$calledFunction(${args.joinToString()}) -> $result")
+
+        val ac = when(result) {
+            Unit -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}})")
+            else -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}}) -> ${result.stringify()}")
+        }
+        recordAction(ac)
+        return result
+    }
+
+    open protected fun <R> recordRes2(result: R, args: Array<Any?>): R {
+        val calledFunction = Exception().stackTrace[2].methodName
+        val ac = when(result) {
+            Unit -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}})")
+            else -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}}) -> ${result.stringify()}")
+        }
         recordAction(ac)
         return result
     }

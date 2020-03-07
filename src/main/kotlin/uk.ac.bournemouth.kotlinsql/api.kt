@@ -148,7 +148,8 @@ interface IColumnType<T:Any, S: IColumnType<T, S, C>, C:Column<T,S,C>> {
 @Suppress("ClassName")
 sealed class ColumnType<T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>>(override val typeName:String,
                                                                         override val type: KClass<T>,
-                                                                        override val javaType: Int): IColumnType<T,S,C> {
+override val javaType: Int): IColumnType<T, S, C>
+{
 
   @Suppress("UNCHECKED_CAST")
   fun asS() = this as S

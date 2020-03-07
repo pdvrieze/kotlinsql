@@ -24,8 +24,6 @@ import uk.ac.bournemouth.kotlinsql.Column
 import uk.ac.bournemouth.kotlinsql.Database
 import uk.ac.bournemouth.kotlinsql.IColumnType
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.ConnectionSource
-import uk.ac.bournemouth.util.kotlin.sql.use
-import uk.ac.bournemouth.util.kotlin.sql.useTransacted
 import uk.ac.bournemouth.util.kotlin.sql.withConnection
 import java.sql.ResultSet
 
@@ -49,6 +47,20 @@ sealed class DBAction2<out O> {
 
         override fun <DB: Database> commit(connectionSource: ConnectionSource<DB>): Nothing {
             throw UnsupportedOperationException("The result of a SELECT statement needs to be consumed for a sensible commit")
+        }
+    }
+
+    interface InsertCommon<S: Database.Insert> {
+        val insert: S
+    }
+
+    @DbActionDSL
+    class InsertStart<S: Database.Insert>(override val insert: S): InsertCommon<S>
+
+    @DbActionDSL
+    class Insert<S: Database.Insert>(override val insert: S): DBAction2<Int>(), InsertCommon<S> {
+        override fun <R> eval(connection: DBConnection2<*>, action: (Int) -> R): R {
+            return action(insert.executeUpdate(connection))
         }
     }
 

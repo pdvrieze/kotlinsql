@@ -317,13 +317,21 @@ class DummyConnection : Connection {
         }
     }
 
-    data class StringAction(val string: String) : Action
+    data class StringAction(val string: String) : Action {
+        init {
+            if (string.isEmpty()) throw IllegalArgumentException("Empty actions are not allowed")
+        }
+
+        override fun toString(): String {
+            return "StringAction(\"\"\"$string\"\"\")"
+        }
+    }
 
     fun Rollback(savePoint: Savepoint) = RollbackImpl(savePoint.savepointName)
     data class RollbackImpl(val savePoint: String?) : Action
 
     object Commit : Action {
-        override fun toString(): String = "Commit"
+        override fun toString(): String = "Commit()"
     }
 
     fun SetAutoCommit(autoCommit: Boolean) = when(autoCommit) {

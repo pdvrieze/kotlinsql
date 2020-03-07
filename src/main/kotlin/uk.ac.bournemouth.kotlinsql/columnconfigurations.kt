@@ -242,5 +242,4 @@ abstract class AbstractColumnConfiguration<T:Any, S: IColumnType<T, S, C>, C: Co
   }
 }
 
-
 private inline val AbstractColumnConfiguration<*,*,*,*>.effectiveName: String get() = name?:  throw NullPointerException("database columns must have names")
