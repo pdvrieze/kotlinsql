@@ -27,10 +27,8 @@ import uk.ac.bournemouth.kotlinsql.test.AbstractDummyResultSet
 import uk.ac.bournemouth.kotlinsql.test.DummyConnection
 import uk.ac.bournemouth.kotlinsql.test.DummyDataSource
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.VALUES
-import uk.ac.bournemouth.util.kotlin.sql.impl.map
 import uk.ac.bournemouth.util.kotlin.sql.impl.invoke
-import uk.ac.bournemouth.util.kotlin.sql.impl.transaction
-import uk.ac.bournemouth.util.kotlin.sql.impl.unitTransaction
+import uk.ac.bournemouth.util.kotlin.sql.impl.map
 
 class TestCreateTransitive {
 
@@ -98,12 +96,8 @@ class TestCreateTransitive {
             DummyConnection.StringAction("Connection.close()")
                                     )
 
-        val filterText = listOf("getAutoCommit()", "isAfterLast()", "isLast()")
-        val filteredActions =
-            c.actions.filter { action ->
-                action !is DummyConnection.StringAction ||
-                        filterText.none { t -> t in action.string }
-            }
+        val filteredActions = c.getFilteredActions()
+
         assertEquals(expectedActions, filteredActions)
 
     }
@@ -111,12 +105,29 @@ class TestCreateTransitive {
     @Test
     fun testCreateTransitive() {
         val source = DummyDataSource()
+        source.setTables(WebAuthDB.roles)
         WebAuthDB(source) {
-            transaction {
-                QU
-            }
             ensureTables()
         }
+        val actualActions = source.lastConnection!!.getFilteredActions()
+
+        val expectedActions = listOf<DummyConnection.Action>(
+            DummyConnection.SetAutoCommit.FALSE,
+            DummyConnection.Commit,
+            DummyConnection.StringAction("Connection.close()")
+                                                            )
+        assertEquals(expectedActions, actualActions)
     }
 
+    companion object {
+
+        private fun DummyConnection.getFilteredActions(): List<DummyConnection.Action> {
+            val filterText = listOf("getAutoCommit()", "isAfterLast()", "isLast()")
+            return actions.filter { action ->
+                action !is DummyConnection.StringAction ||
+                        filterText.none { t -> t in action.string }
+            }
+        }
+
+    }
 }

@@ -32,7 +32,7 @@ import javax.sql.DataSource
 interface ConnectionSourceBase<DB : Database> {
     val datasource: DataSource
     val db: DB
-    fun ensureTables()
+    fun ensureTables(retainExtraColumns: Boolean = true)
 }
 
 
@@ -58,16 +58,11 @@ class TransactionBuilder<DB: Database>(val connection: DBConnection2<DB>): DBAct
 }
 
 internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSource<DB> {
-    override fun ensureTables() {
-        transaction {
-            val tables = metadata().getTables().toList()
-
-            Unit
-        }
-        datasource.connection.use { conn ->
-            conn.autoCommit = false
-
-            conn.commit()
+    override fun ensureTables(retainExtraColumns: Boolean) {
+        DBConnection2(datasource.connection, db).use { conn ->
+            DBAction2.GenericAction<DB, Unit> { conn ->
+                db.ensureTables(conn, retainExtraColumns)
+            }.commit()
         }
     }
 }

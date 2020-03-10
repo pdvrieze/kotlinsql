@@ -20,8 +20,6 @@
 
 package uk.ac.bournemouth.kotlinsql.test
 
-import java.lang.Exception
-import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLWarning
 import java.sql.Statement
@@ -30,43 +28,10 @@ abstract class AbstractDummyStatement(
     private val connection: DummyConnection,
     private val resultSetType: Int = ResultSet.TYPE_SCROLL_INSENSITIVE,
     private val resultSetConcurrency: Int = ResultSet.CONCUR_UPDATABLE
-                                     ) : Statement {
+                                     ) : ActionRecorder(), Statement {
 
     @get:JvmName("getIsClosed")
     protected var isClosed = false
-
-    protected inline fun <R> record(args: kotlin.Array<Any?> = emptyArray(), action: () -> R): R {
-        return action().also { recordRes2(it, args) }
-    }
-
-    protected abstract fun recordAction(action: DummyConnection.Action)
-
-    open protected fun <R> recordRes(result: R, vararg args: Any?): R {
-        val calledFunction = Exception().stackTrace[1].methodName
-
-        val ac = when(result) {
-            Unit -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}})")
-            else -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}}) -> ${result.stringify()}")
-        }
-        recordAction(ac)
-        return result
-    }
-
-    open protected fun <R> recordRes2(result: R, args: Array<Any?>): R {
-        val calledFunction = Exception().stackTrace[2].methodName
-        val ac = when(result) {
-            Unit -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}})")
-            else -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}}) -> ${result.stringify()}")
-        }
-        recordAction(ac)
-        return result
-    }
-
-    open protected fun record(vararg args: Any?) {
-        val calledFunction = Exception().stackTrace[1].methodName
-        val ac = DummyConnection.StringAction("$this.$calledFunction(${args.joinToString()})")
-        recordAction(ac)
-    }
 
 
     final override fun clearBatch() = record()

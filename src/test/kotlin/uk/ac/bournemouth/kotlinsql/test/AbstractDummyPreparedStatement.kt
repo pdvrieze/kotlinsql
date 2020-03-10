@@ -248,7 +248,7 @@ abstract class AbstractDummyPreparedStatement(
         TODO("not implemented")
     }
 
-    override fun setString(parameterIndex: Int, x: String?) = record(arrayOf(parameterIndex, x)) {
+    override fun setString(parameterIndex: Int, x: String?) = record(parameterIndex, x) {
         while (params.size <= curParamRow) {
             params.add(mutableListOf())
         }

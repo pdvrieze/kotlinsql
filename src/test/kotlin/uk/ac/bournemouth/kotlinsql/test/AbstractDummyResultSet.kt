@@ -22,46 +22,30 @@ package uk.ac.bournemouth.kotlinsql.test
 
 import java.io.InputStream
 import java.io.Reader
-import java.lang.Exception
 import java.math.BigDecimal
 import java.net.URL
 import java.sql.*
-import java.sql.Array
+import java.sql.Array as SqlArray
 import java.sql.Date
 import java.util.*
 
-abstract class AbstractDummyResultSet(val query: String, private val data: List<kotlin.Array<Any?>> = emptyList()) : ResultSet {
+abstract class AbstractDummyResultSet(
+    val query: String,
+    private val columns: Array<String>,
+    private val data: List<Array<out Any?>>
+                                     ) : ActionRecorder(), ResultSet {
+    private var wasNull: Boolean? = null
+
+    constructor(query: String) : this(query, emptyArray(), emptyList())
 
     private var pos: Int = 0
 
-    protected abstract fun recordAction(action: DummyConnection.Action)
-
-    protected inline fun <R> record(args: kotlin.Array<Any?> = emptyArray(), action: () -> R): R {
-        return action().also { recordRes2(it, args) }
+    fun getData(columnIndex: Int): Any? {
+        return data[pos - 1][columnIndex - 1].also { wasNull = it == null }
     }
 
-    open protected fun <R> recordRes2(result: R, args: kotlin.Array<Any?>): R {
-        val calledFunction = Exception().stackTrace[2].methodName
-        val ac = DummyConnection.StringAction("$this.$calledFunction(${args.joinToString()}) -> $result")
-        recordAction(ac)
-        return result
-    }
-
-    open protected fun <R> recordRes(result: R, vararg args: Any?): R {
-        val calledFunction = Exception().stackTrace[1].methodName
-        val ac = DummyConnection.StringAction("$this.$calledFunction(${args.joinToString()}) -> $result")
-        recordAction(ac)
-        return result
-    }
-
-    open protected fun record(vararg args: Any?) {
-        val calledFunction = Exception().stackTrace[1].methodName
-        val ac = DummyConnection.StringAction("$this.$calledFunction(${args.joinToString()})")
-        recordAction(ac)
-    }
-
-    override fun findColumn(columnLabel: String?): Int {
-        TODO("not implemented")
+    override fun findColumn(columnLabel: String): Int = record(columnLabel) {
+        columns.indexOf(columnLabel).also { if (it < 0) throw SQLException("Column not found") } + 1
     }
 
     override fun getNClob(columnIndex: Int): NClob {
@@ -448,12 +432,12 @@ abstract class AbstractDummyResultSet(val query: String, private val data: List<
         TODO("not implemented")
     }
 
-    override fun getString(columnIndex: Int): String {
-        TODO("not implemented")
+    override fun getString(columnIndex: Int): String? = record(columnIndex) {
+        getData(columnIndex) as String?
     }
 
-    override fun getString(columnLabel: String?): String {
-        TODO("not implemented")
+    override fun getString(columnLabel: String): String? {
+        return getString(findColumn(columnLabel))
     }
 
     override fun updateSQLXML(columnIndex: Int, xmlObject: SQLXML?) {
@@ -584,11 +568,11 @@ abstract class AbstractDummyResultSet(val query: String, private val data: List<
         TODO("not implemented")
     }
 
-    override fun getArray(columnIndex: Int): Array {
+    override fun getArray(columnIndex: Int): SqlArray {
         TODO("not implemented")
     }
 
-    override fun getArray(columnLabel: String?): Array {
+    override fun getArray(columnLabel: String?): SqlArray {
         TODO("not implemented")
     }
 
@@ -720,11 +704,11 @@ abstract class AbstractDummyResultSet(val query: String, private val data: List<
         TODO("not implemented")
     }
 
-    override fun updateArray(columnIndex: Int, x: Array?) {
+    override fun updateArray(columnIndex: Int, x: SqlArray?) {
         TODO("not implemented")
     }
 
-    override fun updateArray(columnLabel: String?, x: Array?) {
+    override fun updateArray(columnLabel: String?, x: SqlArray?) {
         TODO("not implemented")
     }
 
@@ -760,12 +744,12 @@ abstract class AbstractDummyResultSet(val query: String, private val data: List<
         TODO("not implemented")
     }
 
-    override fun getInt(columnIndex: Int): Int {
-        TODO("not implemented")
+    override fun getInt(columnIndex: Int): Int = record(columnIndex) {
+        getData(columnIndex) as Int? ?: 0
     }
 
-    override fun getInt(columnLabel: String?): Int {
-        TODO("not implemented")
+    override fun getInt(columnLabel: String): Int {
+        return getInt(findColumn(columnLabel))
     }
 
     override fun updateNull(columnIndex: Int) {

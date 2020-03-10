@@ -20,6 +20,7 @@
 
 package uk.ac.bournemouth.kotlinsql.test
 
+import uk.ac.bournemouth.kotlinsql.Table
 import java.io.PrintWriter
 import java.sql.Connection
 import java.sql.SQLException
@@ -29,6 +30,8 @@ import javax.sql.DataSource
 class DummyDataSource: DataSource {
     private var logWriter: PrintWriter = PrintWriter(System.out)
     private val rootLogger = Logger.getAnonymousLogger()
+    var tables: List<Table> = emptyList()
+
     var lastConnection: DummyConnection? = null
 
     override fun setLogWriter(out: PrintWriter) {
@@ -56,7 +59,9 @@ class DummyDataSource: DataSource {
     }
 
     override fun getConnection(): Connection {
-        lastConnection = DummyConnection()
+        lastConnection = DummyConnection().also {
+            if (tables.isNotEmpty()) it.tables = tables
+        }
         return lastConnection!!
     }
 
@@ -66,5 +71,9 @@ class DummyDataSource: DataSource {
 
     override fun getLoginTimeout(): Int {
         TODO("not implemented")
+    }
+
+    fun setTables(vararg tables: Table) {
+        this.tables =tables.toList()
     }
 }

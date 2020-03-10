@@ -20,6 +20,7 @@
 
 package uk.ac.bournemouth.kotlinsql.test
 
+import uk.ac.bournemouth.kotlinsql.Table
 import java.lang.Exception
 import java.sql.*
 import java.util.*
@@ -27,6 +28,12 @@ import java.util.concurrent.Executor
 
 class DummyConnection : Connection {
     val actions = mutableListOf<Action>()
+
+    var tables: List<Table> = emptyList()
+        set(value) {
+            field = value.toList()
+        }
+
     private var isClosed = false
     private var autoCommit = true
     private var nextSavePoint = 1
@@ -142,7 +149,7 @@ class DummyConnection : Connection {
     }
 
     override fun getAutoCommit(): Boolean {
-        return autoCommit.also { actions.add(StringAction("getAutoCommit() -> $it"))}
+        return autoCommit.also { actions.add(StringAction("getAutoCommit() -> $it")) }
     }
 
     override fun setCatalog(catalog: String?) {
@@ -258,7 +265,7 @@ class DummyConnection : Connection {
     }
 
     override fun getMetaData(): DatabaseMetaData {
-        TODO("not implemented")
+        return DummyMetaData()
     }
 
     override fun getTransactionIsolation(): Int {
@@ -311,9 +318,24 @@ class DummyConnection : Connection {
 
     }
 
-    inner class DummyResultSet(query: String): AbstractDummyResultSet(query), Action {
+    inner class DummyResultSet(
+        query: String,
+        columns: Array<String>,
+        data: List<Array<out Any?>>
+                              ) : AbstractDummyResultSet(query, columns, data), Action {
+        constructor(query: String): this(query, emptyArray(), emptyList())
         override fun recordAction(action: Action) {
             actions.add(action)
+        }
+    }
+
+    inner class DummyMetaData() : AbstractDummyMetadata() {
+        override fun recordAction(action: Action) {
+            actions.add(action)
+        }
+
+        override fun getConnection(): DummyConnection {
+            return this@DummyConnection
         }
     }
 
@@ -334,7 +356,7 @@ class DummyConnection : Connection {
         override fun toString(): String = "Commit()"
     }
 
-    fun SetAutoCommit(autoCommit: Boolean) = when(autoCommit) {
+    fun SetAutoCommit(autoCommit: Boolean) = when (autoCommit) {
         true -> SetAutoCommit.TRUE
         else -> SetAutoCommit.FALSE
     }
@@ -348,14 +370,15 @@ class DummyConnection : Connection {
         }
     }
 
-    data class DummySavePoint(private val id: Int): Savepoint, Action {
+    data class DummySavePoint(private val id: Int) : Savepoint, Action {
         override fun getSavepointId(): Int = id
 
         override fun getSavepointName(): String = "savepoint$id"
     }
 
-    data class ReleaseSavepoint(val savepointId: Int): Action {
-        constructor(savepoint: Savepoint): this(savepoint.savepointId)
+    data class ReleaseSavepoint(val savepointId: Int) : Action {
+        constructor(savepoint: Savepoint) : this(savepoint.savepointId)
+
         override fun toString(): String {
             return "ReleaseSavepoint(${savepointId})"
         }
