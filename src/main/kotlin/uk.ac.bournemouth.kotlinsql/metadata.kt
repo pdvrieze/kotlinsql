@@ -323,7 +323,7 @@ class ConnectionMetadata(private val metadata: DatabaseMetaData) {
 
     val schemas: SchemaResults get() = SchemaResults(metadata.schemas)
 
-    fun getTableTypes() = metadata.tableTypes.toStrings()
+    val tableTypes get() = metadata.tableTypes.toStrings()
 
     fun getColumns(catalog: String? = null,
                    schemaPattern: String? = null,
@@ -509,7 +509,7 @@ enum class FetchDirection(val sqlValue: Int) {
     FETCH_UNKNOWN(ResultSet.FETCH_UNKNOWN)
 }
 
-abstract class AbstractReadonlyResultSet(protected val resultSet: ResultSet) : Closeable, AutoCloseable {
+abstract class AbstractMetadataResultSet(protected val resultSet: ResultSet) : Closeable, AutoCloseable {
     fun beforeFirst() = resultSet.beforeFirst()
 
     override fun close() = resultSet.close()
@@ -627,7 +627,7 @@ private fun ResultSet.toStrings(): List<String> {
 }
 
 @Suppress("unused")
-abstract class DataResults(rs: ResultSet) : AbstractReadonlyResultSet(rs) {
+abstract class DataResults(rs: ResultSet) : AbstractMetadataResultSet(rs) {
     private val idxDataType by lazyColIdx("DATA_TYPE")
     private val idxTypeName by lazyColIdx("TYPE_NAME")
     private val idxNullable by lazyColIdx("NULLABLE")
@@ -711,7 +711,7 @@ class ProcedureColumnResults(rs: ResultSet) : DataResults(rs) {
 }
 
 @Suppress("unused")
-class ProcedureResults(attributes: ResultSet) : AbstractReadonlyResultSet(attributes) {
+class ProcedureResults(attributes: ResultSet) : AbstractMetadataResultSet(attributes) {
 
     private fun procedureType(sqlValue: Short) = ProcedureType.values().first { it.sqlValue == sqlValue }
 
@@ -762,7 +762,7 @@ class TableResults(rs: ResultSet) : TableMetaResultBase(rs) {
     val refGeneration: RefGeneration? get() = resultSet.getString(idxRefGeneration)?.let { RefGeneration.valueOf(it) }
 }
 
-open class SchemaResults(rs: ResultSet) : AbstractReadonlyResultSet(rs) {
+open class SchemaResults(rs: ResultSet) : AbstractMetadataResultSet(rs) {
     private val idxTableCat by lazyColIdx("TABLE_CAT")
     val tableCatalog: String? get() = resultSet.getString(idxTableCat)
 
@@ -839,7 +839,7 @@ class TablePrivilegesResult(privileges: ResultSet) : TableMetaResultBase(privile
 }
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-abstract class AbstractRowResult(rs: ResultSet) : AbstractReadonlyResultSet(rs) {
+abstract class AbstractRowResult(rs: ResultSet) : AbstractMetadataResultSet(rs) {
     enum class PseudoColumn {
         BESTROWUNKNOWN,
         BESTROWNOTPSEUDO,
@@ -949,7 +949,7 @@ enum class KeyDeferrability(val sqlValue: Short) {
 }
 
 @Suppress("unused")
-class KeysResult(resultSet: ResultSet) : AbstractReadonlyResultSet(resultSet) {
+class KeysResult(resultSet: ResultSet) : AbstractMetadataResultSet(resultSet) {
     private val idxPkTableCat by lazyColIdx("PKTABLE_CAT")
     private val idxPkTableSchem by lazyColIdx("PKTABLE_SCHEM")
     private val idxPkTableName by lazyColIdx("PKTABLE_NAME")
@@ -982,7 +982,7 @@ class KeysResult(resultSet: ResultSet) : AbstractReadonlyResultSet(resultSet) {
 }
 
 @Suppress("unused")
-class TypeInfo(resultSet: ResultSet) : AbstractReadonlyResultSet(resultSet) {
+class TypeInfo(resultSet: ResultSet) : AbstractMetadataResultSet(resultSet) {
     private val idxTypeName by lazyColIdx("TYPE_NAME")
     private val idxDataType by lazyColIdx("DATA_TYPE")
     private val idxPrecision by lazyColIdx("PRECISION")

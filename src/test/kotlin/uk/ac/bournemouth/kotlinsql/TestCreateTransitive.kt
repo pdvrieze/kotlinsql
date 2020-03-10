@@ -29,6 +29,8 @@ import uk.ac.bournemouth.kotlinsql.test.DummyDataSource
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.VALUES
 import uk.ac.bournemouth.util.kotlin.sql.impl.map
 import uk.ac.bournemouth.util.kotlin.sql.impl.invoke
+import uk.ac.bournemouth.util.kotlin.sql.impl.transaction
+import uk.ac.bournemouth.util.kotlin.sql.impl.unitTransaction
 
 class TestCreateTransitive {
 
@@ -105,14 +107,16 @@ class TestCreateTransitive {
         assertEquals(expectedActions, filteredActions)
 
     }
-/*
 
     @Test
     fun testCreateTransitive() {
         val source = DummyDataSource()
-        val x = WebAuthDB(source) {
+        WebAuthDB(source) {
+            transaction {
+                QU
+            }
             ensureTables()
         }
     }
-*/
+
 }

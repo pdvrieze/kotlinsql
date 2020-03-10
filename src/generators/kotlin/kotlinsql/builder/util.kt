@@ -31,10 +31,11 @@ fun Appendable.generateColumnOperationSignature(
     retS: Boolean = true,
     retC: Boolean = true,
     baseIndent: String = "    ",
-    nullableParam: Boolean = false
+    nullableParam: Boolean = false,
+    genericPrefix: String = ""
                                                ) {
 
-    append("fun <")
+    append("fun <").append(genericPrefix)
     (1..noColumns).joinTo(this, ",\n${baseIndent}     ") { n ->
         "T$n:Any, S$n: IColumnType<T$n, S$n, C$n>, C$n: Column<T$n, S$n, C$n>"
     }
