@@ -21,6 +21,7 @@
 package uk.ac.bournemouth.util.kotlin.sql.impl
 
 import uk.ac.bournemouth.kotlinsql.*
+import uk.ac.bournemouth.util.kotlin.sql.DBContext
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.ConnectionSource
 import uk.ac.bournemouth.util.kotlin.sql.withConnection
 import java.sql.ResultSet
@@ -59,7 +60,7 @@ sealed class DBAction2<DB : Database, out O> {
 
 
     @DbActionDSL
-    class ResultSetMetadata<DB : Database, RS: AbstractMetadataResultSet>
+    class ResultSetMetadata<DB : Database, RS : AbstractMetadataResultSet>
     internal constructor(private val provider: (ConnectionMetadata) -> RS) :
         DBAction2<DB, RS>() {
 
@@ -150,7 +151,19 @@ sealed class DBAction2<DB : Database, out O> {
             }
         }
     }
+
+    class GenericAction<DB : Database, out O>(
+        val action: DBContext<DB>.(DBConnection2<DB>) -> O
+                                             ) : DBAction2<DB, O>() {
+
+        override fun <R> eval(connection: DBConnection2<DB>, block: (O) -> R): R {
+            val context = SimpleDBContext(connection.db)
+            return block(context.action(connection))
+        }
+    }
 }
+
+private class SimpleDBContext<DB: Database>(override val db: DB): DBContext<DB>
 
 fun <DB : Database, S : Database.Select> DBAction2.Select<DB, S>.WHERE(config: Database._Where.() -> Database.WhereClause?): DBAction2.Select<DB, S> {
     val n = query.WHERE(config) as S
@@ -160,7 +173,7 @@ fun <DB : Database, S : Database.Select> DBAction2.Select<DB, S>.WHERE(config: D
 
 fun <DB : Database, S : Database.Select1<T1, S1, C1>, R, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>> DBAction2.Select<DB, S>.map(
     transform: (Sequence<T1>) -> R
-                                                                                                                                                                         ): DBAction2<DB, R> {
+                                                                                                                                                     ): DBAction2<DB, R> {
     return DBAction2.ResultSetTransform(this) { rs ->
         val rsSequence = ResultSetIterator(rs).asSequence()
         transform(rsSequence.map { query.select.col1.fromResultSet(it, 1) as T1 })

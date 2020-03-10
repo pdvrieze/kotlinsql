@@ -34,7 +34,7 @@ class TestCreateTransitive {
 
     @Test
     fun testFakeQuery() {
-        val source = DummyDataSource()
+        val source = DummyDataSource(WebAuthDB)
         val names = WebAuthDB(source) {
             SELECT(users.fullname)
                 .map { seq -> seq.toList() }
@@ -66,7 +66,7 @@ class TestCreateTransitive {
 
     @Test
     fun testInsert() {
-        val source = DummyDataSource()
+        val source = DummyDataSource(WebAuthDB)
         val insertCount: Int = WebAuthDB(source) {
             INSERT(users.user, users.fullname, users.alias)
                 .VALUES("jdoe", "John Doe", "John")

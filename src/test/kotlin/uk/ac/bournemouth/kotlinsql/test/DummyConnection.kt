@@ -20,16 +20,17 @@
 
 package uk.ac.bournemouth.kotlinsql.test
 
+import uk.ac.bournemouth.kotlinsql.Database
 import uk.ac.bournemouth.kotlinsql.Table
 import java.lang.Exception
 import java.sql.*
 import java.util.*
 import java.util.concurrent.Executor
 
-class DummyConnection : Connection {
+class DummyConnection(val db: Database? = null) : Connection {
     val actions = mutableListOf<Action>()
 
-    var tables: List<Table> = emptyList()
+    var tables: List<Table> = db?.run { _tables.toList() } ?: emptyList()
         set(value) {
             field = value.toList()
         }
