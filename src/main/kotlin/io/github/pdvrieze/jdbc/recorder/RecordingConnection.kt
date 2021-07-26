@@ -364,7 +364,7 @@ class RecordingConnection(val delegate: Connection, val db: Database? = null) : 
         query: String,
         columns: Array<String>,
         data: List<Array<out Any?>>
-    ) : AbstractRecordingResultSet(delegate, query, columns, data), Action {
+    ) : AbstractRecordingResultSet(delegate, query), Action {
         constructor(delegate: ResultSet, query: String = "") : this(delegate, query, emptyArray(), emptyList())
 
         override fun recordAction(action: Action) {

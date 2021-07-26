@@ -28,6 +28,14 @@ import java.sql.RowIdLifetime
 abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : ActionRecorder(), DatabaseMetaData {
     abstract override fun getConnection(): RecordingConnection
 
+    final override fun <T : Any?> unwrap(iface: Class<T>?): T = record(iface) {
+        delegate.unwrap(iface)
+    }
+
+    final override fun isWrapperFor(iface: Class<*>?): Boolean = record {
+        delegate.isWrapperFor(iface)
+    }
+
     override fun supportsSubqueriesInQuantifieds(): Boolean {
         TODO("not implemented")
     }
@@ -272,10 +280,6 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
     }
 
     override fun supportsOuterJoins(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun <T : Any?> unwrap(iface: Class<T>?): T {
         TODO("not implemented")
     }
 
@@ -771,10 +775,6 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
     }
 
     override fun generatedKeyAlwaysReturned(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun isWrapperFor(iface: Class<*>?): Boolean {
         TODO("not implemented")
     }
 

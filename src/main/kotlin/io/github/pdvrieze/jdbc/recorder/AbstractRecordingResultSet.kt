@@ -32,127 +32,141 @@ import java.util.*
 
 abstract class AbstractRecordingResultSet(
     val delegate: ResultSet,
-    val query: String,
-    private val columns: Array<String>,
-    private val data: List<Array<out Any?>>
-                                     ) : ActionRecorder(), ResultSet {
-    private var wasNull: Boolean? = null
+    val query: String
+) : ActionRecorder(), ResultSet {
 
-    constructor(delegate: ResultSet, query: String) : this(delegate, query, emptyArray(), emptyList())
+    final override fun <T : Any?> unwrap(iface: Class<T>?): T = record(iface) {
+        delegate.unwrap(iface)
+    }
 
-    private var pos: Int = 0
-
-    fun getData(columnIndex: Int): Any? {
-        return data[pos - 1][columnIndex - 1].also { wasNull = it == null }
+    final override fun isWrapperFor(iface: Class<*>?): Boolean = record {
+        delegate.isWrapperFor(iface)
     }
 
     override fun findColumn(columnLabel: String): Int = record(columnLabel) {
-        columns.indexOf(columnLabel).also { if (it < 0) throw SQLException("Column not found") } + 1
+        delegate.findColumn(columnLabel)
     }
 
-    override fun getNClob(columnIndex: Int): NClob {
-        TODO("not implemented")
+    override fun getNClob(columnIndex: Int): NClob = record(columnIndex) {
+        delegate.getNClob(columnIndex)
     }
 
-    override fun getNClob(columnLabel: String?): NClob {
-        TODO("not implemented")
+    override fun getNClob(columnLabel: String?): NClob = record(columnLabel) {
+        delegate.getNClob(columnLabel)
     }
 
     override fun updateNString(columnIndex: Int, nString: String?) {
-        TODO("not implemented")
+        record(columnIndex, nString)
+        delegate.updateNString(columnIndex, nString)
     }
 
     override fun updateNString(columnLabel: String?, nString: String?) {
-        TODO("not implemented")
+        record(columnLabel, nString)
+        delegate.updateNString(columnLabel, nString)
     }
 
     override fun updateBinaryStream(columnIndex: Int, x: InputStream?, length: Int) {
-        TODO("not implemented")
+        record(columnIndex, x, length)
+        delegate.updateBinaryStream(columnIndex, x, length)
     }
 
     override fun updateBinaryStream(columnLabel: String?, x: InputStream?, length: Int) {
-        TODO("not implemented")
+        record(columnLabel, x, length)
+        delegate.updateBinaryStream(columnLabel, x, length)
     }
 
     override fun updateBinaryStream(columnIndex: Int, x: InputStream?, length: Long) {
-        TODO("not implemented")
+        record(columnIndex, x, length)
+        delegate.updateBinaryStream(columnIndex, x, length)
     }
 
     override fun updateBinaryStream(columnLabel: String?, x: InputStream?, length: Long) {
-        TODO("not implemented")
+        record(columnLabel, x, length)
+        delegate.updateBinaryStream(columnLabel, x, length)
     }
 
     override fun updateBinaryStream(columnIndex: Int, x: InputStream?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateBinaryStream(columnIndex, x)
     }
 
     override fun updateBinaryStream(columnLabel: String?, x: InputStream?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateBinaryStream(columnLabel, x)
     }
 
-    override fun getStatement(): Statement {
-        TODO("not implemented")
+    override fun getStatement(): Statement = record {
+        delegate.statement
     }
 
     override fun updateTimestamp(columnIndex: Int, x: Timestamp?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateTimestamp(columnIndex, x)
     }
 
     override fun updateTimestamp(columnLabel: String?, x: Timestamp?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateTimestamp(columnLabel, x)
     }
 
     override fun updateNCharacterStream(columnIndex: Int, x: Reader?, length: Long) {
-        TODO("not implemented")
+        record(columnIndex, x, length)
+        delegate.updateNCharacterStream(columnIndex, x, length)
     }
 
     override fun updateNCharacterStream(columnLabel: String?, reader: Reader?, length: Long) {
-        TODO("not implemented")
+        record(columnLabel, reader, length)
+        delegate.updateNCharacterStream(columnLabel, reader, length)
     }
 
     override fun updateNCharacterStream(columnIndex: Int, x: Reader?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateNCharacterStream(columnIndex, x)
     }
 
     override fun updateNCharacterStream(columnLabel: String?, reader: Reader?) {
-        TODO("not implemented")
+        record(columnLabel, reader)
+        delegate.updateNCharacterStream(columnLabel, reader)
     }
 
     override fun updateInt(columnIndex: Int, x: Int) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateInt(columnIndex, x)
     }
 
     override fun updateInt(columnLabel: String?, x: Int) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateInt(columnLabel, x)
     }
 
     override fun moveToInsertRow() {
-        TODO("not implemented")
+        record()
+        delegate.moveToInsertRow()
     }
 
-    override fun getDate(columnIndex: Int): Date {
-        TODO("not implemented")
+    override fun getDate(columnIndex: Int): Date = record(columnIndex) {
+        delegate.getDate(columnIndex)
     }
 
-    override fun getDate(columnLabel: String?): Date {
-        TODO("not implemented")
+    override fun getDate(columnLabel: String?): Date = record(columnLabel) {
+        delegate.getDate(columnLabel)
     }
 
-    override fun getDate(columnIndex: Int, cal: Calendar?): Date {
-        TODO("not implemented")
+    override fun getDate(columnIndex: Int, cal: Calendar?): Date = record(columnIndex, cal) {
+        delegate.getDate(columnIndex, cal)
     }
 
-    override fun getDate(columnLabel: String?, cal: Calendar?): Date {
-        TODO("not implemented")
+    override fun getDate(columnLabel: String?, cal: Calendar?): Date = record(columnLabel, cal) {
+        delegate.getDate(columnLabel, cal)
     }
 
-    override fun getWarnings(): SQLWarning {
-        TODO("not implemented")
+    override fun getWarnings(): SQLWarning = record {
+        delegate.warnings
     }
 
     override fun beforeFirst() {
         record()
-        pos = 0
+        delegate.beforeFirst()
     }
 
     override fun close() {
@@ -160,658 +174,723 @@ abstract class AbstractRecordingResultSet(
     }
 
     override fun updateFloat(columnIndex: Int, x: Float) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateFloat(columnIndex, x)
     }
 
     override fun updateFloat(columnLabel: String?, x: Float) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateFloat(columnLabel, x)
     }
 
-    override fun getBoolean(columnIndex: Int): Boolean {
-        TODO("not implemented")
+    override fun getBoolean(columnIndex: Int): Boolean = record(columnIndex) {
+        delegate.getBoolean(columnIndex)
     }
 
-    override fun getBoolean(columnLabel: String?): Boolean {
-        TODO("not implemented")
+    override fun getBoolean(columnLabel: String?): Boolean = record(columnLabel) {
+        delegate.getBoolean(columnLabel)
     }
 
     override fun isFirst(): Boolean = record {
-        pos == 1
+        delegate.isFirst
     }
 
-    override fun getBigDecimal(columnIndex: Int, scale: Int): BigDecimal {
-        TODO("not implemented")
+    override fun getBigDecimal(columnIndex: Int, scale: Int): BigDecimal = record(columnIndex, scale) {
+        delegate.getBigDecimal(columnIndex, scale)
     }
 
-    override fun getBigDecimal(columnLabel: String?, scale: Int): BigDecimal {
-        TODO("not implemented")
+    override fun getBigDecimal(columnLabel: String?, scale: Int): BigDecimal = record(columnLabel, scale) {
+        delegate.getBigDecimal(columnLabel, scale)
     }
 
-    override fun getBigDecimal(columnIndex: Int): BigDecimal {
-        TODO("not implemented")
+    override fun getBigDecimal(columnIndex: Int): BigDecimal = record(columnIndex) {
+        delegate.getBigDecimal(columnIndex)
     }
 
-    override fun getBigDecimal(columnLabel: String?): BigDecimal {
-        TODO("not implemented")
+    override fun getBigDecimal(columnLabel: String?): BigDecimal = record(columnLabel) {
+        delegate.getBigDecimal(columnLabel)
     }
 
     override fun updateBytes(columnIndex: Int, x: ByteArray?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateBytes(columnIndex, x)
     }
 
     override fun updateBytes(columnLabel: String?, x: ByteArray?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateBytes(columnLabel, x)
     }
 
     override fun isLast(): Boolean = record {
-        pos == data.size
+        delegate.isLast
     }
 
     override fun insertRow() {
-        TODO("not implemented")
+        record()
+        delegate.insertRow()
     }
 
-    override fun getTime(columnIndex: Int): Time {
-        TODO("not implemented")
+    override fun getTime(columnIndex: Int): Time = record(columnIndex) {
+        delegate.getTime(columnIndex)
     }
 
-    override fun getTime(columnLabel: String?): Time {
-        TODO("not implemented")
+    override fun getTime(columnLabel: String?): Time = record(columnLabel) {
+        delegate.getTime(columnLabel)
     }
 
-    override fun getTime(columnIndex: Int, cal: Calendar?): Time {
-        TODO("not implemented")
+    override fun getTime(columnIndex: Int, cal: Calendar?): Time = record(columnIndex, cal) {
+        delegate.getTime(columnIndex, cal)
     }
 
-    override fun getTime(columnLabel: String?, cal: Calendar?): Time {
-        TODO("not implemented")
+    override fun getTime(columnLabel: String?, cal: Calendar?): Time = record(columnLabel, cal) {
+        delegate.getTime(columnLabel, cal)
     }
 
-    override fun rowDeleted(): Boolean {
-        TODO("not implemented")
+    override fun rowDeleted(): Boolean = record {
+        delegate.rowDeleted()
     }
 
     override fun last(): Boolean = record {
-        pos = data.size
-        data.isNotEmpty()
+        delegate.last()
     }
 
     override fun isAfterLast(): Boolean = record {
-        pos > data.size
+        delegate.isAfterLast
     }
 
-    override fun relative(rows: Int): Boolean {
-        TODO("not implemented")
+    override fun relative(rows: Int): Boolean = record(rows) {
+        delegate.relative(rows)
     }
 
-    override fun absolute(row: Int): Boolean {
-        TODO("not implemented")
+    override fun absolute(row: Int): Boolean = record(row) {
+        delegate.absolute(row)
     }
 
-    override fun getSQLXML(columnIndex: Int): SQLXML {
-        TODO("not implemented")
+    override fun getSQLXML(columnIndex: Int): SQLXML = record(columnIndex) {
+        delegate.getSQLXML(columnIndex)
     }
 
-    override fun getSQLXML(columnLabel: String?): SQLXML {
-        TODO("not implemented")
-    }
-
-    override fun <T : Any?> unwrap(iface: Class<T>?): T {
-        TODO("not implemented")
+    override fun getSQLXML(columnLabel: String?): SQLXML = record(columnLabel) {
+        delegate.getSQLXML(columnLabel)
     }
 
     override fun next(): Boolean = record {
-        pos++
-        pos <= data.size
+        delegate.next()
     }
 
-    override fun getFloat(columnIndex: Int): Float {
-        TODO("not implemented")
+    override fun getFloat(columnIndex: Int): Float = record(columnIndex) {
+        delegate.getFloat(columnIndex)
     }
 
-    override fun getFloat(columnLabel: String?): Float {
-        TODO("not implemented")
+    override fun getFloat(columnLabel: String?): Float = record(columnLabel) {
+        delegate.getFloat(columnLabel)
     }
 
-    override fun wasNull(): Boolean {
-        TODO("not implemented")
+    override fun wasNull(): Boolean = record {
+        delegate.wasNull()
     }
 
-    override fun getRow(): Int {
-        TODO("not implemented")
+    override fun getRow(): Int = record {
+        delegate.row
     }
 
     override fun first(): Boolean = record {
-        pos = 1
-        pos <= data.size
+        delegate.first()
     }
 
     override fun updateAsciiStream(columnIndex: Int, x: InputStream?, length: Int) {
-        TODO("not implemented")
+        record(columnIndex, x, length)
+        delegate.updateAsciiStream(columnIndex, x, length)
     }
 
     override fun updateAsciiStream(columnLabel: String?, x: InputStream?, length: Int) {
-        TODO("not implemented")
+        record(columnLabel, x, length)
+        delegate.updateAsciiStream(columnLabel, x, length)
     }
 
     override fun updateAsciiStream(columnIndex: Int, x: InputStream?, length: Long) {
-        TODO("not implemented")
+        record(columnIndex, x, length)
+        delegate.updateAsciiStream(columnIndex, x, length)
     }
 
     override fun updateAsciiStream(columnLabel: String?, x: InputStream?, length: Long) {
-        TODO("not implemented")
+        record(columnLabel, x, length)
+        delegate.updateAsciiStream(columnLabel, x, length)
     }
 
     override fun updateAsciiStream(columnIndex: Int, x: InputStream?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateAsciiStream(columnIndex, x)
     }
 
     override fun updateAsciiStream(columnLabel: String?, x: InputStream?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateAsciiStream(columnLabel, x)
     }
 
-    override fun getURL(columnIndex: Int): URL {
-        TODO("not implemented")
+    override fun getURL(columnIndex: Int): URL = record(columnIndex) {
+        delegate.getURL(columnIndex)
     }
 
-    override fun getURL(columnLabel: String?): URL {
-        TODO("not implemented")
+    override fun getURL(columnLabel: String?): URL = record(columnLabel) {
+        delegate.getURL(columnLabel)
     }
 
     override fun updateShort(columnIndex: Int, x: Short) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateShort(columnIndex, x)
     }
 
     override fun updateShort(columnLabel: String?, x: Short) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateShort(columnLabel, x)
     }
 
-    override fun getType(): Int {
-        TODO("not implemented")
+    override fun getType(): Int = record {
+        delegate.type
     }
 
     override fun updateNClob(columnIndex: Int, nClob: NClob?) {
-        TODO("not implemented")
+        record(columnIndex, nClob)
+        delegate.updateNClob(columnIndex, nClob)
     }
 
     override fun updateNClob(columnLabel: String?, nClob: NClob?) {
-        TODO("not implemented")
+        record(columnLabel, nClob)
+        delegate.updateNClob(columnLabel, nClob)
     }
 
     override fun updateNClob(columnIndex: Int, reader: Reader?, length: Long) {
-        TODO("not implemented")
+        record(columnIndex, reader, length)
+        delegate.updateNClob(columnIndex, reader, length)
     }
 
     override fun updateNClob(columnLabel: String?, reader: Reader?, length: Long) {
-        TODO("not implemented")
+        record(columnLabel, reader, length)
+        delegate.updateNClob(columnLabel, reader, length)
     }
 
     override fun updateNClob(columnIndex: Int, reader: Reader?) {
-        TODO("not implemented")
+        record(columnIndex, reader)
+        delegate.updateNClob(columnIndex, reader)
     }
 
     override fun updateNClob(columnLabel: String?, reader: Reader?) {
-        TODO("not implemented")
+        record(columnLabel, reader)
+        delegate.updateNClob(columnLabel, reader)
     }
 
     override fun updateRef(columnIndex: Int, x: Ref?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateRef(columnIndex, x)
     }
 
     override fun updateRef(columnLabel: String?, x: Ref?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateRef(columnLabel, x)
     }
 
     override fun updateObject(columnIndex: Int, x: Any?, scaleOrLength: Int) {
-        TODO("not implemented")
+        record(columnIndex, x, scaleOrLength)
+        delegate.updateObject(columnIndex, x, scaleOrLength)
     }
 
     override fun updateObject(columnIndex: Int, x: Any?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateObject(columnIndex, x)
     }
 
     override fun updateObject(columnLabel: String?, x: Any?, scaleOrLength: Int) {
-        TODO("not implemented")
+        record(columnLabel, x, scaleOrLength)
+        delegate.updateObject(columnLabel, x, scaleOrLength)
     }
 
     override fun updateObject(columnLabel: String?, x: Any?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateObject(columnLabel, x)
     }
 
     override fun setFetchSize(rows: Int) {
-        TODO("not implemented")
+        record(rows)
+        delegate.fetchSize = rows
     }
 
     override fun afterLast() {
-        TODO("not implemented")
+        record()
+        delegate.afterLast()
     }
 
     override fun updateLong(columnIndex: Int, x: Long) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateLong(columnIndex, x)
     }
 
     override fun updateLong(columnLabel: String?, x: Long) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateLong(columnLabel, x)
     }
 
-    override fun getBlob(columnIndex: Int): Blob {
-        TODO("not implemented")
+    override fun getBlob(columnIndex: Int): Blob = record(columnIndex) {
+        delegate.getBlob(columnIndex)
     }
 
-    override fun getBlob(columnLabel: String?): Blob {
-        TODO("not implemented")
+    override fun getBlob(columnLabel: String?): Blob = record(columnLabel) {
+        delegate.getBlob(columnLabel)
     }
 
     override fun updateClob(columnIndex: Int, x: Clob?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateClob(columnIndex, x)
     }
 
     override fun updateClob(columnLabel: String?, x: Clob?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateClob(columnLabel, x)
     }
 
     override fun updateClob(columnIndex: Int, reader: Reader?, length: Long) {
-        TODO("not implemented")
+        record(columnIndex, reader, length)
+        delegate.updateClob(columnIndex, reader, length)
     }
 
     override fun updateClob(columnLabel: String?, reader: Reader?, length: Long) {
-        TODO("not implemented")
+        record(columnLabel, reader, length)
+        delegate.updateClob(columnLabel, reader, length)
     }
 
     override fun updateClob(columnIndex: Int, reader: Reader?) {
-        TODO("not implemented")
+        record(columnIndex, reader)
+        delegate.updateClob(columnIndex, reader)
     }
 
     override fun updateClob(columnLabel: String?, reader: Reader?) {
-        TODO("not implemented")
+        record(columnLabel, reader)
+        delegate.updateClob(columnLabel, reader)
     }
 
-    override fun getByte(columnIndex: Int): Byte {
-        TODO("not implemented")
+    override fun getByte(columnIndex: Int): Byte = record(columnIndex) {
+        delegate.getByte(columnIndex)
     }
 
-    override fun getByte(columnLabel: String?): Byte {
-        TODO("not implemented")
+    override fun getByte(columnLabel: String?): Byte = record(columnLabel) {
+        delegate.getByte(columnLabel)
     }
 
     override fun getString(columnIndex: Int): String? = record(columnIndex) {
-        getData(columnIndex) as String?
+        delegate.getString(columnIndex)
     }
 
-    override fun getString(columnLabel: String): String? {
-        return getString(findColumn(columnLabel))
+    override fun getString(columnLabel: String): String? = record {
+        delegate.getString(columnLabel)
     }
 
     override fun updateSQLXML(columnIndex: Int, xmlObject: SQLXML?) {
-        TODO("not implemented")
+        record(columnIndex, xmlObject)
+        delegate.updateSQLXML(columnIndex, xmlObject)
     }
 
     override fun updateSQLXML(columnLabel: String?, xmlObject: SQLXML?) {
-        TODO("not implemented")
+        record(columnLabel, xmlObject)
+        delegate.updateSQLXML(columnLabel, xmlObject)
     }
 
     override fun updateDate(columnIndex: Int, x: Date?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateDate(columnIndex, x)
     }
 
     override fun updateDate(columnLabel: String?, x: Date?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateDate(columnLabel, x)
     }
 
-    override fun getHoldability(): Int {
-        TODO("not implemented")
+    override fun getHoldability(): Int = record {
+        delegate.holdability
     }
 
-    override fun getObject(columnIndex: Int): Any {
-        TODO("not implemented")
+    override fun getObject(columnIndex: Int): Any = record(columnIndex) {
+        delegate.getObject(columnIndex)
     }
 
-    override fun getObject(columnLabel: String?): Any {
-        TODO("not implemented")
+    override fun getObject(columnLabel: String?): Any = record(columnLabel) {
+        delegate.getObject(columnLabel)
     }
 
-    override fun getObject(columnIndex: Int, map: MutableMap<String, Class<*>>?): Any {
-        TODO("not implemented")
+    override fun getObject(columnIndex: Int, map: MutableMap<String, Class<*>>): Any = record(columnIndex, map) {
+        delegate.getObject(columnIndex, map)
     }
 
-    override fun getObject(columnLabel: String?, map: MutableMap<String, Class<*>>?): Any {
-        TODO("not implemented")
+    override fun getObject(columnLabel: String?, map: MutableMap<String, Class<*>>): Any = record(columnLabel, map) {
+        delegate.getObject(columnLabel, map)
     }
 
-    override fun <T : Any?> getObject(columnIndex: Int, type: Class<T>?): T {
-        TODO("not implemented")
+    override fun <T : Any?> getObject(columnIndex: Int, type: Class<T>?): T = record(columnIndex, type) {
+        delegate.getObject(columnIndex, type)
     }
 
-    override fun <T : Any?> getObject(columnLabel: String?, type: Class<T>?): T {
-        TODO("not implemented")
+    override fun <T : Any?> getObject(columnLabel: String?, type: Class<T>?): T = record(columnLabel, type) {
+        delegate.getObject(columnLabel, type)
     }
 
-    override fun previous(): Boolean {
-        TODO("not implemented")
+    override fun previous(): Boolean = record {
+        delegate.previous()
     }
 
     override fun updateDouble(columnIndex: Int, x: Double) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateDouble(columnIndex, x)
     }
 
     override fun updateDouble(columnLabel: String?, x: Double) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateDouble(columnLabel, x)
     }
 
-    override fun getLong(columnIndex: Int): Long {
-        TODO("not implemented")
+    override fun getLong(columnIndex: Int): Long = record(columnIndex) {
+        delegate.getLong(columnIndex)
     }
 
-    override fun getLong(columnLabel: String?): Long {
-        TODO("not implemented")
+    override fun getLong(columnLabel: String?): Long = record(columnLabel) {
+        delegate.getLong(columnLabel)
     }
 
-    override fun getClob(columnIndex: Int): Clob {
-        TODO("not implemented")
+    override fun getClob(columnIndex: Int): Clob = record(columnIndex) {
+        delegate.getClob(columnIndex)
     }
 
-    override fun getClob(columnLabel: String?): Clob {
-        TODO("not implemented")
+    override fun getClob(columnLabel: String?): Clob = record(columnLabel) {
+        delegate.getClob(columnLabel)
     }
 
     override fun updateBlob(columnIndex: Int, x: Blob?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateBlob(columnIndex, x)
     }
 
     override fun updateBlob(columnLabel: String?, x: Blob?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateBlob(columnLabel, x)
     }
 
     override fun updateBlob(columnIndex: Int, inputStream: InputStream?, length: Long) {
-        TODO("not implemented")
+        record(columnIndex, inputStream, length)
+        delegate.updateBlob(columnIndex, inputStream, length)
     }
 
     override fun updateBlob(columnLabel: String?, inputStream: InputStream?, length: Long) {
-        TODO("not implemented")
+        record(columnLabel, inputStream, length)
+        delegate.updateBlob(columnLabel, inputStream, length)
     }
 
     override fun updateBlob(columnIndex: Int, inputStream: InputStream?) {
-        TODO("not implemented")
+        record(columnIndex, inputStream)
+        delegate.updateBlob(columnIndex, inputStream)
     }
 
     override fun updateBlob(columnLabel: String?, inputStream: InputStream?) {
-        TODO("not implemented")
+        record(columnLabel, inputStream)
+        delegate.updateBlob(columnLabel, inputStream)
     }
 
     override fun updateByte(columnIndex: Int, x: Byte) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateByte(columnIndex, x)
     }
 
     override fun updateByte(columnLabel: String?, x: Byte) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateByte(columnLabel, x)
     }
 
     override fun updateRow() {
-        TODO("not implemented")
+        record()
+        delegate.updateRow()
     }
 
     override fun deleteRow() {
-        TODO("not implemented")
+        record()
+        delegate.deleteRow()
     }
 
-    override fun isClosed(): Boolean {
-        TODO("not implemented")
+    override fun isClosed(): Boolean = record {
+        delegate.isClosed
     }
 
-    override fun getNString(columnIndex: Int): String {
-        TODO("not implemented")
+    override fun getNString(columnIndex: Int): String = record(columnIndex) {
+        delegate.getNString(columnIndex)
     }
 
-    override fun getNString(columnLabel: String?): String {
-        TODO("not implemented")
+    override fun getNString(columnLabel: String?): String = record(columnLabel) {
+        delegate.getNString(columnLabel)
     }
 
-    override fun getCursorName(): String {
-        TODO("not implemented")
+    override fun getCursorName(): String = record {
+        delegate.cursorName
     }
 
-    override fun getArray(columnIndex: Int): SqlArray {
-        TODO("not implemented")
+    override fun getArray(columnIndex: Int): SqlArray = record(columnIndex) {
+        delegate.getArray(columnIndex)
     }
 
-    override fun getArray(columnLabel: String?): SqlArray {
-        TODO("not implemented")
+    override fun getArray(columnLabel: String?): SqlArray = record(columnLabel) {
+        delegate.getArray(columnLabel)
     }
 
     override fun cancelRowUpdates() {
-        TODO("not implemented")
+        record()
+        delegate.cancelRowUpdates()
     }
 
     override fun updateString(columnIndex: Int, x: String?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateString(columnIndex, x)
     }
 
     override fun updateString(columnLabel: String?, x: String?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateString(columnLabel, x)
     }
 
     override fun setFetchDirection(direction: Int) {
-        TODO("not implemented")
+        record(direction)
+        delegate.fetchDirection = direction
     }
 
-    override fun getFetchSize(): Int {
-        TODO("not implemented")
+    override fun getFetchSize(): Int = record {
+        delegate.fetchSize
     }
 
-    override fun getCharacterStream(columnIndex: Int): Reader {
-        TODO("not implemented")
+    override fun getCharacterStream(columnIndex: Int): Reader = record(columnIndex) {
+        delegate.getCharacterStream(columnIndex)
     }
 
-    override fun getCharacterStream(columnLabel: String?): Reader {
-        TODO("not implemented")
+    override fun getCharacterStream(columnLabel: String?): Reader = record(columnLabel) {
+        delegate.getCharacterStream(columnLabel)
     }
 
-    override fun isBeforeFirst(): Boolean {
-        TODO("not implemented")
+    override fun isBeforeFirst(): Boolean = record {
+        delegate.isBeforeFirst
     }
 
     override fun updateBoolean(columnIndex: Int, x: Boolean) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateBoolean(columnIndex, x)
     }
 
     override fun updateBoolean(columnLabel: String?, x: Boolean) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateBoolean(columnLabel, x)
     }
 
     override fun refreshRow() {
-        TODO("not implemented")
+        record()
+        delegate.refreshRow()
     }
 
-    override fun rowUpdated(): Boolean {
-        TODO("not implemented")
+    override fun rowUpdated(): Boolean = record {
+        delegate.rowUpdated()
     }
 
     override fun updateBigDecimal(columnIndex: Int, x: BigDecimal?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateBigDecimal(columnIndex, x)
     }
 
     override fun updateBigDecimal(columnLabel: String?, x: BigDecimal?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateBigDecimal(columnLabel, x)
     }
 
-    override fun getShort(columnIndex: Int): Short {
-        TODO("not implemented")
+    override fun getShort(columnIndex: Int): Short = record(columnIndex) {
+        delegate.getShort(columnIndex)
     }
 
-    override fun getShort(columnLabel: String?): Short {
-        TODO("not implemented")
+    override fun getShort(columnLabel: String?): Short = record(columnLabel) {
+        delegate.getShort(columnLabel)
     }
 
-    override fun getAsciiStream(columnIndex: Int): InputStream {
-        TODO("not implemented")
+    override fun getAsciiStream(columnIndex: Int): InputStream = record(columnIndex) {
+        delegate.getAsciiStream(columnIndex)
     }
 
-    override fun getAsciiStream(columnLabel: String?): InputStream {
-        TODO("not implemented")
+    override fun getAsciiStream(columnLabel: String?): InputStream = record(columnLabel) {
+        delegate.getAsciiStream(columnLabel)
     }
 
     override fun updateTime(columnIndex: Int, x: Time?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateTime(columnIndex, x)
     }
 
     override fun updateTime(columnLabel: String?, x: Time?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateTime(columnLabel, x)
     }
 
-    override fun getTimestamp(columnIndex: Int): Timestamp {
-        TODO("not implemented")
+    override fun getTimestamp(columnIndex: Int): Timestamp = record(columnIndex) {
+        delegate.getTimestamp(columnIndex)
     }
 
-    override fun getTimestamp(columnLabel: String?): Timestamp {
-        TODO("not implemented")
+    override fun getTimestamp(columnLabel: String?): Timestamp = record(columnLabel) {
+        delegate.getTimestamp(columnLabel)
     }
 
-    override fun getTimestamp(columnIndex: Int, cal: Calendar?): Timestamp {
-        TODO("not implemented")
+    override fun getTimestamp(columnIndex: Int, cal: Calendar?): Timestamp = record(columnIndex, cal) {
+        delegate.getTimestamp(columnIndex, cal)
     }
 
-    override fun getTimestamp(columnLabel: String?, cal: Calendar?): Timestamp {
-        TODO("not implemented")
+    override fun getTimestamp(columnLabel: String?, cal: Calendar?): Timestamp = record(columnLabel, cal) {
+        delegate.getTimestamp(columnLabel, cal)
     }
 
-    override fun getRef(columnIndex: Int): Ref {
-        TODO("not implemented")
+    override fun getRef(columnIndex: Int): Ref = record(columnIndex) {
+        delegate.getRef(columnIndex)
     }
 
-    override fun getRef(columnLabel: String?): Ref {
-        TODO("not implemented")
+    override fun getRef(columnLabel: String?): Ref = record(columnLabel) {
+        delegate.getRef(columnLabel)
     }
 
     override fun moveToCurrentRow() {
-        TODO("not implemented")
+        record()
+        delegate.moveToCurrentRow()
     }
 
-    override fun getConcurrency(): Int {
-        TODO("not implemented")
+    override fun getConcurrency(): Int = record {
+        delegate.concurrency
     }
 
     override fun updateRowId(columnIndex: Int, x: RowId?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateRowId(columnIndex, x)
     }
 
     override fun updateRowId(columnLabel: String?, x: RowId?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateRowId(columnLabel, x)
     }
 
-    override fun getNCharacterStream(columnIndex: Int): Reader {
-        TODO("not implemented")
+    override fun getNCharacterStream(columnIndex: Int): Reader = record(columnIndex) {
+        delegate.getNCharacterStream(columnIndex)
     }
 
-    override fun getNCharacterStream(columnLabel: String?): Reader {
-        TODO("not implemented")
+    override fun getNCharacterStream(columnLabel: String?): Reader = record(columnLabel) {
+        delegate.getNCharacterStream(columnLabel)
     }
 
     override fun updateArray(columnIndex: Int, x: SqlArray?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateArray(columnIndex, x)
     }
 
     override fun updateArray(columnLabel: String?, x: SqlArray?) {
-        TODO("not implemented")
+        record(columnLabel, x)
+        delegate.updateArray(columnLabel, x)
     }
 
-    override fun getBytes(columnIndex: Int): ByteArray {
-        TODO("not implemented")
+    override fun getBytes(columnIndex: Int): ByteArray = record(columnIndex) {
+        delegate.getBytes(columnIndex)
     }
 
-    override fun getBytes(columnLabel: String?): ByteArray {
-        TODO("not implemented")
+    override fun getBytes(columnLabel: String?): ByteArray = record(columnLabel) {
+        delegate.getBytes(columnLabel)
     }
 
-    override fun getDouble(columnIndex: Int): Double {
-        TODO("not implemented")
+    override fun getDouble(columnIndex: Int): Double = record(columnIndex) {
+        delegate.getDouble(columnIndex)
     }
 
-    override fun getDouble(columnLabel: String?): Double {
-        TODO("not implemented")
+    override fun getDouble(columnLabel: String?): Double = record(columnLabel) {
+        delegate.getDouble(columnLabel)
     }
 
-    override fun getUnicodeStream(columnIndex: Int): InputStream {
-        TODO("not implemented")
+    override fun getUnicodeStream(columnIndex: Int): InputStream = record(columnIndex) {
+        delegate.getUnicodeStream(columnIndex)
     }
 
-    override fun getUnicodeStream(columnLabel: String?): InputStream {
-        TODO("not implemented")
+    override fun getUnicodeStream(columnLabel: String?): InputStream = record(columnLabel) {
+        delegate.getUnicodeStream(columnLabel)
     }
 
-    override fun rowInserted(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun isWrapperFor(iface: Class<*>?): Boolean {
-        TODO("not implemented")
+    override fun rowInserted(): Boolean = record {
+        delegate.rowInserted()
     }
 
     override fun getInt(columnIndex: Int): Int = record(columnIndex) {
-        getData(columnIndex) as Int? ?: 0
+        delegate.getInt(columnIndex)
     }
 
-    override fun getInt(columnLabel: String): Int {
-        return getInt(findColumn(columnLabel))
+    override fun getInt(columnLabel: String): Int = record(columnLabel){
+        delegate.getInt(columnLabel)
     }
 
     override fun updateNull(columnIndex: Int) {
-        TODO("not implemented")
+        record(columnIndex)
+        delegate.updateNull(columnIndex)
     }
 
     override fun updateNull(columnLabel: String?) {
-        TODO("not implemented")
+        record(columnLabel)
+        delegate.updateNull(columnLabel)
     }
 
-    override fun getRowId(columnIndex: Int): RowId {
-        TODO("not implemented")
+    override fun getRowId(columnIndex: Int): RowId = record(columnIndex) {
+        delegate.getRowId(columnIndex)
     }
 
-    override fun getRowId(columnLabel: String?): RowId {
-        TODO("not implemented")
+    override fun getRowId(columnLabel: String?): RowId = record(columnLabel) {
+        delegate.getRowId(columnLabel)
     }
 
     override fun clearWarnings() {
-        TODO("not implemented")
+        record()
+        delegate.clearWarnings()
     }
 
-    override fun getMetaData(): ResultSetMetaData {
-        TODO("not implemented")
+    override fun getMetaData(): ResultSetMetaData = record {
+        delegate.metaData
     }
 
-    override fun getBinaryStream(columnIndex: Int): InputStream {
-        TODO("not implemented")
+    override fun getBinaryStream(columnIndex: Int): InputStream = record(columnIndex) {
+        delegate.getBinaryStream(columnIndex)
     }
 
-    override fun getBinaryStream(columnLabel: String?): InputStream {
-        TODO("not implemented")
+    override fun getBinaryStream(columnLabel: String?): InputStream = record(columnLabel) {
+        delegate.getBinaryStream(columnLabel)
     }
 
     override fun updateCharacterStream(columnIndex: Int, x: Reader?, length: Int) {
-        TODO("not implemented")
+        record(columnIndex, x, length)
+        delegate.updateCharacterStream(columnIndex, x, length)
     }
 
     override fun updateCharacterStream(columnLabel: String?, reader: Reader?, length: Int) {
-        TODO("not implemented")
+        record(columnLabel, reader, length)
+        delegate.updateCharacterStream(columnLabel, reader, length)
     }
 
     override fun updateCharacterStream(columnIndex: Int, x: Reader?, length: Long) {
-        TODO("not implemented")
+        record(columnIndex, x, length)
+        delegate.updateCharacterStream(columnIndex, x, length)
     }
 
     override fun updateCharacterStream(columnLabel: String?, reader: Reader?, length: Long) {
-        TODO("not implemented")
+        record(columnLabel, reader, length)
+        delegate.updateCharacterStream(columnLabel, reader, length)
     }
 
     override fun updateCharacterStream(columnIndex: Int, x: Reader?) {
-        TODO("not implemented")
+        record(columnIndex, x)
+        delegate.updateCharacterStream(columnIndex, x)
     }
 
     override fun updateCharacterStream(columnLabel: String?, reader: Reader?) {
-        TODO("not implemented")
+        record(columnLabel, reader)
+        delegate.updateCharacterStream(columnLabel, reader)
     }
 
-    override fun getFetchDirection(): Int {
-        TODO("not implemented")
+    override fun getFetchDirection(): Int = record {
+        delegate.fetchDirection
     }
 
     override fun equals(other: Any?): Boolean {
