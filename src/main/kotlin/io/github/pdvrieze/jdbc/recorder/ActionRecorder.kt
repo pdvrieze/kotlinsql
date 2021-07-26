@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020.
+ * Copyright (c) 2021.
  *
  * This file is part of kotlinsql.
  *
@@ -18,8 +18,10 @@
  * under the License.
  */
 
-package uk.ac.bournemouth.kotlinsql.test
+package io.github.pdvrieze.jdbc.recorder
 
+import io.github.pdvrieze.jdbc.recorder.actions.Action
+import io.github.pdvrieze.jdbc.recorder.actions.StringAction
 import java.lang.Exception
 
 abstract class ActionRecorder {
@@ -46,32 +48,42 @@ abstract class ActionRecorder {
         return action().also { recordRes2(it, arrayOf(arg1, arg2, arg3)) }
     }
 
-    protected abstract fun recordAction(action: DummyConnection.Action)
+    protected inline fun <R> record(arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?, crossinline action: () -> R): R {
+        return action().also { recordRes2(it, arrayOf(arg1, arg2, arg3)) }
+    }
+
+    protected abstract fun recordAction(action: Action)
 
     open protected fun <R> recordRes(result: R, vararg args: Any?): R {
         val calledFunction = Exception().stackTrace[1].methodName
 
         val ac = when(result) {
-            Unit -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}})")
-            else -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}}) -> ${result.stringify()}")
+            Unit -> StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}})")
+            else -> StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}}) -> ${result.stringify()}")
         }
         recordAction(ac)
+        if (result is Action) {
+            recordAction(result)
+        }
         return result
     }
 
     open protected fun <R> recordRes2(result: R, args: Array<Any?>): R {
         val calledFunction = Exception().stackTrace[2].methodName
         val ac = when(result) {
-            Unit -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}})")
-            else -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}}) -> ${result.stringify()}")
+            Unit -> StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}})")
+            else -> StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}}) -> ${result.stringify()}")
         }
         recordAction(ac)
+        if (result is Action) {
+            recordAction(result)
+        }
         return result
     }
 
     open protected fun record(vararg args: Any?) {
         val calledFunction = Exception().stackTrace[1].methodName
-        val ac = DummyConnection.StringAction("$this.$calledFunction(${args.joinToString()})")
+        val ac = StringAction("$this.$calledFunction(${args.joinToString()})")
         recordAction(ac)
     }
 

@@ -86,7 +86,6 @@
       <option name="XML_ATTRIBUTE_WRAP" value="4" />
       <option name="XML_KEEP_LINE_BREAKS_IN_TEXT" value="false" />
       <option name="XML_SPACE_INSIDE_EMPTY_TAG" value="true" />
-      <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
     </XML>
     <codeStyleSettings language="JAVA">
       <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="0" />
@@ -129,6 +128,29 @@
       </indentOptions>
       <arrangement>
         <tokens>
+          <token id="PropertyAccessors" name="PropertyAccessors">
+            <rules>
+              <rule>
+                <match>
+                  <AND>
+                    <METHOD>true</METHOD>
+                    <NAME>^(is|get|set).+</NAME>
+                    <STATIC>false</STATIC>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <GETTER />
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <SETTER />
+                </match>
+              </rule>
+            </rules>
+          </token>
           <token id="visibility" name="visibility">
             <rules>
               <rule>
@@ -149,29 +171,6 @@
               <rule>
                 <match>
                   <PRIVATE>true</PRIVATE>
-                </match>
-              </rule>
-            </rules>
-          </token>
-          <token id="PropertyAccessors" name="PropertyAccessors">
-            <rules>
-              <rule>
-                <match>
-                  <AND>
-                    <METHOD>true</METHOD>
-                    <NAME>^(is|get|set).+</NAME>
-                    <STATIC>false</STATIC>
-                  </AND>
-                </match>
-              </rule>
-              <rule>
-                <match>
-                  <GETTER />
-                </match>
-              </rule>
-              <rule>
-                <match>
-                  <SETTER />
                 </match>
               </rule>
             </rules>

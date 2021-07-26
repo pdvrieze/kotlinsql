@@ -34,8 +34,9 @@ class GenerateInsertsKt {
     val count = input as Int
     output.apply {
       appendCopyright()
-      appendln()
-      appendln("""
+      appendLine()
+      appendLine(
+        """
         package uk.ac.bournemouth.util.kotlin.sql.impl.gen
 
         import uk.ac.bournemouth.kotlinsql.Column
@@ -43,35 +44,39 @@ class GenerateInsertsKt {
         import uk.ac.bournemouth.kotlinsql.Table
         import uk.ac.bournemouth.kotlinsql.Database._BaseInsert
         import uk.ac.bournemouth.kotlinsql.IColumnType
-      """.trimIndent())
+      """.trimIndent()
+      )
 
-      for(n in 1..count) {
-        appendln()
+      for (n in 1..count) {
+        appendLine()
         append("class _Insert$n<")
-        (1..n).joinTo(output, ",\n${indent(n,15)}") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }
-        appendln(">")
+        (1..n).joinTo(
+          output,
+          ",\n${indent(n, 15)}"
+        ) { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }
+        appendLine(">")
         append("      internal constructor(table: Table, update:Boolean, ")
-        (1..n).joinTo(output, ",\n${indent(1,27)}") { m -> "col$m: ColumnRef<T$m,S$m,C$m>" }
+        (1..n).joinTo(output, ",\n${indent(1, 27)}") { m -> "col$m: ColumnRef<T$m,S$m,C$m>" }
         append("): _BaseInsert(table, update, ")
         (1..n).joinTo(output, ",") { m -> "col$m" }
-        appendln(") {")
-        appendln()
+        appendLine(") {")
+        appendLine()
         append("  fun VALUES(")
-        (1..n).joinTo(output) { m -> "col$m: T$m?"}
-        appendln(") =")
+        (1..n).joinTo(output) { m -> "col$m: T$m?" }
+        appendLine(") =")
         append("    this.apply{batch.add(_InsertValues$n(")
-        (1..n).joinTo(output) { m -> "col$m"}
-        appendln("))}")
-        appendln()
+        (1..n).joinTo(output) { m -> "col$m" }
+        appendLine("))}")
+        appendLine()
 
         append("  inner class _InsertValues$n(")
-        (1..n).joinTo(output) { m -> "col$m: T$m?"}
+        (1..n).joinTo(output) { m -> "col$m: T$m?" }
         append("):_BaseInsertValues(")
         (1..n).joinTo(output) { m -> "col$m" }
         append(")")
 
-        appendln()
-        appendln("}")
+        appendLine()
+        appendLine("}")
 
       }
 

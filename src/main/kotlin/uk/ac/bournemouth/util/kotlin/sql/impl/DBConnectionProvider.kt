@@ -26,7 +26,6 @@ import uk.ac.bournemouth.kotlinsql.MonadicMetadataImpl
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.ConnectionSource
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.DBActionReceiver
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.invoke as genInvoke
-import uk.ac.bournemouth.util.kotlin.sql.use
 import javax.sql.DataSource
 
 interface ConnectionSourceBase<DB : Database> {
@@ -36,7 +35,7 @@ interface ConnectionSourceBase<DB : Database> {
 }
 
 
-inline fun <DB: Database, R> ConnectionSource<DB>.transaction(noinline body: TransactionBuilder<DB>.() -> R): R {
+fun <DB: Database, R> ConnectionSource<DB>.transaction(body: TransactionBuilder<DB>.() -> R): R {
     return DBAction2.Transaction(body).commit(this)
 }
 
@@ -44,6 +43,9 @@ inline fun <DB: Database, R> ConnectionSource<DB>.transaction(noinline body: Tra
 class TransactionBuilder<DB: Database>(val connection: DBConnection2<DB>): DBActionReceiver<DB> {
 
     override val db: DB get() = connection.db
+
+    @Suppress("UNCHECKED_CAST")
+    override fun metadata(): MonadicMetadata<DB> = metadataInstance as MonadicMetadata<DB>
 
     private var commitPending = false
     fun commit() {
@@ -59,13 +61,19 @@ class TransactionBuilder<DB: Database>(val connection: DBConnection2<DB>): DBAct
 
 internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSource<DB> {
     override fun ensureTables(retainExtraColumns: Boolean) {
-        DBConnection2(datasource.connection, db).use { conn ->
+        DBConnection2(datasource.connection, db).use { _ ->
             DBAction2.GenericAction<DB, Unit> { conn ->
                 db.ensureTables(conn, retainExtraColumns)
             }.commit()
         }
     }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun metadata(): MonadicMetadata<DB> = metadataInstance as MonadicMetadata<DB>
+
 }
+
+private val metadataInstance = MonadicMetadataImpl<Database>()
 
 internal inline fun <DB: Database, R> ConnectionSource<DB>.use(action: DBConnection2<DB>.() -> R):R {
     var doCommit = true

@@ -20,12 +20,12 @@
 
 package uk.ac.bournemouth.kotlinsql
 
+import io.github.pdvrieze.jdbc.recorder.AbstractRecordingPreparedStatement
+import io.github.pdvrieze.jdbc.recorder.DummyDataSource
+import io.github.pdvrieze.jdbc.recorder.actions.Close
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import uk.ac.bournemouth.kotlinsql.test.AbstractDummyPreparedStatement
-import uk.ac.bournemouth.kotlinsql.test.AbstractDummyResultSet
 import uk.ac.bournemouth.kotlinsql.test.DummyConnection
-import uk.ac.bournemouth.kotlinsql.test.DummyDataSource
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.VALUES
 import uk.ac.bournemouth.util.kotlin.sql.impl.invoke
 import uk.ac.bournemouth.util.kotlin.sql.impl.map
@@ -48,8 +48,8 @@ class TestCreateTransitive {
 //            DummyConnection.DummySavePoint(1),
             c.DummyPreparedStatement(q),
             c.DummyResultSet(q),
-            AbstractDummyResultSet.Close,
-            AbstractDummyPreparedStatement.Close(q),
+            Close,
+            AbstractRecordingPreparedStatement.Close(q),
 //            DummyConnection.ReleaseSavepoint(1),
             DummyConnection.Commit,
             DummyConnection.StringAction("Connection.close()")
@@ -91,7 +91,7 @@ class TestCreateTransitive {
             DummyConnection.StringAction("$psstr.setString(3, \"Jane\")"),
             DummyConnection.StringAction("$psstr.addBatch()"),
             DummyConnection.StringAction("$psstr.executeBatch() -> [1, 1]"),
-            AbstractDummyPreparedStatement.Close(q),
+            AbstractRecordingPreparedStatement.Close(q),
             DummyConnection.Commit,
             DummyConnection.StringAction("Connection.close()")
                                     )

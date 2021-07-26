@@ -18,7 +18,7 @@
  * under the License.
  */
 
-package uk.ac.bournemouth.kotlinsql.test
+package io.github.pdvrieze.jdbc.recorder
 
 import uk.ac.bournemouth.kotlinsql.Database
 import uk.ac.bournemouth.kotlinsql.Table

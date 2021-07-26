@@ -33,74 +33,73 @@ class GenerateConnectionSource {
 
         output.apply {
             appendCopyright()
-            appendln()
-            appendln("package uk.ac.bournemouth.util.kotlin.sql.impl.gen")
-            appendln()
-            appendln("import uk.ac.bournemouth.kotlinsql.Column")
-            appendln("import uk.ac.bournemouth.kotlinsql.executeHelper")
-            appendln("import uk.ac.bournemouth.kotlinsql.Database")
-            appendln("import uk.ac.bournemouth.kotlinsql.Database.*")
-            appendln("import uk.ac.bournemouth.kotlinsql.MonadicMetadata")
-            appendln("import uk.ac.bournemouth.kotlinsql.MonadicMetadataImpl")
-            appendln("import uk.ac.bournemouth.kotlinsql.IColumnType")
-            appendln("import uk.ac.bournemouth.util.kotlin.sql.DBContext")
-            appendln("import uk.ac.bournemouth.util.kotlin.sql.impl.ConnectionSourceImplBase")
-            appendln("import uk.ac.bournemouth.util.kotlin.sql.impl.ConnectionSourceBase")
-            appendln("import uk.ac.bournemouth.util.kotlin.sql.impl.DbActionDSL")
-            appendln("import uk.ac.bournemouth.util.kotlin.sql.impl.DBAction2")
-            appendln("import uk.ac.bournemouth.util.kotlin.sql.impl.DBConnection2")
-            appendln("import java.sql.SQLException")
-            appendln("import javax.sql.DataSource")
+            appendLine()
+            appendLine("package uk.ac.bournemouth.util.kotlin.sql.impl.gen")
+            appendLine()
+            appendLine("import uk.ac.bournemouth.kotlinsql.Column")
+            appendLine("import uk.ac.bournemouth.kotlinsql.executeHelper")
+            appendLine("import uk.ac.bournemouth.kotlinsql.Database")
+            appendLine("import uk.ac.bournemouth.kotlinsql.Database.*")
+            appendLine("import uk.ac.bournemouth.kotlinsql.MonadicMetadata")
+            appendLine("import uk.ac.bournemouth.kotlinsql.MonadicMetadataImpl")
+            appendLine("import uk.ac.bournemouth.kotlinsql.IColumnType")
+            appendLine("import uk.ac.bournemouth.util.kotlin.sql.DBContext")
+            appendLine("import uk.ac.bournemouth.util.kotlin.sql.impl.ConnectionSourceImplBase")
+            appendLine("import uk.ac.bournemouth.util.kotlin.sql.impl.ConnectionSourceBase")
+            appendLine("import uk.ac.bournemouth.util.kotlin.sql.impl.DbActionDSL")
+            appendLine("import uk.ac.bournemouth.util.kotlin.sql.impl.DBAction2")
+            appendLine("import uk.ac.bournemouth.util.kotlin.sql.impl.DBConnection2")
+            appendLine("import java.sql.SQLException")
+            appendLine("import javax.sql.DataSource")
 
-            appendln("@DbActionDSL")
-            appendln("interface ConnectionSource<DB : Database> : ConnectionSourceBase<DB>, DBActionReceiver<DB> {")
-            appendln()
-            appendln("    override val datasource: DataSource")
-            appendln()
-            appendln("    fun <O> DBAction2<DB, O>.commit(): O {")
-            appendln("        return commit(this@ConnectionSource)")
-            appendln("    }")
-            appendln("}")
-            appendln()
-            appendln("@DbActionDSL")
-            appendln("interface DBActionReceiver<DB: Database>: DBContext<DB> {")
-            appendln()
-            appendln("    fun metadata(): MonadicMetadata<DB>")
+            appendLine("@DbActionDSL")
+            appendLine("interface ConnectionSource<DB : Database> : ConnectionSourceBase<DB>, DBActionReceiver<DB> {")
+            appendLine()
+            appendLine("    override val datasource: DataSource")
+            appendLine()
+            appendLine("    fun <O> DBAction2<DB, O>.commit(): O {")
+            appendLine("        return commit(this@ConnectionSource)")
+            appendLine("    }")
+            appendLine("}")
+            appendLine()
+            appendLine("@DbActionDSL")
+            appendLine("interface DBActionReceiver<DB: Database>: DBContext<DB> {")
+            appendLine()
+            appendLine("    fun metadata(): MonadicMetadata<DB>")
             for (op in Operation.values()) {
                 for (n in 1..count) {
-                    appendln()
+                    appendLine()
                     append("\n    ")
                     generateOperationSignature(n, op)
-                    appendln(" {")
+                    appendLine(" {")
                     append("        return DBAction2.${op.action}(db.${op.name}(")
-                    (1..n).joinTo(this) { n -> "col$n" }
-                    appendln("))")
-                    appendln("    }")
+                    (1..n).joinTo(this) { m -> "col$m" }
+                    appendLine("))")
+                    appendLine("    }")
                 }
             }
-            appendln("}") // interface
-            appendln()
-            appendln("private class ConnectionSourceImpl<DB : Database>(")
-            appendln("    override val db: DB,")
-            appendln("    override val datasource: DataSource")
-            appendln("                                                 ) : ConnectionSourceImplBase<DB>() {")
+            appendLine("}") // interface
+            appendLine()
+            appendLine("private class ConnectionSourceImpl<DB : Database>(")
+            appendLine("    override val db: DB,")
+            appendLine("    override val datasource: DataSource")
+            appendLine("                                                 ) : ConnectionSourceImplBase<DB>() {")
 //            appendln()
 //            appendln("    override fun metadata(): MonadicMetadata<DB> {")
 //            appendln("        return MonadicMetadataImpl()")
 //            appendln("    }")
 
 
+            appendLine("}")
 
-            appendln("}")
+            appendLine()
+            appendLine("operator fun <DB : Database, R> DB.invoke(datasource: DataSource, action: ConnectionSource<DB>.() -> R): R {")
+            appendLine("    return ConnectionSourceImpl(this, datasource).action()")
+            appendLine("}")
 
-            appendln()
-            appendln("operator fun <DB : Database, R> DB.invoke(datasource: DataSource, action: ConnectionSource<DB>.() -> R): R {")
-            appendln("    return ConnectionSourceImpl(this, datasource).action()")
-            appendln("}")
-
-            for(op in arrayOf(Operation.INSERT)) {
+            for (op in arrayOf(Operation.INSERT)) {
                 for (n in 1..count) {
-                    appendln()
+                    appendLine()
 
                     generateColumnOperationSignature(
                         n,
@@ -108,14 +107,14 @@ class GenerateConnectionSource {
                         "T",
                         "DBAction2.Insert<DB, _Insert$n<",
                         "DBAction2.InsertCommon<DB, _Insert$n<",
-                        nullableParam=true,
+                        nullableParam = true,
                         genericPrefix = "DB: Database, "
-                                                    )
-                    appendln("{")
+                    )
+                    appendLine("{")
                     append("    return DBAction2.Insert(insert.VALUES(")
-                    (1..n).joinTo(this) {"col$it"}
-                    appendln("))")
-                    appendln("}")
+                    (1..n).joinTo(this) { "col$it" }
+                    appendLine("))")
+                    appendLine("}")
                     /*
 fun <T1:Any, S1: IColumnType<T1, S1, C1>, C1: Column<T1, S1, C1>>
         DBAction2.InsertStart<_Insert1<T1, S1, C1>>.VALUES(col1: T1): DBAction2.Insert<_Insert1<T1, S1, C1>> {
@@ -129,9 +128,9 @@ fun <T1:Any, S1: IColumnType<T1, S1, C1>, C1: Column<T1, S1, C1>>
 
     private fun Writer.generateOperationSignature(n: Int, op: Operation, baseIndent: String = "    ") {
         if (n == 1 && op == Operation.SELECT) {
-            generateColumnOperationSignature(n, op.name, "C", "DBAction2.Select<DB, Database.Select1<")
+            generateColumnOperationSignature(n, op.name, "C", "DBAction2.Select<DB, Database.Select1<", baseIndent = baseIndent)
         } else {
-            generateColumnOperationSignature(n, op.name, "C", "DBAction2.${op.action}<DB, ${op.base}$n<")
+            generateColumnOperationSignature(n, op.name, "C", "DBAction2.${op.action}<DB, ${op.base}$n<", baseIndent = baseIndent)
         }
     }
 

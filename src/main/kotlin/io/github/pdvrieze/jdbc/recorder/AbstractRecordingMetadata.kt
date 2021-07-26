@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020.
+ * Copyright (c) 2021.
  *
  * This file is part of kotlinsql.
  *
@@ -18,16 +18,15 @@
  * under the License.
  */
 
-package uk.ac.bournemouth.kotlinsql.test
+package io.github.pdvrieze.jdbc.recorder
 
-import uk.ac.bournemouth.kotlinsql.BoundedType
 import uk.ac.bournemouth.kotlinsql.ILengthColumn
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.RowIdLifetime
 
-abstract class AbstractDummyMetadata : ActionRecorder(), DatabaseMetaData {
-    abstract override fun getConnection(): DummyConnection
+abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : ActionRecorder(), DatabaseMetaData {
+    abstract override fun getConnection(): RecordingConnection
 
     override fun supportsSubqueriesInQuantifieds(): Boolean {
         TODO("not implemented")
@@ -191,7 +190,8 @@ abstract class AbstractDummyMetadata : ActionRecorder(), DatabaseMetaData {
                 "REMARKS" to ""
                              )
         }
-        connection.DummyResultSet("getTables()", columns, data)
+        val rs = delegate.getTables(catalog, schemaPattern, tableNamePattern, types)
+        connection.RecordingResultSet(rs, "getTables()", columns, data)
     }
 
     override fun supportsMultipleResultSets(): Boolean {
@@ -476,7 +476,8 @@ abstract class AbstractDummyMetadata : ActionRecorder(), DatabaseMetaData {
                 }
             }
         }
-        connection.DummyResultSet("metadata.getColumns()", columns, data)
+        val rs = delegate.getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern)
+        connection.RecordingResultSet(rs, "metadata.getColumns()", columns, data)
     }
 
     private fun Boolean?.toOptionalBoolean(): String {

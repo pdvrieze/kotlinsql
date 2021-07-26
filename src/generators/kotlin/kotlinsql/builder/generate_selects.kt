@@ -32,73 +32,74 @@ class GenerateSelectClasses {
     val count = input as Int
     output.apply {
       appendCopyright()
-      appendln()
-      appendln("package uk.ac.bournemouth.util.kotlin.sql.impl.gen")
-      appendln()
-      appendln("import java.sql.SQLException")
-      appendln()
-      appendln("import uk.ac.bournemouth.kotlinsql.Column")
-      appendln("import uk.ac.bournemouth.kotlinsql.Database")
-      appendln("import uk.ac.bournemouth.kotlinsql.Database.*")
-      appendln("import uk.ac.bournemouth.kotlinsql.IColumnType")
-      appendln("import uk.ac.bournemouth.util.kotlin.sql.impl.DBConnection2")
-      appendln("import uk.ac.bournemouth.util.kotlin.sql.DBTransaction")
-      appendln("import uk.ac.bournemouth.util.kotlin.sql.DBTransactionBase")
-      appendln("import uk.ac.bournemouth.kotlinsql.executeHelper")
-      appendln("import uk.ac.bournemouth.kotlinsql.sequenceHelper")
+      appendLine()
+      appendLine("package uk.ac.bournemouth.util.kotlin.sql.impl.gen")
+      appendLine()
+      appendLine("import java.sql.SQLException")
+      appendLine()
+      appendLine("import uk.ac.bournemouth.kotlinsql.Column")
+      appendLine("import uk.ac.bournemouth.kotlinsql.Database")
+      appendLine("import uk.ac.bournemouth.kotlinsql.Database.*")
+      appendLine("import uk.ac.bournemouth.kotlinsql.IColumnType")
+      appendLine("import uk.ac.bournemouth.util.kotlin.sql.impl.DBConnection2")
+      appendLine("import uk.ac.bournemouth.util.kotlin.sql.DBTransaction")
+      appendLine("import uk.ac.bournemouth.util.kotlin.sql.DBTransactionBase")
+      appendLine("import uk.ac.bournemouth.kotlinsql.executeHelper")
+      appendLine("import uk.ac.bournemouth.kotlinsql.sequenceHelper")
 
       for (n in 2..count) {
-        appendln()
+        appendLine()
         append("interface Select$n<")
-        (1..n).joinToString(",\n               ") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }.apply { append(this) }
-        appendln(">:SelectStatement {")
-        appendln()
+        (1..n).joinToString(",\n               ") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }
+          .apply { append(this) }
+        appendLine(">:SelectStatement {")
+        appendLine()
         append("  override val select:_Select$n<")
-        (1..n).joinTo(this,",") { m -> "T$m,S$m,C$m" }
-        appendln(">")
-        appendln()
+        (1..n).joinTo(this, ",") { m -> "T$m,S$m,C$m" }
+        appendLine(">")
+        appendLine()
         append("  fun <R>getList(connection: DBConnection2<*>, factory:")
         appendFactorySignature(n)
-        appendln("): List<R>")
-        if (n>1) {
-          appendln()
+        appendLine("): List<R>")
+        if (n > 1) {
+          appendLine()
           append("  fun getSingle(connection:DBConnection2<*>): _Statement$n.Result<")
-          (1..n).joinTo(this,",") { m-> "T$m" }
-          appendln(">?")
+          (1..n).joinTo(this, ",") { m -> "T$m" }
+          appendLine(">?")
 
-          appendln()
+          appendLine()
           append("  fun <R> getSingle(connection:DBConnection2<*>, factory:")
           appendFactorySignature(n)
-          appendln("):R?")
+          appendLine("):R?")
 
-          appendln()
+          appendLine()
           append("  fun execute(connection:DBConnection2<*>, block: (")
-          (1..n).joinToString(",") {m -> "T$m?"}.apply { append(this) }
-          appendln(")->Unit):Boolean")
+          (1..n).joinToString(",") { m -> "T$m?" }.apply { append(this) }
+          appendLine(")->Unit):Boolean")
         }
 
-        appendln("}")
+        appendLine("}")
 
-        if (n>1) {
-          appendln()
+        if (n > 1) {
+          appendLine()
 
           append("fun <DB: Database, In, ")
           (1..n).joinTo(this, ", ") { m -> "T$m: Any, C$m: Column<T$m, *, C$m>" }
           append(", R> DBTransactionBase<DB, In>.sequence(queryGen: DB.(In)->Select$n<")
-          (1..n).joinTo(this, ", ") { m -> "T$m, *, C$m"}
+          (1..n).joinTo(this, ", ") { m -> "T$m, *, C$m" }
           append(">, combine: (")
           (1..n).joinTo(this, ", ") { m -> "T$m?" }
-          appendln(") -> R): DBTransaction<DB, Sequence<R>> {")
+          appendLine(") -> R): DBTransaction<DB, Sequence<R>> {")
 
-          appendln("    return sequenceHelper(queryGen) { query, rs ->")
+          appendLine("    return sequenceHelper(queryGen) { query, rs ->")
 
-          appendln("        val s = query.select")
+          appendLine("        val s = query.select")
 
-          append  ("        combine(")
-          (1..n).joinTo(this, ", ") { m-> "s.col$m.fromResultSet(rs, $m)" }
-          appendln(") }")
+          append("        combine(")
+          (1..n).joinTo(this, ", ") { m -> "s.col$m.fromResultSet(rs, $m)" }
+          appendLine(") }")
 
-          appendln("}")
+          appendLine("}")
           /*
         fun <DB : Database, T : Any, C : Column<T, *, C>> DBTransactionBase<DB, *>.sequence(query: Database.Select1<T, *, C>): DBTransaction<DB, Sequence<T>> {
     return sequenceHelper(query) { query, rs -> query.select.col1.fromResultSet(rs, 1)!! }
@@ -106,94 +107,95 @@ class GenerateSelectClasses {
 
          */
         }
-        appendln()
-        appendln("@Suppress(\"UNCHECKED_CAST\")")
+        appendLine()
+        appendLine("@Suppress(\"UNCHECKED_CAST\")")
         append("class _Select$n<")
-        (1..n).joinToString(",\n               ") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }.apply { append(this) }
+        (1..n).joinToString(",\n               ") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }
+          .apply { append(this) }
 
         append(">(")
         append((1..n).joinToString { m -> "col$m: C$m" })
         append("):\n      _BaseSelect(")
         append((1..n).joinToString { m -> "col$m" })
-        appendln("),")
-        (1..n).joinTo(this, ", ","      Select$n<", "> {") { m -> "T$m, S$m, C$m" }
-        appendln()
-        appendln()
+        appendLine("),")
+        (1..n).joinTo(this, ", ", "      Select$n<", "> {") { m -> "T$m, S$m, C$m" }
+        appendLine()
+        appendLine()
         append("    override val select: _Select$n<")
-        (1..n).joinTo(this, ",") { m-> "T$m,S$m,C$m"}
-        appendln("> get() = this")
+        (1..n).joinTo(this, ",") { m -> "T$m,S$m,C$m" }
+        appendLine("> get() = this")
 
-        appendln()
+        appendLine()
         append("    override fun WHERE(config: _Where.() -> WhereClause?):Select$n<")
         (1..n).joinTo(this) { m -> "T$m, S$m, C$m" }
 
-        appendln("> =")
-        appendln("        _Where().config()?.let { _Statement$n(this, it) } ?: this")
+        appendLine("> =")
+        appendLine("        _Where().config()?.let { _Statement$n(this, it) } ?: this")
 
-        appendln()
+        appendLine()
         append("    override fun execute(connection:DBConnection2<*>, block: (")
-        (1..n).joinToString(",") {m -> "T$m?"}.apply { append(this) }
-        appendln(")->Unit):Boolean {")
-        appendln("        return executeHelper(connection, block) { rs, block2 ->")
+        (1..n).joinToString(",") { m -> "T$m?" }.apply { append(this) }
+        appendLine(")->Unit):Boolean {")
+        appendLine("        return executeHelper(connection, block) { rs, block2 ->")
         append("            block2(")
         (1..n).joinToString(",\n${" ".repeat(19)}") { m -> "col$m.type.fromResultSet(rs, $m)" }.apply { append(this) }
 //        if (n==1) {
 //          append("select.col1.type.fromResultSet(rs, 1)")
 //        } else {
 //        }
-        appendln(')')
-        appendln("        }")
-        appendln("    }")
+        appendLine(')')
+        appendLine("        }")
+        appendLine("    }")
 
-        appendln()
+        appendLine()
         append("    override fun <R>getList(connection: DBConnection2<*>, factory:")
         appendFactorySignature(n)
-        appendln("): List<R> {")
-        appendln("        val result=mutableListOf<R>()")
+        appendLine("): List<R> {")
+        appendLine("        val result=mutableListOf<R>()")
         append("        execute(connection) { ")
         (1..n).joinToString { "p$it" }.apply { append(this) }
         append(" -> result.add(factory(")
         (1..n).joinToString { "p$it" }.apply { append(this) }
-        appendln(")) }")
-        appendln("        return result")
-        appendln("    }")
+        appendLine(")) }")
+        appendLine("        return result")
+        appendLine("    }")
 
-        if (n>1) {
-          appendln()
+        if (n > 1) {
+          appendLine()
           append("    override fun getSingle(connection:DBConnection2<*>)")
           append(" = getSingle(connection) { ")
-          (1..n).joinTo(this,",") { "p$it" }
+          (1..n).joinTo(this, ",") { "p$it" }
           append(" -> _Statement$n.Result(")
-          (1..n).joinTo(this,",") { "p$it" }
-          appendln(")}")
+          (1..n).joinTo(this, ",") { "p$it" }
+          appendLine(")}")
 
 
-          appendln()
+          appendLine()
           append("    override fun <R> getSingle(connection:DBConnection2<*>, factory:")
           appendFactorySignature(n)
-          appendln("):R? {")
-          appendln("      return connection.prepareStatement(toSQL()) {")
-          appendln("        setParams(this)")
-          appendln("        execute { rs ->")
-          appendln("          if (rs.next()) {")
-          appendln("            if (!rs.isLast) throw SQLException(\"Multiple results found, where only one or none expected\")")
+          appendLine("):R? {")
+          appendLine("      return connection.prepareStatement(toSQL()) {")
+          appendLine("        setParams(this)")
+          appendLine("        execute { rs ->")
+          appendLine("          if (rs.next()) {")
+          appendLine("            if (!rs.isLast) throw SQLException(\"Multiple results found, where only one or none expected\")")
           append("            factory(")
-          (1..n).joinTo(this,",\n${" ".repeat(18)}") { m -> "select.col$m.type.fromResultSet(rs, $m)" }
-          appendln(")")
+          (1..n).joinTo(this, ",\n${" ".repeat(18)}") { m -> "select.col$m.type.fromResultSet(rs, $m)" }
+          appendLine(")")
 
-          appendln("          } else null ")
-          appendln("        }")
-          appendln("      }")
+          appendLine("          } else null ")
+          appendLine("        }")
+          appendLine("      }")
 
-          appendln("    }")
+          appendLine("    }")
         }
 
-        appendln()
-        for(m in 1..n) {
-          appendln("    val col$m: C$m get() = columns[${m-1}] as C$m")
+        appendLine()
+        for (m in 1..n) {
+          appendLine("    val col$m: C$m get() = columns[${m - 1}] as C$m")
         }
 
-        appendln("}")
+        appendLine("}")
 
       }
     }

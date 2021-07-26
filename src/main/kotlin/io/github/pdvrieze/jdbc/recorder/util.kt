@@ -18,9 +18,9 @@
  * under the License.
  */
 
-package uk.ac.bournemouth.kotlinsql.test
+package io.github.pdvrieze.jdbc.recorder
 
-fun Any?.stringify(): String {
+internal fun Any?.stringify(): String {
     return when (this) {
         null -> "null"
         is ByteArray -> joinToString(prefix = "[", postfix = "]")
@@ -38,7 +38,7 @@ fun Any?.stringify(): String {
     }
 }
 
-fun CharSequence.escape(): String = buildString {
+internal fun CharSequence.escape(): String = buildString {
     for (ch in this@escape) {
         when (ch) {
             '\\' -> append("\\\\")

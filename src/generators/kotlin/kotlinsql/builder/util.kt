@@ -33,15 +33,15 @@ fun Appendable.generateColumnOperationSignature(
     baseIndent: String = "    ",
     nullableParam: Boolean = false,
     genericPrefix: String = ""
-                                               ) {
+) {
 
     append("fun <").append(genericPrefix)
     (1..noColumns).joinTo(this, ",\n${baseIndent}     ") { n ->
         "T$n:Any, S$n: IColumnType<T$n, S$n, C$n>, C$n: Column<T$n, S$n, C$n>"
     }
-    appendln(">")
+    appendLine(">")
 
-    append("${baseIndent}    ")
+    append("$baseIndent    ")
     if (receiver.isNotEmpty()) {
         appendGenericType(receiver, noColumns, baseIndent, retT, retS, retC)
         append('.')
@@ -59,7 +59,7 @@ fun Appendable.appendGenericType(
     retT: Boolean = true,
     retS: Boolean = true,
     retC: Boolean = true
-                                ) {
+) {
     append(type)
     val numGenerics = type.fold(0) { acc, ch ->
         acc + when (ch) {

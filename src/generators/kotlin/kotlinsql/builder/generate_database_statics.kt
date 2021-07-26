@@ -33,60 +33,61 @@ class GenerateDatabaseBaseKt {
     output.apply {
 
       appendCopyright()
-      appendln()
-      appendln("package uk.ac.bournemouth.util.kotlin.sql.impl.gen")
-      appendln()
-      appendln("import uk.ac.bournemouth.kotlinsql.Column")
-      appendln("import uk.ac.bournemouth.kotlinsql.IColumnType")
-      appendln("import uk.ac.bournemouth.kotlinsql.Database")
-      appendln("import uk.ac.bournemouth.kotlinsql.TableRef")
-      appendln("import uk.ac.bournemouth.kotlinsql.Table")
-      appendln()
-      appendln("abstract class DatabaseMethods {")
+      appendLine()
+      appendLine("package uk.ac.bournemouth.util.kotlin.sql.impl.gen")
+      appendLine()
+      appendLine("import uk.ac.bournemouth.kotlinsql.Column")
+      appendLine("import uk.ac.bournemouth.kotlinsql.IColumnType")
+      appendLine("import uk.ac.bournemouth.kotlinsql.Database")
+      appendLine("import uk.ac.bournemouth.kotlinsql.TableRef")
+      appendLine("import uk.ac.bournemouth.kotlinsql.Table")
+      appendLine()
+      appendLine("abstract class DatabaseMethods {")
 //      appendln("  companion object {")
 
-      appendln("    abstract operator fun get(key:TableRef):Table")
+      appendLine("    abstract operator fun get(key:TableRef):Table")
 
-      appendFunctionGroup("SELECT","_Select", count, "_Select")
-      appendFunctionGroup("INSERT","_Insert", count)
-      appendFunctionGroup("INSERT_OR_UPDATE","_Insert", count)
+      appendFunctionGroup("SELECT", "_Select", count, "_Select")
+      appendFunctionGroup("INSERT", "_Insert", count)
+      appendFunctionGroup("INSERT_OR_UPDATE", "_Insert", count)
 
-//      appendln("  }")
-      appendln("}")
+//      appendLine("  }")
+      appendLine("}")
     }
   }
 
   private fun Writer.appendFunctionGroup(funName: String, className: String, count: Int, interfaceName: String = className) {
     for (n in 1..count) {
-      appendln()
-  //        appendln("    @JvmStatic")
+      appendLine()
+      //        appendln("    @JvmStatic")
       append("    fun <")
 
       run {
         val indent = " ".repeat(if (n < 9) 9 else 10)
-        (1..n).joinToString(",\n$indent") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }.apply {
-          append(this)
-        }
+        (1..n).joinToString(",\n$indent") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }
+          .apply {
+            append(this)
+          }
       }
       append(">\n        $funName(")
       (1..n).joinToString { m -> "col$m: C$m" }.apply { append(this) }
       append("): ")
-      if (n==1 && funName=="SELECT") {
+      if (n == 1 && funName == "SELECT") {
         append("Database.$interfaceName$n<T1, S1, C1>")
       } else {
-        (1..n).joinTo(this, prefix="$interfaceName$n<", postfix = ">") {m-> "T$m, S$m, C$m"}
+        (1..n).joinTo(this, prefix = "$interfaceName$n<", postfix = ">") { m -> "T$m, S$m, C$m" }
       }
-      appendln(" =")
-      if (className=="_Insert") {
-        val update = funName=="INSERT_OR_UPDATE"
+      appendLine(" =")
+      if (className == "_Insert") {
+        val update = funName == "INSERT_OR_UPDATE"
         append("            $className$n(get(col1.table), $update, ")
-      } else if (n == 1 && funName=="SELECT") {
+      } else if (n == 1 && funName == "SELECT") {
         append("            Database.$className$n(")
       } else {
         append("            $className$n(")
       }
       (1..n).joinToString { m -> "col$m" }.apply { append(this) }
-      appendln(")")
+      appendLine(")")
     }
   }
 }
