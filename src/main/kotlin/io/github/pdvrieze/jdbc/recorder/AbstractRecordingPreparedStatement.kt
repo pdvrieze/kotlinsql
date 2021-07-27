@@ -20,7 +20,6 @@
 
 package io.github.pdvrieze.jdbc.recorder
 
-import io.github.pdvrieze.jdbc.recorder.actions.Action
 import io.github.pdvrieze.jdbc.recorder.actions.StringAction
 import java.io.InputStream
 import java.io.Reader
@@ -313,21 +312,5 @@ abstract class AbstractRecordingPreparedStatement<D: PreparedStatement>(
         delegate.getMoreResults(current)
     }
 
-
-    class Close(private val sql: String) : Action {
-        override fun toString(): String {
-            return "PreparedStatement($sql).close()"
-        }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is Close) return false
-            return sql == other.sql
-        }
-
-        override fun hashCode(): Int {
-            return sql.hashCode()
-        }
-    }
 
 }

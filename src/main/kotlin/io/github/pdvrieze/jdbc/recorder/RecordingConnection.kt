@@ -307,10 +307,8 @@ class RecordingConnection(val delegate: Connection, val db: Database? = null) : 
         delegate.createSQLXML()
     }
 
-    inner class RecordingCallableStatement(
-        delegate: CallableStatement,
-        sql: String
-    ) : AbstractRecordingCallableStatement(this, delegate, sql), Action {
+    inner class RecordingCallableStatement(delegate: CallableStatement, sql: String) :
+        AbstractRecordingCallableStatement(this, delegate, sql), Action {
 
         override fun recordAction(action: Action) {
             actions.add(action)

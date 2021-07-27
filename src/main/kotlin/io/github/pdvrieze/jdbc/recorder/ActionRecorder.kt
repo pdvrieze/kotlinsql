@@ -52,6 +52,14 @@ abstract class ActionRecorder {
         return action().also { recordRes2(it, arrayOf(arg1, arg2, arg3)) }
     }
 
+    protected inline fun <R> record(arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?, arg5: Any?, crossinline action: () -> R): R {
+        return action().also { recordRes2(it, arrayOf(arg1, arg2, arg3)) }
+    }
+
+    protected inline fun <R> record(arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?, arg5: Any?, arg6: Any?, crossinline action: () -> R): R {
+        return action().also { recordRes2(it, arrayOf(arg1, arg2, arg3)) }
+    }
+
     protected abstract fun recordAction(action: Action)
 
     open protected fun <R> recordRes(result: R, vararg args: Any?): R {

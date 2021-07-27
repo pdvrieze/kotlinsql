@@ -20,7 +20,7 @@
 
 package io.github.pdvrieze.jdbc.recorder
 
-import uk.ac.bournemouth.kotlinsql.ILengthColumn
+import io.github.pdvrieze.jdbc.recorder.RecordingConnection.RecordingResultSet
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.RowIdLifetime
@@ -36,28 +36,28 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
         delegate.isWrapperFor(iface)
     }
 
-    override fun supportsSubqueriesInQuantifieds(): Boolean {
-        TODO("not implemented")
+    override fun supportsSubqueriesInQuantifieds(): Boolean = record {
+        delegate.supportsSubqueriesInQuantifieds()
     }
 
-    override fun supportsGetGeneratedKeys(): Boolean {
-        TODO("not implemented")
+    override fun supportsGetGeneratedKeys(): Boolean = record {
+        delegate.supportsGetGeneratedKeys()
     }
 
-    override fun supportsCoreSQLGrammar(): Boolean {
-        TODO("not implemented")
+    override fun supportsCoreSQLGrammar(): Boolean = record {
+        delegate.supportsCoreSQLGrammar()
     }
 
-    override fun getMaxColumnsInIndex(): Int {
-        TODO("not implemented")
+    override fun getMaxColumnsInIndex(): Int = record {
+        delegate.maxColumnsInIndex
     }
 
-    override fun insertsAreDetected(type: Int): Boolean {
-        TODO("not implemented")
+    override fun insertsAreDetected(type: Int): Boolean = record(type) {
+        delegate.insertsAreDetected(type)
     }
 
-    override fun supportsIntegrityEnhancementFacility(): Boolean {
-        TODO("not implemented")
+    override fun supportsIntegrityEnhancementFacility(): Boolean = record {
+        delegate.supportsIntegrityEnhancementFacility()
     }
 
     override fun getAttributes(
@@ -65,120 +65,127 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
         schemaPattern: String?,
         typeNamePattern: String?,
         attributeNamePattern: String?
-                              ): ResultSet {
-        TODO("not implemented")
+    ): ResultSet = record(catalog, schemaPattern, typeNamePattern, attributeNamePattern) {
+        connection.RecordingResultSet(
+            delegate.getAttributes(
+                catalog,
+                schemaPattern,
+                typeNamePattern,
+                attributeNamePattern
+            )
+        )
     }
 
-    override fun getDatabaseProductVersion(): String {
-        TODO("not implemented")
+    override fun getDatabaseProductVersion(): String = record {
+        delegate.databaseProductVersion
     }
 
-    override fun supportsOpenStatementsAcrossRollback(): Boolean {
-        TODO("not implemented")
+    override fun supportsOpenStatementsAcrossRollback(): Boolean = record {
+        delegate.supportsOpenStatementsAcrossRollback()
     }
 
-    override fun getDatabaseProductName(): String {
-        TODO("not implemented")
+    override fun getDatabaseProductName(): String = record {
+        delegate.databaseProductName
     }
 
-    override fun getMaxProcedureNameLength(): Int {
-        TODO("not implemented")
+    override fun getMaxProcedureNameLength(): Int = record {
+        delegate.maxProcedureNameLength
     }
 
-    override fun getCatalogTerm(): String {
-        TODO("not implemented")
+    override fun getCatalogTerm(): String = record {
+        delegate.catalogTerm
     }
 
-    override fun supportsCatalogsInDataManipulation(): Boolean {
-        TODO("not implemented")
+    override fun supportsCatalogsInDataManipulation(): Boolean = record {
+        delegate.supportsCatalogsInDataManipulation()
     }
 
-    override fun getMaxUserNameLength(): Int {
-        TODO("not implemented")
+    override fun getMaxUserNameLength(): Int = record {
+        delegate.maxUserNameLength
     }
 
-    override fun getJDBCMajorVersion(): Int {
-        TODO("not implemented")
+    override fun getJDBCMajorVersion(): Int = record {
+        delegate.jdbcMajorVersion
     }
 
-    override fun getTimeDateFunctions(): String {
-        TODO("not implemented")
+    override fun getTimeDateFunctions(): String = record {
+        delegate.timeDateFunctions
     }
 
-    override fun supportsStoredFunctionsUsingCallSyntax(): Boolean {
-        TODO("not implemented")
+    override fun supportsStoredFunctionsUsingCallSyntax(): Boolean = record {
+        delegate.supportsStoredFunctionsUsingCallSyntax()
     }
 
-    override fun autoCommitFailureClosesAllResultSets(): Boolean {
-        TODO("not implemented")
+    override fun autoCommitFailureClosesAllResultSets(): Boolean = record {
+        delegate.autoCommitFailureClosesAllResultSets()
     }
 
-    override fun getMaxColumnsInSelect(): Int {
-        TODO("not implemented")
+    override fun getMaxColumnsInSelect(): Int = record {
+        delegate.maxColumnsInSelect
     }
 
-    override fun getCatalogs(): ResultSet {
-        TODO("not implemented")
+    override fun getCatalogs(): ResultSet = record {
+        connection.RecordingResultSet(delegate.catalogs)
     }
 
-    override fun storesLowerCaseQuotedIdentifiers(): Boolean {
-        TODO("not implemented")
+    override fun storesLowerCaseQuotedIdentifiers(): Boolean = record {
+        delegate.storesLowerCaseQuotedIdentifiers()
     }
 
-    override fun supportsDataDefinitionAndDataManipulationTransactions(): Boolean {
-        TODO("not implemented")
+    override fun supportsDataDefinitionAndDataManipulationTransactions(): Boolean = record {
+        delegate.supportsDataDefinitionAndDataManipulationTransactions()
     }
 
-    override fun supportsCatalogsInTableDefinitions(): Boolean {
-        TODO("not implemented")
+    override fun supportsCatalogsInTableDefinitions(): Boolean = record {
+        delegate.supportsCatalogsInTableDefinitions()
     }
 
-    override fun getMaxColumnsInOrderBy(): Int {
-        TODO("not implemented")
+    override fun getMaxColumnsInOrderBy(): Int = record {
+        delegate.maxColumnsInOrderBy
     }
 
-    override fun getDriverMinorVersion(): Int {
-        TODO("not implemented")
+    override fun getDriverMinorVersion(): Int = record {
+        delegate.driverMinorVersion
     }
 
-    override fun storesUpperCaseIdentifiers(): Boolean {
-        TODO("not implemented")
+    override fun storesUpperCaseIdentifiers(): Boolean = record {
+        delegate.storesUpperCaseIdentifiers()
     }
 
-    override fun nullsAreSortedLow(): Boolean {
-        TODO("not implemented")
+    override fun nullsAreSortedLow(): Boolean = record {
+        delegate.nullsAreSortedLow()
     }
 
-    override fun supportsSchemasInIndexDefinitions(): Boolean {
-        TODO("not implemented")
+    override fun supportsSchemasInIndexDefinitions(): Boolean = record {
+        delegate.supportsSchemasInIndexDefinitions()
     }
 
-    override fun getMaxStatementLength(): Int {
-        TODO("not implemented")
+    override fun getMaxStatementLength(): Int = record {
+        delegate.maxStatementLength
     }
 
-    override fun supportsTransactions(): Boolean {
-        TODO("not implemented")
+    override fun supportsTransactions(): Boolean = record {
+        delegate.supportsTransactions()
     }
 
-    override fun supportsResultSetConcurrency(type: Int, concurrency: Int): Boolean {
-        TODO("not implemented")
+    override fun supportsResultSetConcurrency(type: Int, concurrency: Int): Boolean = record(type, concurrency) {
+        delegate.supportsResultSetConcurrency(type, concurrency)
     }
 
-    override fun isReadOnly(): Boolean {
-        TODO("not implemented")
+    override fun isReadOnly(): Boolean = record {
+        delegate.isReadOnly
     }
 
-    override fun usesLocalFiles(): Boolean {
-        TODO("not implemented")
+    override fun usesLocalFiles(): Boolean = record {
+        delegate.usesLocalFiles()
     }
 
-    override fun supportsResultSetType(type: Int): Boolean {
-        TODO("not implemented")
+    override fun supportsResultSetType(type: Int): Boolean = record(type) {
+        delegate.supportsResultSetType(type)
     }
 
-    override fun getMaxConnections(): Int {
-        TODO("not implemented")
+    override fun getMaxConnections(): Int = record {
+        delegate.maxConnections
     }
 
     override fun getTables(
@@ -186,64 +193,54 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
         schemaPattern: String?,
         tableNamePattern: String?,
         types: Array<out String>?
-                          ): ResultSet = record(arrayOf(catalog, schemaPattern, tableNamePattern, types)){
-        val columns = arrayOf(
-            "TABLE_CAT", "TABLE_SCHEM", "TABLE_NAME", "TABLE_TYPE", "REMARKS",
-            "TYPE_CAT", "TYPE_SCHEM", "TYPE_NAME", "SELF_REFERENCING_COL_NAME", "REF_GENERATION"
-                             )
-        val data = connection.tables.map { table ->
-            columns.dataArray(
-                "TABLE_NAME" to table._name,
-                "TABLE_TYPE" to "TABLE",
-                "REMARKS" to ""
-                             )
-        }
+    ): ResultSet = record(arrayOf(catalog, schemaPattern, tableNamePattern, types)) {
         val rs = delegate.getTables(catalog, schemaPattern, tableNamePattern, types)
-        connection.RecordingResultSet(rs, "getTables()", columns, data)
+        connection.RecordingResultSet(rs, "getTables()")
     }
 
-    override fun supportsMultipleResultSets(): Boolean {
-        TODO("not implemented")
+    override fun supportsMultipleResultSets(): Boolean = record {
+        delegate.supportsMultipleResultSets()
     }
 
-    override fun dataDefinitionIgnoredInTransactions(): Boolean {
-        TODO("not implemented")
+    override fun dataDefinitionIgnoredInTransactions(): Boolean = record {
+        delegate.dataDefinitionIgnoredInTransactions()
     }
 
-    override fun getFunctions(catalog: String?, schemaPattern: String?, functionNamePattern: String?): ResultSet {
-        TODO("not implemented")
+    override fun getFunctions(catalog: String?, schemaPattern: String?, functionNamePattern: String?): ResultSet =
+        record(catalog, schemaPattern, functionNamePattern) {
+            connection.RecordingResultSet(delegate.getFunctions(catalog, schemaPattern, functionNamePattern))
+        }
+
+    override fun getSearchStringEscape(): String = record {
+        delegate.searchStringEscape
     }
 
-    override fun getSearchStringEscape(): String {
-        TODO("not implemented")
+    override fun supportsGroupBy(): Boolean = record {
+        delegate.supportsGroupBy()
     }
 
-    override fun supportsGroupBy(): Boolean {
-        TODO("not implemented")
+    override fun getMaxTableNameLength(): Int = record {
+        delegate.maxTableNameLength
     }
 
-    override fun getMaxTableNameLength(): Int {
-        TODO("not implemented")
+    override fun dataDefinitionCausesTransactionCommit(): Boolean = record {
+        delegate.dataDefinitionCausesTransactionCommit()
     }
 
-    override fun dataDefinitionCausesTransactionCommit(): Boolean {
-        TODO("not implemented")
+    override fun supportsOpenStatementsAcrossCommit(): Boolean = record {
+        delegate.supportsOpenStatementsAcrossCommit()
     }
 
-    override fun supportsOpenStatementsAcrossCommit(): Boolean {
-        TODO("not implemented")
+    override fun ownInsertsAreVisible(type: Int): Boolean = record(type) {
+        delegate.ownInsertsAreVisible(type)
     }
 
-    override fun ownInsertsAreVisible(type: Int): Boolean {
-        TODO("not implemented")
+    override fun getSchemaTerm(): String = record {
+        delegate.schemaTerm
     }
 
-    override fun getSchemaTerm(): String {
-        TODO("not implemented")
-    }
-
-    override fun isCatalogAtStart(): Boolean {
-        TODO("not implemented")
+    override fun isCatalogAtStart(): Boolean = record {
+        delegate.isCatalogAtStart
     }
 
     override fun getFunctionColumns(
@@ -251,100 +248,103 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
         schemaPattern: String?,
         functionNamePattern: String?,
         columnNamePattern: String?
-                                   ): ResultSet {
-        TODO("not implemented")
+    ): ResultSet = record(catalog, schemaPattern, functionNamePattern, columnNamePattern) {
+        connection.RecordingResultSet(
+            delegate.getFunctionColumns(catalog, schemaPattern, functionNamePattern, columnNamePattern)
+        )
     }
 
-    override fun supportsTransactionIsolationLevel(level: Int): Boolean {
-        TODO("not implemented")
+    override fun supportsTransactionIsolationLevel(level: Int): Boolean = record(level) {
+        delegate.supportsTransactionIsolationLevel(level)
     }
 
-    override fun nullsAreSortedAtStart(): Boolean {
-        TODO("not implemented")
+    override fun nullsAreSortedAtStart(): Boolean = record {
+        delegate.nullsAreSortedAtStart()
     }
 
-    override fun getPrimaryKeys(catalog: String?, schema: String?, table: String?): ResultSet {
-        TODO("not implemented")
+    override fun getPrimaryKeys(catalog: String?, schema: String?, table: String?): RecordingResultSet =
+        record(catalog, schema, table) {
+            connection.RecordingResultSet(delegate.getPrimaryKeys(catalog, schema, table))
+        }
+
+    override fun getProcedureTerm(): String = record {
+        delegate.procedureTerm
     }
 
-    override fun getProcedureTerm(): String {
-        TODO("not implemented")
+    override fun supportsANSI92IntermediateSQL(): Boolean = record {
+        delegate.supportsANSI92IntermediateSQL()
     }
 
-    override fun supportsANSI92IntermediateSQL(): Boolean {
-        TODO("not implemented")
+    override fun getDatabaseMajorVersion(): Int = record {
+        delegate.databaseMajorVersion
     }
 
-    override fun getDatabaseMajorVersion(): Int {
-        TODO("not implemented")
+    override fun supportsOuterJoins(): Boolean = record {
+        delegate.supportsOuterJoins()
     }
 
-    override fun supportsOuterJoins(): Boolean {
-        TODO("not implemented")
+    override fun supportsLikeEscapeClause(): Boolean = record {
+        delegate.supportsLikeEscapeClause()
     }
 
-    override fun supportsLikeEscapeClause(): Boolean {
-        TODO("not implemented")
+    override fun supportsPositionedUpdate(): Boolean = record {
+        delegate.supportsPositionedUpdate()
     }
 
-    override fun supportsPositionedUpdate(): Boolean {
-        TODO("not implemented")
+    override fun supportsMixedCaseIdentifiers(): Boolean = record {
+        delegate.supportsMixedCaseIdentifiers()
     }
 
-    override fun supportsMixedCaseIdentifiers(): Boolean {
-        TODO("not implemented")
+    override fun supportsLimitedOuterJoins(): Boolean = record {
+        delegate.supportsLimitedOuterJoins()
     }
 
-    override fun supportsLimitedOuterJoins(): Boolean {
-        TODO("not implemented")
+    override fun getSQLStateType(): Int = record {
+        delegate.sqlStateType
     }
 
-    override fun getSQLStateType(): Int {
-        TODO("not implemented")
+    override fun getSystemFunctions(): String = record {
+        delegate.systemFunctions
     }
 
-    override fun getSystemFunctions(): String {
-        TODO("not implemented")
+    override fun getMaxRowSize(): Int = record {
+        delegate.maxRowSize
     }
 
-    override fun getMaxRowSize(): Int {
-        TODO("not implemented")
+    override fun supportsOpenCursorsAcrossRollback(): Boolean = record {
+        delegate.supportsOpenCursorsAcrossRollback()
     }
 
-    override fun supportsOpenCursorsAcrossRollback(): Boolean {
-        TODO("not implemented")
+    override fun getTableTypes(): RecordingResultSet = record {
+        connection.RecordingResultSet(delegate.tableTypes)
     }
 
-    override fun getTableTypes(): ResultSet {
-        TODO("not implemented")
+    override fun getMaxTablesInSelect(): Int = record {
+        delegate.maxTablesInSelect
     }
 
-    override fun getMaxTablesInSelect(): Int {
-        TODO("not implemented")
+    override fun nullsAreSortedHigh(): Boolean = record {
+        delegate.nullsAreSortedHigh()
     }
 
-    override fun nullsAreSortedHigh(): Boolean {
-        TODO("not implemented")
+    override fun getURL(): String = record {
+        delegate.url
     }
 
-    override fun getURL(): String {
-        TODO("not implemented")
+    override fun supportsNamedParameters(): Boolean = record {
+        delegate.supportsNamedParameters()
     }
 
-    override fun supportsNamedParameters(): Boolean {
-        TODO("not implemented")
+    override fun supportsConvert(): Boolean = record {
+        delegate.supportsConvert()
     }
 
-    override fun supportsConvert(): Boolean {
-        TODO("not implemented")
+    override fun supportsConvert(fromType: Int, toType: Int): Boolean = record(fromType, toType) {
+        delegate.supportsConvert(fromType, toType)
     }
 
-    override fun supportsConvert(fromType: Int, toType: Int): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun getMaxStatements(): Int {
-        TODO("not implemented")
+    override fun getMaxStatements(): Int = record {
+        delegate.maxStatements
     }
 
     override fun getProcedureColumns(
@@ -352,96 +352,105 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
         schemaPattern: String?,
         procedureNamePattern: String?,
         columnNamePattern: String?
-                                    ): ResultSet {
-        TODO("not implemented")
+    ): RecordingResultSet = record(catalog, schemaPattern, procedureNamePattern, columnNamePattern) {
+        connection.RecordingResultSet(
+            delegate.getProcedureColumns(
+                catalog,
+                schemaPattern,
+                procedureNamePattern,
+                columnNamePattern
+            )
+        )
     }
 
-    override fun allTablesAreSelectable(): Boolean {
-        TODO("not implemented")
+    override fun allTablesAreSelectable(): Boolean = record {
+        delegate.allTablesAreSelectable()
     }
 
-    override fun getJDBCMinorVersion(): Int {
-        TODO("not implemented")
+    override fun getJDBCMinorVersion(): Int = record {
+        delegate.jdbcMinorVersion
     }
 
-    override fun getCatalogSeparator(): String {
-        TODO("not implemented")
+    override fun getCatalogSeparator(): String = record {
+        delegate.catalogSeparator
     }
 
-    override fun getSuperTypes(catalog: String?, schemaPattern: String?, typeNamePattern: String?): ResultSet {
-        TODO("not implemented")
+    override fun getSuperTypes(catalog: String?, schemaPattern: String?, typeNamePattern: String?): RecordingResultSet =
+        record(catalog, schemaPattern, typeNamePattern) {
+            connection.RecordingResultSet(delegate.getSuperTypes(catalog, schemaPattern, typeNamePattern))
+        }
+
+    override fun getMaxBinaryLiteralLength(): Int = record {
+        delegate.maxBinaryLiteralLength
     }
 
-    override fun getMaxBinaryLiteralLength(): Int {
-        TODO("not implemented")
+    override fun getTypeInfo(): RecordingResultSet = record {
+        connection.RecordingResultSet(delegate.typeInfo)
     }
 
-    override fun getTypeInfo(): ResultSet {
-        TODO("not implemented")
+    override fun getVersionColumns(catalog: String?, schema: String?, table: String?): RecordingResultSet =
+        record(catalog, schema, table) {
+            connection.RecordingResultSet(delegate.getVersionColumns(catalog, schema, table))
+        }
+
+    override fun supportsMultipleOpenResults(): Boolean = record {
+        delegate.supportsMultipleOpenResults()
     }
 
-    override fun getVersionColumns(catalog: String?, schema: String?, table: String?): ResultSet {
-        TODO("not implemented")
+    override fun deletesAreDetected(type: Int): Boolean = record(type) {
+        delegate.deletesAreDetected(type)
     }
 
-    override fun supportsMultipleOpenResults(): Boolean {
-        TODO("not implemented")
+    override fun getDatabaseMinorVersion(): Int = record {
+        delegate.databaseMinorVersion
     }
 
-    override fun deletesAreDetected(type: Int): Boolean {
-        TODO("not implemented")
+    override fun supportsMinimumSQLGrammar(): Boolean = record {
+        delegate.supportsMinimumSQLGrammar()
     }
 
-    override fun getDatabaseMinorVersion(): Int {
-        TODO("not implemented")
+    override fun getMaxColumnsInGroupBy(): Int = record {
+        delegate.maxColumnsInGroupBy
     }
 
-    override fun supportsMinimumSQLGrammar(): Boolean {
-        TODO("not implemented")
+    override fun getNumericFunctions(): String = record {
+        delegate.numericFunctions
     }
 
-    override fun getMaxColumnsInGroupBy(): Int {
-        TODO("not implemented")
+    override fun getExtraNameCharacters(): String = record {
+        delegate.extraNameCharacters
     }
 
-    override fun getNumericFunctions(): String {
-        TODO("not implemented")
+    override fun getMaxCursorNameLength(): Int = record {
+        delegate.maxCursorNameLength
     }
 
-    override fun getExtraNameCharacters(): String {
-        TODO("not implemented")
+    override fun nullsAreSortedAtEnd(): Boolean = record {
+        delegate.nullsAreSortedAtEnd()
     }
 
-    override fun getMaxCursorNameLength(): Int {
-        TODO("not implemented")
+    override fun supportsSchemasInDataManipulation(): Boolean = record {
+        delegate.supportsSchemasInDataManipulation()
     }
 
-    override fun nullsAreSortedAtEnd(): Boolean {
-        TODO("not implemented")
+    override fun getSchemas(): RecordingResultSet = record {
+        connection.RecordingResultSet(delegate.schemas)
     }
 
-    override fun supportsSchemasInDataManipulation(): Boolean {
-        TODO("not implemented")
+    override fun getSchemas(catalog: String?, schemaPattern: String?): RecordingResultSet = record(catalog, schemaPattern) {
+        connection.RecordingResultSet(delegate.getSchemas(catalog, schemaPattern))
     }
 
-    override fun getSchemas(): ResultSet {
-        TODO("not implemented")
+    override fun supportsCorrelatedSubqueries(): Boolean = record {
+        delegate.supportsCorrelatedSubqueries()
     }
 
-    override fun getSchemas(catalog: String?, schemaPattern: String?): ResultSet {
-        TODO("not implemented")
+    override fun getDefaultTransactionIsolation(): Int = record {
+        delegate.defaultTransactionIsolation
     }
 
-    override fun supportsCorrelatedSubqueries(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun getDefaultTransactionIsolation(): Int {
-        TODO("not implemented")
-    }
-
-    override fun locatorsUpdateCopy(): Boolean {
-        TODO("not implemented")
+    override fun locatorsUpdateCopy(): Boolean = record {
+        delegate.locatorsUpdateCopy()
     }
 
     override fun getColumns(
@@ -449,47 +458,11 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
         schemaPattern: String?,
         tableNamePattern: String?,
         columnNamePattern: String?
-                           ): ResultSet = record(arrayOf(catalog, schemaPattern, tableNamePattern, columnNamePattern)){
-        val columns = arrayOf(
-            "TABLE_CAT", "TABLE_SCHEM", "TABLE_NAME", "COLUMN_NAME", "DATA_TYPE",
-            "TYPE_NAME", "COLUMN_SIZE", "BUFFER_LENGTH", "DECIMAL_DIGITS", "NUM_PREC_RADIX",
-            "NULLABLE", "REMARKS", "COLUMN_DEF", "SQL_DATA_TYPE", "SQL_DATETIME_SUB",
-            "CHAR_OCTET_LENGTH", "ORDINAL_POSITION", "IS_NULLABLE", "SCOPE_CATALOG", "SCOPE_SCHEMA",
-            "SCOPE_TABLE", "SOURCE_DATA_TYPE", "IS_AUTOINCREMENT", "IS_GENERATEDCOLUMN"
-                             )
-        val data = connection.tables.flatMap { table ->
-            if (tableNamePattern != null && tableNamePattern != table._name) {
-                emptyList()
-            } else {
-                table._cols.map { column ->
-                    columns.dataArray(
-                        "TABLE_NAME" to table._name,
-                        "COLUMN_NAME" to column.name,
-                        "DATA_TYPE" to column.type.javaType,
-                        "TYPE_NAME" to column.type.typeName,
-                        "COLUMN_SIZE" to ((column as? ILengthColumn)?.length ?: 0),
-                        "NULLABLE" to when (column.notnull) {
-                            true  -> DatabaseMetaData.columnNullable
-                            false -> DatabaseMetaData.columnNoNulls
-                            else  -> DatabaseMetaData.columnNullableUnknown
-                        },
-                        "IS_NULLABLE" to column.notnull?.let{ !it }.toOptionalBoolean(),
-                        "IS_AUTOINCREMENT" to column.autoincrement.toOptionalBoolean(),
-                        "IS_GENERATEDCOLUMN" to "NO"
-                                     )
-                }
-            }
-        }
-        val rs = delegate.getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern)
-        connection.RecordingResultSet(rs, "metadata.getColumns()", columns, data)
-    }
-
-    private fun Boolean?.toOptionalBoolean(): String {
-        return when (this) {
-            true  -> "YES"
-            false -> "NO"
-            else  -> ""
-        }
+    ): RecordingResultSet = record(arrayOf(catalog, schemaPattern, tableNamePattern, columnNamePattern)) {
+        connection.RecordingResultSet(
+            delegate.getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern),
+            "metadata.getColumns()"
+        )
     }
 
     override fun getCrossReference(
@@ -499,32 +472,41 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
         foreignCatalog: String?,
         foreignSchema: String?,
         foreignTable: String?
-                                  ): ResultSet {
-        TODO("not implemented")
+    ): RecordingResultSet = record(parentCatalog, parentSchema, parentTable, foreignCatalog, foreignSchema, foreignTable) {
+        connection.RecordingResultSet(
+            delegate.getCrossReference(
+                parentCatalog,
+                parentSchema,
+                parentTable,
+                foreignCatalog,
+                foreignSchema,
+                foreignTable
+            )
+        )
     }
 
-    override fun ownDeletesAreVisible(type: Int): Boolean {
-        TODO("not implemented")
+    override fun ownDeletesAreVisible(type: Int): Boolean = record(type) {
+        delegate.ownDeletesAreVisible(type)
     }
 
-    override fun othersUpdatesAreVisible(type: Int): Boolean {
-        TODO("not implemented")
+    override fun othersUpdatesAreVisible(type: Int): Boolean = record(type) {
+        delegate.othersUpdatesAreVisible(type)
     }
 
-    override fun supportsStatementPooling(): Boolean {
-        TODO("not implemented")
+    override fun supportsStatementPooling(): Boolean = record {
+        delegate.supportsStatementPooling()
     }
 
-    override fun storesLowerCaseIdentifiers(): Boolean {
-        TODO("not implemented")
+    override fun storesLowerCaseIdentifiers(): Boolean = record {
+        delegate.storesLowerCaseIdentifiers()
     }
 
-    override fun supportsCatalogsInIndexDefinitions(): Boolean {
-        TODO("not implemented")
+    override fun supportsCatalogsInIndexDefinitions(): Boolean = record {
+        delegate.supportsCatalogsInIndexDefinitions()
     }
 
-    override fun ownUpdatesAreVisible(type: Int): Boolean {
-        TODO("not implemented")
+    override fun ownUpdatesAreVisible(type: Int): Boolean = record(type) {
+        delegate.ownUpdatesAreVisible(type)
     }
 
     override fun getUDTs(
@@ -532,56 +514,64 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
         schemaPattern: String?,
         typeNamePattern: String?,
         types: IntArray?
-                        ): ResultSet {
-        TODO("not implemented")
+    ): RecordingResultSet =
+        record(catalog, schemaPattern, typeNamePattern, types) {
+            connection.RecordingResultSet(
+                delegate.getUDTs(
+                    catalog,
+                    schemaPattern,
+                    typeNamePattern,
+                    types
+                )
+            )
+        }
+
+    override fun getStringFunctions(): String = record {
+        delegate.stringFunctions
     }
 
-    override fun getStringFunctions(): String {
-        TODO("not implemented")
+    override fun getMaxColumnsInTable(): Int = record {
+        delegate.maxColumnsInTable
     }
 
-    override fun getMaxColumnsInTable(): Int {
-        TODO("not implemented")
+    override fun supportsColumnAliasing(): Boolean = record {
+        delegate.supportsColumnAliasing()
     }
 
-    override fun supportsColumnAliasing(): Boolean {
-        TODO("not implemented")
+    override fun supportsSchemasInProcedureCalls(): Boolean = record {
+        delegate.supportsSchemasInProcedureCalls()
     }
 
-    override fun supportsSchemasInProcedureCalls(): Boolean {
-        TODO("not implemented")
+    override fun getClientInfoProperties(): RecordingResultSet = record {
+        connection.RecordingResultSet(delegate.clientInfoProperties)
     }
 
-    override fun getClientInfoProperties(): ResultSet {
-        TODO("not implemented")
+    override fun usesLocalFilePerTable(): Boolean = record {
+        delegate.usesLocalFilePerTable()
     }
 
-    override fun usesLocalFilePerTable(): Boolean {
-        TODO("not implemented")
+    override fun getIdentifierQuoteString(): String = record {
+        delegate.identifierQuoteString
     }
 
-    override fun getIdentifierQuoteString(): String {
-        TODO("not implemented")
+    override fun supportsFullOuterJoins(): Boolean = record {
+        delegate.supportsFullOuterJoins()
     }
 
-    override fun supportsFullOuterJoins(): Boolean {
-        TODO("not implemented")
+    override fun supportsOrderByUnrelated(): Boolean = record {
+        delegate.supportsOrderByUnrelated()
     }
 
-    override fun supportsOrderByUnrelated(): Boolean {
-        TODO("not implemented")
+    override fun supportsSchemasInTableDefinitions(): Boolean = record {
+        delegate.supportsSchemasInTableDefinitions()
     }
 
-    override fun supportsSchemasInTableDefinitions(): Boolean {
-        TODO("not implemented")
+    override fun supportsCatalogsInProcedureCalls(): Boolean = record {
+        delegate.supportsCatalogsInProcedureCalls()
     }
 
-    override fun supportsCatalogsInProcedureCalls(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun getUserName(): String {
-        TODO("not implemented")
+    override fun getUserName(): String = record {
+        delegate.userName
     }
 
     override fun getBestRowIdentifier(
@@ -590,32 +580,32 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
         table: String?,
         scope: Int,
         nullable: Boolean
-                                     ): ResultSet {
-        TODO("not implemented")
+    ): RecordingResultSet = record(catalog, schema, table, scope, nullable) {
+        connection.RecordingResultSet(delegate.getBestRowIdentifier(catalog, schema, table, scope, nullable))
     }
 
-    override fun supportsTableCorrelationNames(): Boolean {
-        TODO("not implemented")
+    override fun supportsTableCorrelationNames(): Boolean = record {
+        delegate.supportsTableCorrelationNames()
     }
 
-    override fun getMaxIndexLength(): Int {
-        TODO("not implemented")
+    override fun getMaxIndexLength(): Int = record {
+        delegate.maxIndexLength
     }
 
-    override fun supportsSubqueriesInExists(): Boolean {
-        TODO("not implemented")
+    override fun supportsSubqueriesInExists(): Boolean = record {
+        delegate.supportsSubqueriesInExists()
     }
 
-    override fun getMaxSchemaNameLength(): Int {
-        TODO("not implemented")
+    override fun getMaxSchemaNameLength(): Int = record {
+        delegate.maxSchemaNameLength
     }
 
-    override fun supportsANSI92EntryLevelSQL(): Boolean {
-        TODO("not implemented")
+    override fun supportsANSI92EntryLevelSQL(): Boolean = record {
+        delegate.supportsANSI92EntryLevelSQL()
     }
 
-    override fun getDriverVersion(): String {
-        TODO("not implemented")
+    override fun getDriverVersion(): String = record {
+        delegate.driverVersion
     }
 
     override fun getPseudoColumns(
@@ -623,32 +613,40 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
         schemaPattern: String?,
         tableNamePattern: String?,
         columnNamePattern: String?
-                                 ): ResultSet {
-        TODO("not implemented")
+    ): RecordingResultSet = record(catalog, schemaPattern, tableNamePattern, columnNamePattern) {
+        connection.RecordingResultSet(
+            delegate.getPseudoColumns(
+                catalog,
+                schemaPattern,
+                tableNamePattern,
+                columnNamePattern
+            )
+        )
     }
 
-    override fun supportsMixedCaseQuotedIdentifiers(): Boolean {
-        TODO("not implemented")
+    override fun supportsMixedCaseQuotedIdentifiers(): Boolean = record {
+        delegate.supportsMixedCaseQuotedIdentifiers()
     }
 
-    override fun getProcedures(catalog: String?, schemaPattern: String?, procedureNamePattern: String?): ResultSet {
-        TODO("not implemented")
+    override fun getProcedures(catalog: String?, schemaPattern: String?, procedureNamePattern: String?): RecordingResultSet =
+        record(catalog, schemaPattern, procedureNamePattern) {
+            connection.RecordingResultSet(delegate.getProcedures(catalog, schemaPattern, procedureNamePattern))
+        }
+
+    override fun getDriverMajorVersion(): Int = record {
+        delegate.driverMajorVersion
     }
 
-    override fun getDriverMajorVersion(): Int {
-        TODO("not implemented")
+    override fun supportsANSI92FullSQL(): Boolean = record {
+        delegate.supportsANSI92FullSQL()
     }
 
-    override fun supportsANSI92FullSQL(): Boolean {
-        TODO("not implemented")
+    override fun supportsAlterTableWithAddColumn(): Boolean = record {
+        delegate.supportsAlterTableWithAddColumn()
     }
 
-    override fun supportsAlterTableWithAddColumn(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun supportsResultSetHoldability(holdability: Int): Boolean {
-        TODO("not implemented")
+    override fun supportsResultSetHoldability(holdability: Int): Boolean = record(holdability) {
+        delegate.supportsResultSetHoldability(holdability)
     }
 
     override fun getColumnPrivileges(
@@ -656,32 +654,33 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
         schema: String?,
         table: String?,
         columnNamePattern: String?
-                                    ): ResultSet {
-        TODO("not implemented")
+    ): RecordingResultSet = record(catalog, schema, table, columnNamePattern) {
+        connection.RecordingResultSet(delegate.getColumnPrivileges(catalog, schema, table, columnNamePattern))
     }
 
-    override fun getImportedKeys(catalog: String?, schema: String?, table: String?): ResultSet {
-        TODO("not implemented")
+    override fun getImportedKeys(catalog: String?, schema: String?, table: String?): RecordingResultSet =
+        record(catalog, schema, table) {
+            connection.RecordingResultSet(delegate.getImportedKeys(catalog, schema, table))
+        }
+
+    override fun supportsUnionAll(): Boolean = record {
+        delegate.supportsUnionAll()
     }
 
-    override fun supportsUnionAll(): Boolean {
-        TODO("not implemented")
+    override fun getRowIdLifetime(): RowIdLifetime = record {
+        delegate.rowIdLifetime
     }
 
-    override fun getRowIdLifetime(): RowIdLifetime {
-        TODO("not implemented")
+    override fun getDriverName(): String = record {
+        delegate.driverName
     }
 
-    override fun getDriverName(): String {
-        TODO("not implemented")
+    override fun doesMaxRowSizeIncludeBlobs(): Boolean = record {
+        delegate.doesMaxRowSizeIncludeBlobs()
     }
 
-    override fun doesMaxRowSizeIncludeBlobs(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun supportsGroupByUnrelated(): Boolean {
-        TODO("not implemented")
+    override fun supportsGroupByUnrelated(): Boolean = record {
+        delegate.supportsGroupByUnrelated()
     }
 
     override fun getIndexInfo(
@@ -690,152 +689,155 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
         table: String?,
         unique: Boolean,
         approximate: Boolean
-                             ): ResultSet {
-        TODO("not implemented")
+    ): RecordingResultSet = record(catalog, schema, table, unique, approximate) {
+        connection.RecordingResultSet(delegate.getIndexInfo(catalog, schema, table, unique, approximate))
     }
 
-    override fun supportsSubqueriesInIns(): Boolean {
-        TODO("not implemented")
+    override fun supportsSubqueriesInIns(): Boolean = record {
+        delegate.supportsSubqueriesInIns()
     }
 
-    override fun supportsStoredProcedures(): Boolean {
-        TODO("not implemented")
+    override fun supportsStoredProcedures(): Boolean = record {
+        delegate.supportsStoredProcedures()
     }
 
-    override fun getExportedKeys(catalog: String?, schema: String?, table: String?): ResultSet {
-        TODO("not implemented")
+    override fun getExportedKeys(catalog: String?, schema: String?, table: String?): RecordingResultSet =
+        record(catalog, schema, table) {
+            connection.RecordingResultSet(delegate.getExportedKeys(catalog, schema, table))
+        }
+
+    override fun supportsPositionedDelete(): Boolean = record {
+        delegate.supportsPositionedDelete()
     }
 
-    override fun supportsPositionedDelete(): Boolean {
-        TODO("not implemented")
+    override fun supportsAlterTableWithDropColumn(): Boolean = record {
+        delegate.supportsAlterTableWithDropColumn()
     }
 
-    override fun supportsAlterTableWithDropColumn(): Boolean {
-        TODO("not implemented")
+    override fun supportsExpressionsInOrderBy(): Boolean = record {
+        delegate.supportsExpressionsInOrderBy()
     }
 
-    override fun supportsExpressionsInOrderBy(): Boolean {
-        TODO("not implemented")
+    override fun getMaxCatalogNameLength(): Int = record {
+        delegate.maxCatalogNameLength
     }
 
-    override fun getMaxCatalogNameLength(): Int {
-        TODO("not implemented")
+    override fun supportsExtendedSQLGrammar(): Boolean = record {
+        delegate.supportsExtendedSQLGrammar()
     }
 
-    override fun supportsExtendedSQLGrammar(): Boolean {
-        TODO("not implemented")
+    override fun othersInsertsAreVisible(type: Int): Boolean = record(type) {
+        delegate.othersInsertsAreVisible(type)
     }
 
-    override fun othersInsertsAreVisible(type: Int): Boolean {
-        TODO("not implemented")
+    override fun updatesAreDetected(type: Int): Boolean = record(type) {
+        delegate.updatesAreDetected(type)
     }
 
-    override fun updatesAreDetected(type: Int): Boolean {
-        TODO("not implemented")
+    override fun supportsDataManipulationTransactionsOnly(): Boolean = record {
+        delegate.supportsDataManipulationTransactionsOnly()
     }
 
-    override fun supportsDataManipulationTransactionsOnly(): Boolean {
-        TODO("not implemented")
+    override fun supportsSubqueriesInComparisons(): Boolean = record {
+        delegate.supportsSubqueriesInComparisons()
     }
 
-    override fun supportsSubqueriesInComparisons(): Boolean {
-        TODO("not implemented")
+    override fun supportsSavepoints(): Boolean = record {
+        delegate.supportsSavepoints()
     }
 
-    override fun supportsSavepoints(): Boolean {
-        TODO("not implemented")
+    override fun getSQLKeywords(): String = record {
+        delegate.sqlKeywords
     }
 
-    override fun getSQLKeywords(): String {
-        TODO("not implemented")
+    override fun getMaxColumnNameLength(): Int = record {
+        delegate.maxColumnNameLength
     }
 
-    override fun getMaxColumnNameLength(): Int {
-        TODO("not implemented")
+    override fun nullPlusNonNullIsNull(): Boolean = record {
+        delegate.nullPlusNonNullIsNull()
     }
 
-    override fun nullPlusNonNullIsNull(): Boolean {
-        TODO("not implemented")
+    override fun supportsGroupByBeyondSelect(): Boolean = record {
+        delegate.supportsGroupByBeyondSelect()
     }
 
-    override fun supportsGroupByBeyondSelect(): Boolean {
-        TODO("not implemented")
+    override fun supportsCatalogsInPrivilegeDefinitions(): Boolean = record {
+        delegate.supportsCatalogsInPrivilegeDefinitions()
     }
 
-    override fun supportsCatalogsInPrivilegeDefinitions(): Boolean {
-        TODO("not implemented")
+    override fun allProceduresAreCallable(): Boolean = record {
+        delegate.allProceduresAreCallable()
     }
 
-    override fun allProceduresAreCallable(): Boolean {
-        TODO("not implemented")
+    override fun getSuperTables(catalog: String?, schemaPattern: String?, tableNamePattern: String?): RecordingResultSet =
+        record(catalog, schemaPattern, tableNamePattern) {
+            connection.RecordingResultSet(delegate.getSuperTables(catalog, schemaPattern, tableNamePattern))
+        }
+
+    override fun generatedKeyAlwaysReturned(): Boolean = record {
+        delegate.generatedKeyAlwaysReturned()
     }
 
-    override fun getSuperTables(catalog: String?, schemaPattern: String?, tableNamePattern: String?): ResultSet {
-        TODO("not implemented")
+    override fun storesUpperCaseQuotedIdentifiers(): Boolean = record {
+        delegate.storesUpperCaseQuotedIdentifiers()
     }
 
-    override fun generatedKeyAlwaysReturned(): Boolean {
-        TODO("not implemented")
+    override fun getMaxCharLiteralLength(): Int = record {
+        delegate.maxCharLiteralLength
     }
 
-    override fun storesUpperCaseQuotedIdentifiers(): Boolean {
-        TODO("not implemented")
+    override fun othersDeletesAreVisible(type: Int): Boolean = record(type) {
+        delegate.othersDeletesAreVisible(type)
     }
 
-    override fun getMaxCharLiteralLength(): Int {
-        TODO("not implemented")
+    override fun supportsNonNullableColumns(): Boolean = record {
+        delegate.supportsNonNullableColumns()
     }
 
-    override fun othersDeletesAreVisible(type: Int): Boolean {
-        TODO("not implemented")
+    override fun supportsUnion(): Boolean = record {
+        delegate.supportsUnion()
     }
 
-    override fun supportsNonNullableColumns(): Boolean {
-        TODO("not implemented")
+    override fun supportsDifferentTableCorrelationNames(): Boolean = record {
+        delegate.supportsDifferentTableCorrelationNames()
     }
 
-    override fun supportsUnion(): Boolean {
-        TODO("not implemented")
+    override fun supportsSchemasInPrivilegeDefinitions(): Boolean = record {
+        delegate.supportsSchemasInPrivilegeDefinitions()
     }
 
-    override fun supportsDifferentTableCorrelationNames(): Boolean {
-        TODO("not implemented")
+    override fun supportsSelectForUpdate(): Boolean = record {
+        delegate.supportsSelectForUpdate()
     }
 
-    override fun supportsSchemasInPrivilegeDefinitions(): Boolean {
-        TODO("not implemented")
+    override fun supportsMultipleTransactions(): Boolean = record {
+        delegate.supportsMultipleTransactions()
     }
 
-    override fun supportsSelectForUpdate(): Boolean {
-        TODO("not implemented")
+    override fun storesMixedCaseQuotedIdentifiers(): Boolean = record {
+        delegate.storesMixedCaseQuotedIdentifiers()
     }
 
-    override fun supportsMultipleTransactions(): Boolean {
-        TODO("not implemented")
+    override fun supportsOpenCursorsAcrossCommit(): Boolean = record {
+        delegate.supportsOpenCursorsAcrossCommit()
     }
 
-    override fun storesMixedCaseQuotedIdentifiers(): Boolean {
-        TODO("not implemented")
+    override fun storesMixedCaseIdentifiers(): Boolean = record {
+        delegate.storesMixedCaseIdentifiers()
     }
 
-    override fun supportsOpenCursorsAcrossCommit(): Boolean {
-        TODO("not implemented")
+    override fun getTablePrivileges(catalog: String?, schemaPattern: String?, tableNamePattern: String?): RecordingResultSet =
+        record(catalog, schemaPattern, tableNamePattern) {
+            connection.RecordingResultSet(delegate.getTablePrivileges(catalog, schemaPattern, tableNamePattern))
+        }
+
+    override fun supportsBatchUpdates(): Boolean = record {
+        delegate.supportsBatchUpdates()
     }
 
-    override fun storesMixedCaseIdentifiers(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun getTablePrivileges(catalog: String?, schemaPattern: String?, tableNamePattern: String?): ResultSet {
-        TODO("not implemented")
-    }
-
-    override fun supportsBatchUpdates(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun getResultSetHoldability(): Int {
-        TODO("not implemented")
+    override fun getResultSetHoldability(): Int = record {
+        delegate.resultSetHoldability
     }
 
     override fun toString(): String {
@@ -846,6 +848,6 @@ abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : Actio
 private fun Array<String>.dataArray(vararg data: Pair<String, Any?>): Array<Any?> {
     return Array(size) { idx ->
         val colName = get(idx)
-        data.firstOrNull { it.first == colName }?.second ?: null
+        data.firstOrNull { it.first == colName }?.second
     }
 }

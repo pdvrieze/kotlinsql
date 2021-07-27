@@ -28,53 +28,46 @@ import java.sql.SQLException
 import java.util.logging.Logger
 import javax.sql.DataSource
 
-class DummyDataSource(val db: Database? = null): DataSource {
+class RecordingDataSource(val delegate: DataSource, val db: Database? = null): DataSource {
     private var logWriter: PrintWriter = PrintWriter(System.out)
     private val rootLogger = Logger.getAnonymousLogger()
-    var tables: List<Table> = emptyList()
-
-    var lastConnection: DummyConnection? = null
 
     override fun setLogWriter(out: PrintWriter) {
-        logWriter = out
+        delegate.logWriter = out
     }
 
     override fun getParentLogger(): Logger {
-        return rootLogger
+        return delegate.parentLogger
     }
 
     override fun setLoginTimeout(seconds: Int) {
-        TODO("not implemented")
+        delegate.loginTimeout = seconds
     }
 
-    override fun isWrapperFor(iface: Class<*>?): Boolean {
-        return false
+    override fun isWrapperFor(iface: Class<*>): Boolean {
+        return iface.isInstance(delegate) || delegate.isWrapperFor(iface)
     }
 
     override fun getLogWriter(): PrintWriter {
         return logWriter
     }
 
-    override fun <T : Any?> unwrap(iface: Class<T>?): T {
-        throw SQLException("Not implemented / relevant")
+    override fun <T : Any?> unwrap(iface: Class<T>): T {
+        return when {
+            iface.isInstance(delegate) -> iface.cast(delegate)
+            else                       -> delegate.unwrap(iface)
+        }
     }
 
     override fun getConnection(): Connection {
-        lastConnection = DummyConnection(db).also {
-            if (tables.isNotEmpty()) it.tables = tables
-        }
-        return lastConnection!!
+        return RecordingConnection(delegate.connection, db)
     }
 
     override fun getConnection(username: String?, password: String?): Connection {
-        return getConnection()
+        return RecordingConnection(delegate.getConnection(username, password), db)
     }
 
     override fun getLoginTimeout(): Int {
-        TODO("not implemented")
-    }
-
-    fun setTables(vararg tables: Table) {
-        this.tables =tables.toList()
+        return delegate.loginTimeout
     }
 }
