@@ -27,9 +27,10 @@ import java.sql.*
 import java.util.*
 import java.util.concurrent.Executor
 
-class RecordingConnection(val delegate: Connection, val db: Database? = null) : ActionRecorder(), Connection {
+class RecordingConnection(delegate: Connection, val db: Database? = null) : WrappingActionRecorder<Connection>(delegate), Connection {
     val actions = mutableListOf<Action>()
 
+/*
     var tables: List<Table> = db?.run { _tables.toList() } ?: emptyList()
         set(value) {
             field = value.toList()
@@ -38,6 +39,7 @@ class RecordingConnection(val delegate: Connection, val db: Database? = null) : 
     private var isClosed = false
     private var autoCommit = true
     private var nextSavePoint = 1
+*/
 
     override fun recordAction(action: Action) {
         actions.add(action)
@@ -112,19 +114,14 @@ class RecordingConnection(val delegate: Connection, val db: Database? = null) : 
         delegate.commit()
     }
 
-    override fun <T : Any?> unwrap(iface: Class<T>?): T {
-        record(iface)
-        return delegate.unwrap(iface)
-    }
-
     override fun setTransactionIsolation(level: Int) {
         record(level)
         delegate.transactionIsolation = level
     }
 
     override fun setAutoCommit(autoCommit: Boolean) {
-        this.autoCommit = autoCommit
         actions.add(SetAutoCommit(autoCommit))
+        delegate.autoCommit = autoCommit
     }
 
     override fun abort(executor: Executor?) {
@@ -163,7 +160,7 @@ class RecordingConnection(val delegate: Connection, val db: Database? = null) : 
     }
 
     override fun getAutoCommit(): Boolean {
-        return autoCommit.also { actions.add(StringAction("getAutoCommit() -> $it")) }
+        return delegate.autoCommit.also { actions.add(StringAction("getAutoCommit() -> $it")) }
     }
 
     override fun setCatalog(catalog: String?) {
@@ -193,12 +190,12 @@ class RecordingConnection(val delegate: Connection, val db: Database? = null) : 
     }
 
     override fun close() {
-        isClosed = true
-        actions.add(StringAction("Connection.close()"))
+        recordAction(ConnectionClose)
+        delegate.close()
     }
 
-    override fun isClosed(): Boolean {
-        return isClosed
+    override fun isClosed(): Boolean = record {
+        delegate.isClosed
     }
 
     override fun createNClob(): NClob = record {
@@ -216,10 +213,6 @@ class RecordingConnection(val delegate: Connection, val db: Database? = null) : 
     override fun setReadOnly(readOnly: Boolean) {
         record(readOnly)
         delegate.isReadOnly = readOnly
-    }
-
-    override fun isWrapperFor(iface: Class<*>?): Boolean = record(iface) {
-        delegate.isWrapperFor(iface)
     }
 
     override fun nativeSQL(sql: String?): String = record(sql) {
@@ -305,6 +298,10 @@ class RecordingConnection(val delegate: Connection, val db: Database? = null) : 
 
     override fun createSQLXML(): SQLXML = record {
         delegate.createSQLXML()
+    }
+
+    override fun toString(): String {
+        return "RecordingConnection($db)"
     }
 
     inner class RecordingCallableStatement(delegate: CallableStatement, sql: String) :

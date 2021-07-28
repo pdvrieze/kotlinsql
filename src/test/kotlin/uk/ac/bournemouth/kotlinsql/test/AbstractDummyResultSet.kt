@@ -20,20 +20,35 @@
 
 package uk.ac.bournemouth.kotlinsql.test
 
+import io.github.pdvrieze.jdbc.recorder.actions.Action
 import java.io.InputStream
 import java.io.Reader
 import java.math.BigDecimal
 import java.net.URL
 import java.sql.*
-import java.sql.Array as SqlArray
 import java.sql.Date
 import java.util.*
+import kotlin.Any
+import kotlin.Array
+import kotlin.Boolean
+import kotlin.Byte
+import kotlin.ByteArray
+import kotlin.Double
+import kotlin.Float
+import kotlin.Int
+import kotlin.Long
+import kotlin.Short
+import kotlin.String
+import kotlin.TODO
+import kotlin.also
+import kotlin.emptyArray
+import java.sql.Array as SqlArray
 
 abstract class AbstractDummyResultSet(
     val query: String,
     private val columns: Array<String>,
     private val data: List<Array<out Any?>>
-                                     ) : ActionRecorder(), ResultSet {
+) : ResultSet, Action {
     private var wasNull: Boolean? = null
 
     constructor(query: String) : this(query, emptyArray(), emptyList())
@@ -44,8 +59,8 @@ abstract class AbstractDummyResultSet(
         return data[pos - 1][columnIndex - 1].also { wasNull = it == null }
     }
 
-    override fun findColumn(columnLabel: String): Int = record(columnLabel) {
-        columns.indexOf(columnLabel).also { if (it < 0) throw SQLException("Column not found") } + 1
+    override fun findColumn(columnLabel: String): Int {
+        return columns.indexOf(columnLabel).also { if (it < 0) throw SQLException("Column not found") } + 1
     }
 
     override fun getNClob(columnIndex: Int): NClob {
@@ -149,13 +164,10 @@ abstract class AbstractDummyResultSet(
     }
 
     override fun beforeFirst() {
-        record()
         pos = 0
     }
 
-    override fun close() {
-        recordAction(Close)
-    }
+    override fun close() {}
 
     override fun updateFloat(columnIndex: Int, x: Float) {
         TODO("not implemented")
@@ -173,9 +185,7 @@ abstract class AbstractDummyResultSet(
         TODO("not implemented")
     }
 
-    override fun isFirst(): Boolean = record {
-        pos == 1
-    }
+    override fun isFirst(): Boolean = pos == 1
 
     override fun getBigDecimal(columnIndex: Int, scale: Int): BigDecimal {
         TODO("not implemented")
@@ -201,9 +211,7 @@ abstract class AbstractDummyResultSet(
         TODO("not implemented")
     }
 
-    override fun isLast(): Boolean = record {
-        pos == data.size
-    }
+    override fun isLast(): Boolean = pos == data.size
 
     override fun insertRow() {
         TODO("not implemented")
@@ -229,14 +237,12 @@ abstract class AbstractDummyResultSet(
         TODO("not implemented")
     }
 
-    override fun last(): Boolean = record {
+    override fun last(): Boolean  {
         pos = data.size
-        data.isNotEmpty()
+        return data.isNotEmpty()
     }
 
-    override fun isAfterLast(): Boolean = record {
-        pos > data.size
-    }
+    override fun isAfterLast(): Boolean = pos > data.size
 
     override fun relative(rows: Int): Boolean {
         TODO("not implemented")
@@ -258,9 +264,9 @@ abstract class AbstractDummyResultSet(
         TODO("not implemented")
     }
 
-    override fun next(): Boolean = record {
+    override fun next(): Boolean {
         pos++
-        pos <= data.size
+        return pos <= data.size
     }
 
     override fun getFloat(columnIndex: Int): Float {
@@ -279,9 +285,9 @@ abstract class AbstractDummyResultSet(
         TODO("not implemented")
     }
 
-    override fun first(): Boolean = record {
+    override fun first(): Boolean {
         pos = 1
-        pos <= data.size
+        return pos <= data.size
     }
 
     override fun updateAsciiStream(columnIndex: Int, x: InputStream?, length: Int) {
@@ -432,8 +438,8 @@ abstract class AbstractDummyResultSet(
         TODO("not implemented")
     }
 
-    override fun getString(columnIndex: Int): String? = record(columnIndex) {
-        getData(columnIndex) as String?
+    override fun getString(columnIndex: Int): String? {
+        return getData(columnIndex) as String?
     }
 
     override fun getString(columnLabel: String): String? {
@@ -740,12 +746,10 @@ abstract class AbstractDummyResultSet(
         TODO("not implemented")
     }
 
-    override fun isWrapperFor(iface: Class<*>?): Boolean {
-        TODO("not implemented")
-    }
+    override fun isWrapperFor(iface: Class<*>?): Boolean = false
 
-    override fun getInt(columnIndex: Int): Int = record(columnIndex) {
-        getData(columnIndex) as Int? ?: 0
+    override fun getInt(columnIndex: Int): Int {
+        return getData(columnIndex) as Int? ?: 0
     }
 
     override fun getInt(columnLabel: String): Int {
@@ -827,10 +831,6 @@ abstract class AbstractDummyResultSet(
 
     override fun toString(): String {
         return "ResultSet($query)"
-    }
-
-    object Close : DummyConnection.Action {
-        override fun toString(): String = "ResultSet.close()"
     }
 
 }

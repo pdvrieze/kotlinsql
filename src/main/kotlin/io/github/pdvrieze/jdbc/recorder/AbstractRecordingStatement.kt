@@ -20,14 +20,16 @@
 
 package io.github.pdvrieze.jdbc.recorder
 
+import io.github.pdvrieze.jdbc.recorder.actions.StatementClose
 import java.sql.ResultSet
 import java.sql.SQLWarning
 import java.sql.Statement
 
 abstract class AbstractRecordingStatement<D: Statement>(
     private val connection: RecordingConnection,
-    protected val delegate: D
-) : ActionRecorder(), Statement {
+    delegate: D,
+    open val sql: String? = null,
+) : WrappingActionRecorder<D>(delegate), Statement {
 
     @get:JvmName("getIsClosed")
     protected var isClosed = false
@@ -56,7 +58,7 @@ abstract class AbstractRecordingStatement<D: Statement>(
     }
 
     final override fun close() {
-        record()
+        recordAction(StatementClose(sql))
         delegate.close()
     }
 
@@ -115,7 +117,7 @@ abstract class AbstractRecordingStatement<D: Statement>(
     }
 
     final override fun getFetchSize(): Int = record {
-        delegate.getFetchSize()
+        delegate.fetchSize
     }
 
     final override fun getGeneratedKeys(): ResultSet = record {
@@ -123,7 +125,7 @@ abstract class AbstractRecordingStatement<D: Statement>(
     }
 
     final override fun getMaxFieldSize(): Int = record {
-        delegate.getMaxFieldSize()
+        delegate.maxFieldSize
     }
 
     final override fun getMaxRows(): Int = record {
@@ -139,7 +141,7 @@ abstract class AbstractRecordingStatement<D: Statement>(
     }
 
     final override fun getQueryTimeout(): Int = record {
-        delegate.getQueryTimeout()
+        delegate.queryTimeout
     }
 
     final override fun getResultSet(): ResultSet = record {
@@ -168,11 +170,7 @@ abstract class AbstractRecordingStatement<D: Statement>(
     }
 
     final override fun isPoolable(): Boolean = record {
-        delegate.isPoolable()
-    }
-
-    final override fun isWrapperFor(iface: Class<*>?): Boolean = record {
-        delegate.isWrapperFor(iface)
+        delegate.isPoolable
     }
 
     final override fun isClosed(): Boolean = record {
@@ -196,7 +194,7 @@ abstract class AbstractRecordingStatement<D: Statement>(
 
     final override fun setFetchDirection(direction: Int) {
         record(direction)
-        delegate.setFetchDirection(direction)
+        delegate.fetchDirection = direction
     }
 
     final override fun setFetchSize(rows: Int) {
@@ -211,7 +209,7 @@ abstract class AbstractRecordingStatement<D: Statement>(
 
     final override fun setMaxRows(max: Int) {
         record(max)
-        delegate.setMaxRows(max)
+        delegate.maxRows = max
     }
 
 
@@ -223,10 +221,6 @@ abstract class AbstractRecordingStatement<D: Statement>(
     final override fun setQueryTimeout(seconds: Int) {
         record(seconds)
         delegate.queryTimeout = seconds
-    }
-
-    final override fun <T : Any?> unwrap(iface: Class<T>?): T = record(iface) {
-        delegate.unwrap(iface)
     }
 
 }

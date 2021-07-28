@@ -28,7 +28,6 @@ import java.sql.*
 import java.util.*
 import java.util.concurrent.Executor
 import javax.sql.DataSource
-import javax.xml.crypto.Data
 
 @Suppress("MemberVisibilityCanBePrivate", "unused", "PropertyName")
 open class DBConnection2<DB : Database> constructor(val rawConnection: Connection, override val db: DB) :
@@ -228,13 +227,13 @@ open class DBConnection2<DB : Database> constructor(val rawConnection: Connectio
         override val connection: DBConnection2<DB>,
         override val db: DB,
         action: DBActionObj<DB, Unit, *>
-                                                                                           ) :
-        DBTransactionBase.ActionContext<DB> {
+    ) : DBTransactionBase.ActionContext<DB> {
         private val actions = ArrayDeque<DBActionObj<DB, *, *>>()
             .apply { add(action) }
         private val onCommitActions = mutableListOf<DBTransactionBase.ActionContext<DB>.() -> Unit>()
         private val onRollbackActions = mutableListOf<DBTransactionBase.ActionContext<DB>.() -> Unit>()
         var data: Any? = Unit
+        private var savePoint: Savepoint? = null
 
         override fun rollback(): Nothing {
             throw RollbackException()
@@ -245,7 +244,7 @@ open class DBConnection2<DB : Database> constructor(val rawConnection: Connectio
                 connection,
                 db,
                 action
-                                                                                                            )
+            )
         }
 
         /**
@@ -259,20 +258,27 @@ open class DBConnection2<DB : Database> constructor(val rawConnection: Connectio
             return evaluateNow()
         }
 
-        private inline fun evalImpl(afterEval: (Connection, Boolean) -> Unit) {
+        private fun evalImpl(afterEval: (Connection, Boolean) -> Unit) {
             val rawConnection = connection.rawConnection
             val oldAutoCommit = rawConnection.autoCommit
-            if (oldAutoCommit) { rawConnection.autoCommit = false }
-            var savePoint = rawConnection.setSavepoint()
+            if (oldAutoCommit) {
+                rawConnection.autoCommit = false
+            }
+            if (savePoint== null) {
+                savePoint = rawConnection.setSavepoint()
+            }
             try {
-                while(actions.isNotEmpty()) {
+                while (actions.isNotEmpty()) {
+                    @Suppress("UNCHECKED_CAST")
                     val nextAction = actions.removeFirst() as DBAction<DB, Any?, Any?>
 
                     data = nextAction(this, data)
                 }
                 afterEval(rawConnection, oldAutoCommit)
-                rawConnection.releaseSavepoint(savePoint)
-                savePoint = null
+                if (savePoint != null) {
+                    rawConnection.rollback(savePoint)
+                    savePoint = null
+                }
             } catch (e: Exception) {
                 for (action in onRollbackActions) {
                     try {
@@ -282,7 +288,13 @@ open class DBConnection2<DB : Database> constructor(val rawConnection: Connectio
                     }
                 }
                 try {
-                    rawConnection.rollback(savePoint)
+                    if (savePoint!=null) {
+                        val sp = savePoint
+                        savePoint = null
+                        rawConnection.rollback(sp)
+                    } else {
+                        rawConnection.rollback()
+                    }
                 } catch (f: Exception) {
 //                    rawConnection.rollback() // Savepoint is invalid
                     e.addSuppressed(f)
@@ -308,13 +320,17 @@ open class DBConnection2<DB : Database> constructor(val rawConnection: Connectio
                 for (action in onCommitActions) {
                     action()
                 }
+                if (savePoint != null) {
+                    rawConnection.releaseSavepoint(savePoint)
+                    savePoint = null
+                }
                 rawConnection.commit()
             }
             onCommitActions.clear()
 
             return when (val data = data) { // special case sequences
                 is Sequence<*> -> data.toList().asSequence()
-                else -> data
+                else           -> data
             }
         }
 
@@ -331,7 +347,7 @@ open class DBConnection2<DB : Database> constructor(val rawConnection: Connectio
         }
 
         fun prependActions(sourceContext: ContextImpl<DB>) {
-            for(action in sourceContext.actions) {
+            for (action in sourceContext.actions) {
                 actions.addFirst(action)
             }
             sourceContext.actions.clear()
@@ -350,6 +366,7 @@ open class DBConnection2<DB : Database> constructor(val rawConnection: Connectio
         override val db: DB get() = context.db
 
         override fun evaluateNow(): T {
+            @Suppress("UNCHECKED_CAST")
             return context.evaluateNow() as T
         }
 
@@ -370,10 +387,12 @@ open class DBConnection2<DB : Database> constructor(val rawConnection: Connectio
             return this as DBTransaction<DB, Output>
         }
 
+        @Suppress("OverridingDeprecatedMember")
         override fun <Output> flatmapOld(action: DBAction<DB, T, DBTransaction<DB, Output>>): DBTransaction<DB, Output> = map {
             when (val actionResult = action(it)) {
                 is DBTransactionImpl -> {
                     context.prependActions(actionResult.context)
+                    @Suppress("UNCHECKED_CAST")
                     Unit as Output // We have just injected further actions, but they have unit as input
                 }
                 else                                                                                         -> actionResult.evaluateNow()

@@ -20,6 +20,7 @@
 
 package uk.ac.bournemouth.kotlinsql.test
 
+import io.github.pdvrieze.jdbc.recorder.actions.Action
 import java.sql.ResultSet
 import java.sql.SQLWarning
 import java.sql.Statement
@@ -28,17 +29,17 @@ abstract class AbstractDummyStatement(
     private val connection: DummyConnection,
     private val resultSetType: Int = ResultSet.TYPE_SCROLL_INSENSITIVE,
     private val resultSetConcurrency: Int = ResultSet.CONCUR_UPDATABLE
-                                     ) : ActionRecorder(), Statement {
+) : Statement, Action {
 
     @get:JvmName("getIsClosed")
     protected var isClosed = false
 
 
-    final override fun clearBatch() = record()
+    final override fun clearBatch() {}
 
-    final override fun getResultSetType(): Int = recordRes(resultSetType)
+    final override fun getResultSetType(): Int = resultSetType
 
-    final override fun isCloseOnCompletion(): Boolean = recordRes(true)
+    final override fun isCloseOnCompletion(): Boolean = true
 
     override fun <T : Any?> unwrap(iface: Class<T>?): T {
         TODO("not implemented")
@@ -48,13 +49,13 @@ abstract class AbstractDummyStatement(
         TODO("not implemented")
     }
 
-    final override fun cancel() = record()
+    final override fun cancel() {}
 
     final override fun getConnection(): DummyConnection = connection
 
-    final override fun setMaxFieldSize(max: Int) = record(max)
+    final override fun setMaxFieldSize(max: Int) {}
 
-    final override fun getWarnings(): SQLWarning? = recordRes(null)
+    final override fun getWarnings(): SQLWarning? = null
 
     override fun executeQuery(sql: String?): ResultSet {
         TODO("not implemented")
@@ -62,16 +63,15 @@ abstract class AbstractDummyStatement(
 
     override fun close() {
         isClosed = true
-        record()
     }
 
-    final override fun isClosed(): Boolean = recordRes(isClosed)
+    final override fun isClosed(): Boolean = isClosed
 
     override fun getMaxFieldSize(): Int {
         TODO("not implemented")
     }
 
-    override fun isWrapperFor(iface: Class<*>?): Boolean = recordRes(false)
+    override fun isWrapperFor(iface: Class<*>?): Boolean = false
 
     override fun getUpdateCount(): Int {
         TODO("not implemented")
@@ -145,7 +145,7 @@ abstract class AbstractDummyStatement(
         TODO("not implemented")
     }
 
-    final override fun getResultSetConcurrency(): Int = recordRes(resultSetConcurrency)
+    final override fun getResultSetConcurrency(): Int = resultSetConcurrency
 
     override fun getResultSet(): ResultSet {
         TODO("not implemented")

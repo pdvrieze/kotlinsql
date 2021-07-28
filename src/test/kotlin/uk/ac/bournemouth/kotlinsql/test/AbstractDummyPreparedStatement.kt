@@ -20,6 +20,7 @@
 
 package uk.ac.bournemouth.kotlinsql.test
 
+import io.github.pdvrieze.jdbc.recorder.actions.Action
 import java.io.InputStream
 import java.io.Reader
 import java.lang.Exception
@@ -35,77 +36,55 @@ abstract class AbstractDummyPreparedStatement(
     resultSetType: Int = ResultSet.TYPE_SCROLL_INSENSITIVE,
     resultSetConcurrency: Int = ResultSet.CONCUR_UPDATABLE,
     resultSetHoldability: Int = ResultSet.CLOSE_CURSORS_AT_COMMIT
-                                             ) :
-    AbstractDummyStatement(connection, resultSetType, resultSetConcurrency), PreparedStatement {
+) : AbstractDummyStatement(connection, resultSetType, resultSetConcurrency), PreparedStatement {
 
     private var curParamRow = 0
     val params = mutableListOf<MutableList<Any?>>()
 
-    override fun <R> recordRes(result: R, vararg args: Any?): R {
-        val calledFunction = Exception().stackTrace[1].methodName
-        val ac = when(result) {
-            Unit -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}})")
-            else -> DummyConnection.StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}}) -> ${result.stringify()}")
-        }
-        recordAction(ac)
-        return result
-    }
-
-    override fun record(vararg args: Any?) {
-        val calledFunction = Exception().stackTrace[1].methodName
-        val ac = DummyConnection.StringAction("\"$sql\" -- $calledFunction(${args.joinToString()})")
-        recordAction(ac)
-    }
-
     override fun close() {
         isClosed = true
-        recordAction(Close(sql))
     }
 
-    override fun setRef(parameterIndex: Int, x: Ref?) = record(parameterIndex, x)
+    override fun setRef(parameterIndex: Int, x: Ref?) {}
 
-    override fun setBlob(parameterIndex: Int, x: Blob?) = record(parameterIndex, x)
+    override fun setBlob(parameterIndex: Int, x: Blob?) {}
 
-    override fun setBlob(parameterIndex: Int, inputStream: InputStream?, length: Long) =
-        record(parameterIndex, inputStream, length)
+    override fun setBlob(parameterIndex: Int, inputStream: InputStream?, length: Long) {}
 
-    override fun setBlob(parameterIndex: Int, inputStream: InputStream?) = record(parameterIndex, inputStream)
+    override fun setBlob(parameterIndex: Int, inputStream: InputStream?) {}
 
-    override fun setCharacterStream(parameterIndex: Int, reader: Reader?, length: Int) =
-        record(parameterIndex, reader, length)
+    override fun setCharacterStream(parameterIndex: Int, reader: Reader?, length: Int) {}
 
-    override fun setCharacterStream(parameterIndex: Int, reader: Reader?, length: Long) =
-        record(parameterIndex, reader, length)
+    override fun setCharacterStream(parameterIndex: Int, reader: Reader?, length: Long) {}
 
-    override fun setCharacterStream(parameterIndex: Int, reader: Reader?) = record(parameterIndex, reader)
+    override fun setCharacterStream(parameterIndex: Int, reader: Reader?) {}
 
-    override fun setArray(parameterIndex: Int, x: java.sql.Array?) = record(parameterIndex, x)
+    override fun setArray(parameterIndex: Int, x: java.sql.Array?) {}
 
-    override fun setDate(parameterIndex: Int, x: Date?) = record(parameterIndex, x)
+    override fun setDate(parameterIndex: Int, x: Date?) {}
 
-    override fun setDate(parameterIndex: Int, x: Date?, cal: Calendar?) = record(parameterIndex, x, cal)
+    override fun setDate(parameterIndex: Int, x: Date?, cal: Calendar?) {}
 
-    override fun clearParameters() = record()
+    override fun clearParameters() {}
 
-    override fun setObject(parameterIndex: Int, x: Any?, targetSqlType: Int) = record(parameterIndex, x, targetSqlType)
+    override fun setObject(parameterIndex: Int, x: Any?, targetSqlType: Int) {}
 
-    override fun setObject(parameterIndex: Int, x: Any?) = record(parameterIndex, x)
+    override fun setObject(parameterIndex: Int, x: Any?) {}
 
-    override fun setObject(parameterIndex: Int, x: Any?, targetSqlType: Int, scaleOrLength: Int) =
-        record(parameterIndex, x, targetSqlType, scaleOrLength)
+    override fun setObject(parameterIndex: Int, x: Any?, targetSqlType: Int, scaleOrLength: Int) {}
 
-    override fun setBytes(parameterIndex: Int, x: ByteArray?) = record(parameterIndex, x)
+    override fun setBytes(parameterIndex: Int, x: ByteArray?) {}
 
-    override fun setLong(parameterIndex: Int, x: Long) = record(parameterIndex, x)
+    override fun setLong(parameterIndex: Int, x: Long) {}
 
-    override fun setClob(parameterIndex: Int, x: Clob?) = record(parameterIndex, x)
+    override fun setClob(parameterIndex: Int, x: Clob?) {}
 
-    override fun setClob(parameterIndex: Int, reader: Reader?, length: Long) = record(parameterIndex, reader, length)
+    override fun setClob(parameterIndex: Int, reader: Reader?, length: Long) {}
 
-    override fun setClob(parameterIndex: Int, reader: Reader?) = record(parameterIndex, reader)
+    override fun setClob(parameterIndex: Int, reader: Reader?) {}
 
     override fun executeQuery(): ResultSet {
-        return connection.DummyResultSet(sql).also { recordAction(it) }
+        return connection.DummyResultSet(sql)
     }
 
     override fun executeQuery(sql: String?): ResultSet {
@@ -156,9 +135,7 @@ abstract class AbstractDummyPreparedStatement(
         TODO("not implemented")
     }
 
-    override fun executeBatch(): IntArray = record {
-        IntArray(params.size) { 1 }
-    }
+    override fun executeBatch(): IntArray = IntArray(params.size) { 1 }
 
     override fun getQueryTimeout(): Int {
         TODO("not implemented")
@@ -212,9 +189,7 @@ abstract class AbstractDummyPreparedStatement(
         TODO("not implemented")
     }
 
-    override fun executeUpdate(): Int = record {
-        params.size
-    }
+    override fun executeUpdate(): Int = params.size
 
     override fun executeUpdate(sql: String?): Int {
         TODO("not implemented")
@@ -233,6 +208,7 @@ abstract class AbstractDummyPreparedStatement(
     }
 
     override fun <T : Any?> unwrap(iface: Class<T>?): T {
+
         TODO("not implemented")
     }
 
@@ -248,7 +224,7 @@ abstract class AbstractDummyPreparedStatement(
         TODO("not implemented")
     }
 
-    override fun setString(parameterIndex: Int, x: String?) = record(parameterIndex, x) {
+    override fun setString(parameterIndex: Int, x: String?) {
         while (params.size <= curParamRow) {
             params.add(mutableListOf())
         }
@@ -283,9 +259,7 @@ abstract class AbstractDummyPreparedStatement(
         TODO("not implemented")
     }
 
-    override fun isWrapperFor(iface: Class<*>?): Boolean {
-        TODO("not implemented")
-    }
+    override fun isWrapperFor(iface: Class<*>?): Boolean = false
 
     override fun setNull(parameterIndex: Int, sqlType: Int) {
         TODO("not implemented")
@@ -316,7 +290,7 @@ abstract class AbstractDummyPreparedStatement(
     }
 
     override fun execute(): Boolean {
-        TODO("not implemented")
+        return true
     }
 
     override fun execute(sql: String?): Boolean {
@@ -355,7 +329,7 @@ abstract class AbstractDummyPreparedStatement(
         TODO("not implemented")
     }
 
-    override fun addBatch(): Unit = record {
+    override fun addBatch(): Unit {
         curParamRow++
     }
 
@@ -392,7 +366,7 @@ abstract class AbstractDummyPreparedStatement(
     }
 
 
-    class Close(private val sql: String) : DummyConnection.Action {
+    class Close(private val sql: String) : Action {
         override fun toString(): String {
             return "PreparedStatement($sql).close()"
         }

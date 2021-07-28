@@ -33,8 +33,10 @@ import java.util.*
 abstract class AbstractRecordingPreparedStatement<D: PreparedStatement>(
     connection: RecordingConnection,
     delegate: D,
-    val sql: String
-) : AbstractRecordingStatement<D>(connection, delegate), PreparedStatement {
+    sql: String
+) : AbstractRecordingStatement<D>(connection, delegate, sql), PreparedStatement {
+
+    override val sql: String get() = super.sql!!
 
     override fun record(vararg args: Any?) {
         val calledFunction = Exception().stackTrace[1].methodName
@@ -49,7 +51,7 @@ abstract class AbstractRecordingPreparedStatement<D: PreparedStatement>(
     override fun clearParameters() = record()
 
     override fun execute(): Boolean {
-        return record() {
+        return record {
             delegate.execute()
         }
     }
@@ -301,6 +303,7 @@ abstract class AbstractRecordingPreparedStatement<D: PreparedStatement>(
 
     override fun setUnicodeStream(parameterIndex: Int, x: InputStream?, length: Int) {
         record(parameterIndex, x, length)
+        @Suppress("DEPRECATION")
         delegate.setUnicodeStream(parameterIndex, x, length)
     }
 
@@ -311,6 +314,5 @@ abstract class AbstractRecordingPreparedStatement<D: PreparedStatement>(
     override fun getMoreResults(current: Int): Boolean = record {
         delegate.getMoreResults(current)
     }
-
 
 }

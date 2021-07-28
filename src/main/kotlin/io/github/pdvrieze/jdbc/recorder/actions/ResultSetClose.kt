@@ -20,6 +20,30 @@
 
 package io.github.pdvrieze.jdbc.recorder.actions
 
-object Close : Action {
-    override fun toString(): String = "ResultSet.close()"
+import io.github.pdvrieze.jdbc.recorder.AbstractRecordingStatement
+import io.github.pdvrieze.jdbc.recorder.escape
+
+object ResultSetClose : Action {
+    override fun toString(): String = "ResultSetClose"
+}
+
+object ConnectionClose: Action {
+    override fun toString(): String = "Connection.close()"
+}
+
+class StatementClose(val query: String?): Action {
+    override fun toString(): String = "Statement(${query?.escape() ?: ""}).close()"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is StatementClose) return false
+
+        if (query != other.query) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return query?.hashCode() ?: 0
+    }
 }

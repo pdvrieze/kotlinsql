@@ -20,7 +20,7 @@
 
 package io.github.pdvrieze.jdbc.recorder
 
-import io.github.pdvrieze.jdbc.recorder.actions.Close
+import io.github.pdvrieze.jdbc.recorder.actions.ResultSetClose
 import java.io.InputStream
 import java.io.Reader
 import java.math.BigDecimal
@@ -31,17 +31,9 @@ import java.sql.Date
 import java.util.*
 
 abstract class AbstractRecordingResultSet(
-    val delegate: ResultSet,
+    delegate: ResultSet,
     val query: String
-) : ActionRecorder(), ResultSet {
-
-    final override fun <T : Any?> unwrap(iface: Class<T>?): T = record(iface) {
-        delegate.unwrap(iface)
-    }
-
-    final override fun isWrapperFor(iface: Class<*>?): Boolean = record {
-        delegate.isWrapperFor(iface)
-    }
+) : WrappingActionRecorder<ResultSet>(delegate), ResultSet {
 
     override fun findColumn(columnLabel: String): Int = record(columnLabel) {
         delegate.findColumn(columnLabel)
@@ -170,7 +162,7 @@ abstract class AbstractRecordingResultSet(
     }
 
     override fun close() {
-        recordAction(Close)
+        recordAction(ResultSetClose)
     }
 
     override fun updateFloat(columnIndex: Int, x: Float) {
@@ -196,10 +188,12 @@ abstract class AbstractRecordingResultSet(
     }
 
     override fun getBigDecimal(columnIndex: Int, scale: Int): BigDecimal = record(columnIndex, scale) {
+        @Suppress("DEPRECATION")
         delegate.getBigDecimal(columnIndex, scale)
     }
 
     override fun getBigDecimal(columnLabel: String?, scale: Int): BigDecimal = record(columnLabel, scale) {
+        @Suppress("DEPRECATION")
         delegate.getBigDecimal(columnLabel, scale)
     }
 
@@ -805,10 +799,12 @@ abstract class AbstractRecordingResultSet(
     }
 
     override fun getUnicodeStream(columnIndex: Int): InputStream = record(columnIndex) {
+        @Suppress("DEPRECATION")
         delegate.getUnicodeStream(columnIndex)
     }
 
     override fun getUnicodeStream(columnLabel: String?): InputStream = record(columnLabel) {
+        @Suppress("DEPRECATION")
         delegate.getUnicodeStream(columnLabel)
     }
 

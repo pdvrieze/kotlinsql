@@ -23,8 +23,9 @@ package io.github.pdvrieze.jdbc.recorder
 import io.github.pdvrieze.jdbc.recorder.actions.Action
 import io.github.pdvrieze.jdbc.recorder.actions.StringAction
 import java.lang.Exception
+import java.sql.Wrapper
 
-abstract class ActionRecorder {
+abstract class ActionRecorder2 {
 
     protected inline fun <R> record(args: Array<Any?> = emptyArray(), crossinline action: () -> R): R {
         return action().also { recordRes2(it, args) }
@@ -52,11 +53,26 @@ abstract class ActionRecorder {
         return action().also { recordRes2(it, arrayOf(arg1, arg2, arg3)) }
     }
 
-    protected inline fun <R> record(arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?, arg5: Any?, crossinline action: () -> R): R {
+    protected inline fun <R> record(
+        arg1: Any?,
+        arg2: Any?,
+        arg3: Any?,
+        arg4: Any?,
+        arg5: Any?,
+        crossinline action: () -> R
+    ): R {
         return action().also { recordRes2(it, arrayOf(arg1, arg2, arg3)) }
     }
 
-    protected inline fun <R> record(arg1: Any?, arg2: Any?, arg3: Any?, arg4: Any?, arg5: Any?, arg6: Any?, crossinline action: () -> R): R {
+    protected inline fun <R> record(
+        arg1: Any?,
+        arg2: Any?,
+        arg3: Any?,
+        arg4: Any?,
+        arg5: Any?,
+        arg6: Any?,
+        crossinline action: () -> R
+    ): R {
         return action().also { recordRes2(it, arrayOf(arg1, arg2, arg3)) }
     }
 
@@ -65,9 +81,9 @@ abstract class ActionRecorder {
     open protected fun <R> recordRes(result: R, vararg args: Any?): R {
         val calledFunction = Exception().stackTrace[1].methodName
 
-        val ac = when(result) {
-            Unit -> StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}})")
-            else -> StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}}) -> ${result.stringify()}")
+        val ac = when (result) {
+            Unit -> StringAction("$this.$calledFunction(${args.joinToString { it.stringify() }})")
+            else -> StringAction("$this.$calledFunction(${args.joinToString { it.stringify() }}) -> ${result.stringify()}")
         }
         recordAction(ac)
         if (result is Action) {
@@ -78,14 +94,11 @@ abstract class ActionRecorder {
 
     open protected fun <R> recordRes2(result: R, args: Array<Any?>): R {
         val calledFunction = Exception().stackTrace[2].methodName
-        val ac = when(result) {
-            Unit -> StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}})")
-            else -> StringAction("$this.$calledFunction(${args.joinToString{it.stringify()}}) -> ${result.stringify()}")
+        val ac = when (result) {
+            Unit -> StringAction("$this.$calledFunction(${args.joinToString { it.stringify() }})")
+            else -> StringAction("$this.$calledFunction(${args.joinToString { it.stringify() }}) -> ${result.stringify()}")
         }
         recordAction(ac)
-        if (result is Action) {
-            recordAction(result)
-        }
         return result
     }
 
@@ -94,5 +107,19 @@ abstract class ActionRecorder {
         val ac = StringAction("$this.$calledFunction(${args.joinToString()})")
         recordAction(ac)
     }
+
+}
+
+abstract class WrappingActionRecorder<D : Wrapper>(val delegate: D) : ActionRecorder2(), Wrapper {
+
+    final override fun isWrapperFor(iface: Class<*>): Boolean =
+        iface.isInstance(delegate) || delegate.isWrapperFor(iface)
+
+    @Suppress("UNCHECKED_CAST")
+    final override fun <T : Any?> unwrap(iface: Class<T>): T = when {
+        iface.isInstance(delegate) -> (delegate as T)
+        else                       -> delegate.unwrap(iface)
+    }
+
 
 }

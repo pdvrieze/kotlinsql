@@ -66,7 +66,7 @@ interface Table : TableRef {
         connection.dropTransitive(ifExists).evaluateNow()
 
     fun ensureTable(connection: DBConnection2<*>, retainExtraColumns: Boolean = true) =
-        connection.ensureTable(retainExtraColumns).evaluateNow()
+        connection.ensureTable(retainExtraColumns).commit()
 
     fun <DB : Database> DB.createTransitive(
         ifNotExists: Boolean,

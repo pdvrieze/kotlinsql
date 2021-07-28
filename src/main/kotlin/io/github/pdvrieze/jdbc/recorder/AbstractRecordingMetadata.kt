@@ -25,16 +25,8 @@ import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.RowIdLifetime
 
-abstract class AbstractRecordingMetadata(val delegate: DatabaseMetaData) : ActionRecorder(), DatabaseMetaData {
+abstract class AbstractRecordingMetadata(delegate: DatabaseMetaData) : WrappingActionRecorder<DatabaseMetaData>(delegate), DatabaseMetaData {
     abstract override fun getConnection(): RecordingConnection
-
-    final override fun <T : Any?> unwrap(iface: Class<T>?): T = record(iface) {
-        delegate.unwrap(iface)
-    }
-
-    final override fun isWrapperFor(iface: Class<*>?): Boolean = record {
-        delegate.isWrapperFor(iface)
-    }
 
     override fun supportsSubqueriesInQuantifieds(): Boolean = record {
         delegate.supportsSubqueriesInQuantifieds()

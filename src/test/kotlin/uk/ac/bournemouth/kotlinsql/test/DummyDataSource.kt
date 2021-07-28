@@ -18,8 +18,9 @@
  * under the License.
  */
 
-package io.github.pdvrieze.jdbc.recorder
+package uk.ac.bournemouth.kotlinsql.test
 
+import io.github.pdvrieze.jdbc.recorder.RecordingConnection
 import uk.ac.bournemouth.kotlinsql.Database
 import uk.ac.bournemouth.kotlinsql.Table
 import java.io.PrintWriter
@@ -28,44 +29,54 @@ import java.sql.SQLException
 import java.util.logging.Logger
 import javax.sql.DataSource
 
-class RecordingDataSource(val delegate: DataSource, val db: Database? = null): DataSource {
+class DummyDataSource(val db: Database? = null): DataSource {
     private var logWriter: PrintWriter = PrintWriter(System.out)
     private val rootLogger = Logger.getAnonymousLogger()
+    var tables: List<Table> = emptyList()
+
+    var lastConnection: RecordingConnection? = null
 
     override fun setLogWriter(out: PrintWriter) {
-        delegate.logWriter = out
+        logWriter = out
     }
 
     override fun getParentLogger(): Logger {
-        return delegate.parentLogger
+        return rootLogger
     }
 
     override fun setLoginTimeout(seconds: Int) {
-        delegate.loginTimeout = seconds
+        TODO("not implemented")
     }
 
-    final override fun isWrapperFor(iface: Class<*>): Boolean {
-        return iface.isInstance(delegate) || delegate.isWrapperFor(iface)
-    }
-
-    final override fun <T : Any?> unwrap(iface: Class<T>): T = when {
-        iface.isInstance(delegate) -> iface.cast(delegate)
-        else                       -> delegate.unwrap(iface)
+    override fun isWrapperFor(iface: Class<*>?): Boolean {
+        return false
     }
 
     override fun getLogWriter(): PrintWriter {
         return logWriter
     }
 
+    override fun <T : Any?> unwrap(iface: Class<T>?): T {
+        throw SQLException("Not implemented / relevant")
+    }
+
     override fun getConnection(): Connection {
-        return RecordingConnection(delegate.connection, db)
+        val dummyCon = DummyConnection(db).also {
+            if (tables.isNotEmpty()) it.tables = tables
+        }
+        lastConnection = RecordingConnection(dummyCon, db)
+        return lastConnection!!
     }
 
     override fun getConnection(username: String?, password: String?): Connection {
-        return RecordingConnection(delegate.getConnection(username, password), db)
+        return getConnection()
     }
 
     override fun getLoginTimeout(): Int {
-        return delegate.loginTimeout
+        TODO("not implemented")
+    }
+
+    fun setTables(vararg tables: Table) {
+        this.tables =tables.toList()
     }
 }
