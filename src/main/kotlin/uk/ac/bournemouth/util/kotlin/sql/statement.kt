@@ -22,6 +22,7 @@
 
 package uk.ac.bournemouth.util.kotlin.sql
 
+import uk.ac.bournemouth.kotlinsql.sql.useHelper
 import java.math.BigDecimal
 import java.sql.*
 import java.util.*
@@ -210,7 +211,7 @@ class StatementHelper constructor(val statement: PreparedStatement, private val 
    * Get a a string as the single return column.
    */
   fun stringResult(): String? {
-    execute { rs ->
+    return execute { rs ->
       if(rs.next()) {
         return rs.getString(1)
       }

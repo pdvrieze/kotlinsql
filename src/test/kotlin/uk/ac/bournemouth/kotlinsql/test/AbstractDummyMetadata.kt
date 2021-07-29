@@ -20,7 +20,7 @@
 
 package uk.ac.bournemouth.kotlinsql.test
 
-import uk.ac.bournemouth.kotlinsql.ILengthColumn
+import uk.ac.bournemouth.kotlinsql.columns.ILengthColumn
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.RowIdLifetime

@@ -24,7 +24,7 @@ buildscript {
 
     ext {
         if (!rootProject.hasProperty('kotlin_version')) {
-            kotlin_version = '1.4.30'
+            kotlin_version = '1.5.21'
         }
         if (!rootProject.hasProperty('codegen_version')) {
             codegen_version = '0.5.10'

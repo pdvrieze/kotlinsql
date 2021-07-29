@@ -17,10 +17,6 @@
 package uk.ac.bournemouth.kotlinsql
 
 
-import uk.ac.bournemouth.kotlinsql.Database
-import uk.ac.bournemouth.kotlinsql.MutableTable
-import uk.ac.bournemouth.util.kotlin.sql.DBContext
-
 /**
  * Code definition of the webauth database.
  */

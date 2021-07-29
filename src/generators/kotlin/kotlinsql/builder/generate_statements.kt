@@ -41,7 +41,8 @@ class GenerateStatementsKt {
 //      appendln("import uk.ac.bournemouth.kotlinsql.Database")
       appendLine("import uk.ac.bournemouth.kotlinsql.Database.*")
       appendLine("import uk.ac.bournemouth.kotlinsql.IColumnType")
-      appendLine("import uk.ac.bournemouth.util.kotlin.sql.impl.DBConnection2")
+      appendLine("import uk.ac.bournemouth.kotlinsql.monadic.MonadicDBConnection")
+      appendLine("import uk.ac.bournemouth.kotlinsql.sql.NonMonadicApi")
       appendLine("import java.sql.SQLException")
 
       for (n in 1..count) {
@@ -70,7 +71,7 @@ class GenerateStatementsKt {
         }
 
         appendLine()
-        append("  override fun execute(connection:DBConnection2<*>, block: (")
+        append("  override fun execute(connection:MonadicDBConnection<*>, block: (")
         (1..n).joinToString(",") { m -> "T$m?" }.apply { append(this) }
         appendLine(")->Unit):Boolean {")
         appendLine("    return executeHelper(connection, block) { rs, block2 ->")
@@ -87,7 +88,8 @@ class GenerateStatementsKt {
 
         if (n > 1) {
           appendLine()
-          append("  override fun getSingle(connection:DBConnection2<*>)")
+          appendLine("  @NonMonadicApi")
+          append("  override fun getSingle(connection:MonadicDBConnection<*>)")
           append(" = getSingle(connection) { ")
           (1..n).joinTo(this, ",") { "p$it" }
           append(" -> Result(")
@@ -95,7 +97,8 @@ class GenerateStatementsKt {
           appendLine(")}")
 
           appendLine()
-          append("  override fun <R> getSingle(connection:DBConnection2<*>, factory:")
+          appendLine("  @NonMonadicApi")
+          append("  override fun <R> getSingle(connection:MonadicDBConnection<*>, factory:")
           appendFactorySignature(n)
           appendLine("):R? {")
           appendLine("    return connection.prepareStatement(toSQL()) {")
@@ -115,7 +118,7 @@ class GenerateStatementsKt {
 
         appendLine()
         if (n == 1) {
-          appendLine("  override fun getList(connection: DBConnection2<*>): List<T1?> {")
+          appendLine("  override fun getList(connection: MonadicDBConnection<*>): List<T1?> {")
           appendLine("    val result=mutableListOf<T1?>()")
           append("    execute(connection) { ")
           (1..n).joinToString { "p$it" }.apply { append(this) }
@@ -123,7 +126,7 @@ class GenerateStatementsKt {
           (1..n).joinToString { "p$it" }.apply { append(this) }
           appendLine(") }")
         } else {
-          append("  override fun <R> getList(connection: DBConnection2<*>, factory:")
+          append("  override fun <R> getList(connection: MonadicDBConnection<*>, factory:")
           appendFactorySignature(n)
           appendLine("): List<R> {")
           appendLine("    val result=mutableListOf<R>()")

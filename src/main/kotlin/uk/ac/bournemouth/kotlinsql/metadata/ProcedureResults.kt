@@ -1,0 +1,51 @@
+/*
+ * Copyright (c) 2021.
+ *
+ * This file is part of kotlinsql.
+ *
+ * This file is licenced to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You should have received a copy of the license with the source distribution.
+ * Alternatively, you may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package uk.ac.bournemouth.kotlinsql.metadata
+
+import java.sql.DatabaseMetaData
+import java.sql.ResultSet
+
+@Suppress("unused")
+class ProcedureResults(attributes: ResultSet) : AbstractMetadataResultSet(attributes) {
+
+    private fun procedureType(sqlValue: Short) = ProcedureType.values().first { it.sqlValue == sqlValue }
+
+    enum class ProcedureType(val sqlValue: Short) {
+        PROCEDURE_RESULT_UNKNOWN(DatabaseMetaData.procedureResultUnknown.toShort()),
+        PROCEDURE_NO_RESULT(DatabaseMetaData.procedureNoResult.toShort()),
+        PROCEDURE_RETURNS_RESULT(DatabaseMetaData.procedureReturnsResult.toShort())
+    }
+
+    private val idxProcedureCat by lazyColIdx("PROCEDURE_CAT")
+    private val idxProcedureSchem by lazyColIdx("PROCEDURE_SCHEM")
+    private val idxProcedureName by lazyColIdx("PROCEDURE_NAME")
+    private val idxSpecificName by lazyColIdx("SPECIFIC_NAME")
+    private val idxProcedureType by lazyColIdx("PROCEDURE_TYPE")
+    private val idxRemarks by lazyColIdx("REMARKS")
+
+    val procedureCatalog: String? get() = resultSet.getString(idxProcedureCat)
+    val procedureScheme: String? get() = resultSet.getString(idxProcedureSchem)
+    val procedureName: String get() = resultSet.getString(idxProcedureName)
+    val specificName: String get() = resultSet.getString(idxSpecificName)
+    val procedureType: ProcedureType get() = procedureType(resultSet.getShort(idxProcedureType))
+    val remarks: String? get() = resultSet.getString(idxRemarks)
+
+}

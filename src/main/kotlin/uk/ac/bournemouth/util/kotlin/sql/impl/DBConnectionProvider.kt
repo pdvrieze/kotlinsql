@@ -21,8 +21,10 @@
 package uk.ac.bournemouth.util.kotlin.sql.impl
 
 import uk.ac.bournemouth.kotlinsql.Database
-import uk.ac.bournemouth.kotlinsql.MonadicMetadata
-import uk.ac.bournemouth.kotlinsql.MonadicMetadataImpl
+import uk.ac.bournemouth.kotlinsql.monadic.MonadicDBConnection
+import uk.ac.bournemouth.kotlinsql.monadic.MonadicMetadata
+import uk.ac.bournemouth.kotlinsql.monadic.impl.MonadicMetadataImpl
+import uk.ac.bournemouth.kotlinsql.monadic.use
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.ConnectionSource
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.DBActionReceiver
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.invoke as genInvoke
@@ -40,7 +42,7 @@ fun <DB: Database, R> ConnectionSource<DB>.transaction(body: TransactionBuilder<
 }
 
 @DbActionDSL
-class TransactionBuilder<DB: Database>(val connection: DBConnection2<DB>): DBActionReceiver<DB> {
+class TransactionBuilder<DB: Database>(val connection: MonadicDBConnection<DB>): DBActionReceiver<DB> {
 
     override val db: DB get() = connection.db
 
@@ -61,7 +63,7 @@ class TransactionBuilder<DB: Database>(val connection: DBConnection2<DB>): DBAct
 
 internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSource<DB> {
     override fun ensureTables(retainExtraColumns: Boolean) {
-        DBConnection2(datasource.connection, db).use { _ ->
+        MonadicDBConnection(datasource.connection, db).use { _ ->
             DBAction2.GenericAction<DB, Unit> { conn ->
                 db.ensureTables(conn, retainExtraColumns)
             }.commit()
@@ -75,9 +77,9 @@ internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSourc
 
 private val metadataInstance = MonadicMetadataImpl<Database>()
 
-internal inline fun <DB: Database, R> ConnectionSource<DB>.use(action: DBConnection2<DB>.() -> R):R {
+internal inline fun <DB: Database, R> ConnectionSource<DB>.use(action: MonadicDBConnection<DB>.() -> R):R {
     var doCommit = true
-    val conn = DBConnection2(datasource.connection, db)
+    val conn = MonadicDBConnection(datasource.connection, db)
     try {
         return conn.action()
     } catch (e: Exception) {

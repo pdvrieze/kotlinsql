@@ -41,39 +41,40 @@ class GenerateSelectClasses {
       appendLine("import uk.ac.bournemouth.kotlinsql.Database")
       appendLine("import uk.ac.bournemouth.kotlinsql.Database.*")
       appendLine("import uk.ac.bournemouth.kotlinsql.IColumnType")
-      appendLine("import uk.ac.bournemouth.util.kotlin.sql.impl.DBConnection2")
-      appendLine("import uk.ac.bournemouth.util.kotlin.sql.DBTransaction")
-      appendLine("import uk.ac.bournemouth.util.kotlin.sql.DBTransactionBase")
+      appendLine("import uk.ac.bournemouth.kotlinsql.monadic.MonadicDBConnection")
+      appendLine("import uk.ac.bournemouth.kotlinsql.monadic.EvaluatableDBTransaction")
+      appendLine("import uk.ac.bournemouth.kotlinsql.monadic.EmptyDBTransaction")
+      appendLine("import uk.ac.bournemouth.kotlinsql.sql.NonMonadicApi")
       appendLine("import uk.ac.bournemouth.kotlinsql.executeHelper")
       appendLine("import uk.ac.bournemouth.kotlinsql.sequenceHelper")
 
       for (n in 2..count) {
         appendLine()
         append("interface Select$n<")
-        (1..n).joinToString(",\n               ") { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }
+        (1..n).joinToString(",\n               ") { m -> "T$m: Any, S$m: IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }
           .apply { append(this) }
         appendLine(">:SelectStatement {")
         appendLine()
-        append("  override val select:_Select$n<")
+        append("  override val select: _Select$n<")
         (1..n).joinTo(this, ",") { m -> "T$m,S$m,C$m" }
         appendLine(">")
         appendLine()
-        append("  fun <R>getList(connection: DBConnection2<*>, factory:")
+        append("  fun <R>getList(connection: MonadicDBConnection<*>, factory:")
         appendFactorySignature(n)
         appendLine("): List<R>")
         if (n > 1) {
           appendLine()
-          append("  fun getSingle(connection:DBConnection2<*>): _Statement$n.Result<")
+          append("  fun getSingle(connection: MonadicDBConnection<*>): _Statement$n.Result<")
           (1..n).joinTo(this, ",") { m -> "T$m" }
           appendLine(">?")
 
           appendLine()
-          append("  fun <R> getSingle(connection:DBConnection2<*>, factory:")
+          append("  fun <R> getSingle(connection: MonadicDBConnection<*>, factory:")
           appendFactorySignature(n)
           appendLine("):R?")
 
           appendLine()
-          append("  fun execute(connection:DBConnection2<*>, block: (")
+          append("  fun execute(connection: MonadicDBConnection<*>, block: (")
           (1..n).joinToString(",") { m -> "T$m?" }.apply { append(this) }
           appendLine(")->Unit):Boolean")
         }
@@ -85,11 +86,11 @@ class GenerateSelectClasses {
 
           append("fun <DB: Database, In, ")
           (1..n).joinTo(this, ", ") { m -> "T$m: Any, C$m: Column<T$m, *, C$m>" }
-          append(", R> DBTransactionBase<DB, In>.sequence(queryGen: DB.(In)->Select$n<")
+          append(", R> EmptyDBTransaction<DB, In>.sequence(queryGen: DB.(In)->Select$n<")
           (1..n).joinTo(this, ", ") { m -> "T$m, *, C$m" }
           append(">, combine: (")
           (1..n).joinTo(this, ", ") { m -> "T$m?" }
-          appendLine(") -> R): DBTransaction<DB, Sequence<R>> {")
+          appendLine(") -> R): EvaluatableDBTransaction<DB, Sequence<R>> {")
 
           appendLine("    return sequenceHelper(queryGen) { query, rs ->")
 
@@ -101,7 +102,7 @@ class GenerateSelectClasses {
 
           appendLine("}")
           /*
-        fun <DB : Database, T : Any, C : Column<T, *, C>> DBTransactionBase<DB, *>.sequence(query: Database.Select1<T, *, C>): DBTransaction<DB, Sequence<T>> {
+        fun <DB : Database, T : Any, C : Column<T, *, C>> EmptyDBTransaction<DB, *>.sequence(query: Database.Select1<T, *, C>): EvaluatableDBTransaction<DB, Sequence<T>> {
     return sequenceHelper(query) { query, rs -> query.select.col1.fromResultSet(rs, 1)!! }
 }
 
@@ -126,14 +127,14 @@ class GenerateSelectClasses {
         appendLine("> get() = this")
 
         appendLine()
-        append("    override fun WHERE(config: _Where.() -> WhereClause?):Select$n<")
+        append("    override fun WHERE(config: _Where.() -> WhereClause?): Select$n<")
         (1..n).joinTo(this) { m -> "T$m, S$m, C$m" }
 
         appendLine("> =")
         appendLine("        _Where().config()?.let { _Statement$n(this, it) } ?: this")
 
         appendLine()
-        append("    override fun execute(connection:DBConnection2<*>, block: (")
+        append("    override fun execute(connection:MonadicDBConnection<*>, block: (")
         (1..n).joinToString(",") { m -> "T$m?" }.apply { append(this) }
         appendLine(")->Unit):Boolean {")
         appendLine("        return executeHelper(connection, block) { rs, block2 ->")
@@ -148,7 +149,7 @@ class GenerateSelectClasses {
         appendLine("    }")
 
         appendLine()
-        append("    override fun <R>getList(connection: DBConnection2<*>, factory:")
+        append("    override fun <R>getList(connection: MonadicDBConnection<*>, factory:")
         appendFactorySignature(n)
         appendLine("): List<R> {")
         appendLine("        val result=mutableListOf<R>()")
@@ -162,7 +163,8 @@ class GenerateSelectClasses {
 
         if (n > 1) {
           appendLine()
-          append("    override fun getSingle(connection:DBConnection2<*>)")
+          appendLine("    @NonMonadicApi")
+          append("    override fun getSingle(connection: MonadicDBConnection<*>)")
           append(" = getSingle(connection) { ")
           (1..n).joinTo(this, ",") { "p$it" }
           append(" -> _Statement$n.Result(")
@@ -171,7 +173,8 @@ class GenerateSelectClasses {
 
 
           appendLine()
-          append("    override fun <R> getSingle(connection:DBConnection2<*>, factory:")
+          appendLine("    @NonMonadicApi")
+          append("    override fun <R> getSingle(connection: MonadicDBConnection<*>, factory:")
           appendFactorySignature(n)
           appendLine("):R? {")
           appendLine("      return connection.prepareStatement(toSQL()) {")

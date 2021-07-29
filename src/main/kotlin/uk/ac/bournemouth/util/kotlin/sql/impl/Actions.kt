@@ -21,9 +21,13 @@
 package uk.ac.bournemouth.util.kotlin.sql.impl
 
 import uk.ac.bournemouth.kotlinsql.*
-import uk.ac.bournemouth.util.kotlin.sql.DBContext
+import uk.ac.bournemouth.kotlinsql.metadata.AbstractMetadataResultSet
+import uk.ac.bournemouth.kotlinsql.DBContext
+import uk.ac.bournemouth.kotlinsql.monadic.MonadicDBConnection
+import uk.ac.bournemouth.kotlinsql.sql.NonMonadicApi
+import uk.ac.bournemouth.kotlinsql.sql.ResultSetIterator
+import uk.ac.bournemouth.kotlinsql.sql.withConnection
 import uk.ac.bournemouth.util.kotlin.sql.impl.gen.ConnectionSource
-import uk.ac.bournemouth.util.kotlin.sql.withConnection
 import java.sql.ResultSet
 
 interface InternalResultSet
@@ -35,7 +39,7 @@ annotation class DbActionDSL
 sealed class DBAction2<DB : Database, out O> {
 
 
-    protected abstract fun <R> eval(connection: DBConnection2<DB>, block: (O) -> R): R
+    protected abstract fun <R> eval(connection: MonadicDBConnection<DB>, block: (O) -> R): R
 
     //    abstract fun apply(): R
     fun rollback() = Unit // by default no need to undo anything
@@ -52,7 +56,7 @@ sealed class DBAction2<DB : Database, out O> {
 
     class ValueMetadata<DB : Database, O> internal constructor(private val producer: (ConnectionMetadata) -> O) :
         DBAction2<DB, O>() {
-        override fun <R> eval(connection: DBConnection2<DB>, block: (O) -> R): R {
+        override fun <R> eval(connection: MonadicDBConnection<DB>, block: (O) -> R): R {
             val metadata = ConnectionMetadata(connection.rawConnection.metaData)
             return block(producer(metadata))
         }
@@ -64,7 +68,7 @@ sealed class DBAction2<DB : Database, out O> {
     internal constructor(private val provider: (ConnectionMetadata) -> RS) :
         DBAction2<DB, RS>() {
 
-        override fun <R> eval(connection: DBConnection2<DB>, block: (RS) -> R): R {
+        override fun <R> eval(connection: MonadicDBConnection<DB>, block: (RS) -> R): R {
             val metadata = ConnectionMetadata(connection.rawConnection.metaData)
             val resultSetWrapper = provider(metadata)
             try {
@@ -78,7 +82,8 @@ sealed class DBAction2<DB : Database, out O> {
 
     @DbActionDSL
     class Select<DB : Database, S : Database.SelectStatement>(val query: S) : DBAction2<DB, InternalResultSet>() {
-        override fun <R> eval(connection: DBConnection2<DB>, block: (InternalResultSet) -> R): R {
+        @OptIn(NonMonadicApi::class)
+        override fun <R> eval(connection: MonadicDBConnection<DB>, block: (InternalResultSet) -> R): R {
             val realAction = block as (ResultSet) -> R
 
             return connection.prepareStatement(query.toSQL()) {
@@ -102,7 +107,7 @@ sealed class DBAction2<DB : Database, out O> {
     @DbActionDSL
     class Insert<DB : Database, S : Database.Insert>(override val insert: S) : DBAction2<DB, Int>(),
                                                                                InsertCommon<DB, S> {
-        override fun <R> eval(connection: DBConnection2<DB>, action: (Int) -> R): R {
+        override fun <R> eval(connection: MonadicDBConnection<DB>, action: (Int) -> R): R {
             return action(insert.executeUpdate(connection))
         }
     }
@@ -110,7 +115,7 @@ sealed class DBAction2<DB : Database, out O> {
     @DbActionDSL
     class Transform<DB : Database, I, out O>(val source: DBAction2<DB, I>, val transform: (I) -> O) :
         DBAction2<DB, O>() {
-        override fun <R> eval(connection: DBConnection2<DB>, block: (O) -> R): R {
+        override fun <R> eval(connection: MonadicDBConnection<DB>, block: (O) -> R): R {
             return source.eval(connection) { input ->
                 block(transform(input))
             }
@@ -122,14 +127,14 @@ sealed class DBAction2<DB : Database, out O> {
         val source: DBAction2<DB, InternalResultSet>,
         private val action: (ResultSet) -> O
                                                   ) : DBAction2<DB, O>() {
-        override fun <R> eval(connection: DBConnection2<DB>, block: (O) -> R): R {
+        override fun <R> eval(connection: MonadicDBConnection<DB>, block: (O) -> R): R {
             return source.eval(connection, action as ((InternalResultSet) -> R))
         }
     }
 
     @DbActionDSL
     class Source<DB : Database, out O>(private val s: () -> O) : DBAction2<DB, O>() {
-        override fun <R> eval(connection: DBConnection2<DB>, block: (O) -> R): R = block(s())
+        override fun <R> eval(connection: MonadicDBConnection<DB>, block: (O) -> R): R = block(s())
 
         override fun commit(connectionSource: ConnectionSource<DB>): O = s()
     }
@@ -137,7 +142,7 @@ sealed class DBAction2<DB : Database, out O> {
     @DbActionDSL
     class Transaction<DB : Database, out O>(val action: TransactionBuilder<DB>.() -> O) : DBAction2<DB, O>() {
 
-        override fun <R> eval(connection: DBConnection2<DB>, block: (O) -> R): R {
+        override fun <R> eval(connection: MonadicDBConnection<DB>, block: (O) -> R): R {
             connection.rawConnection.autoCommit = false
             var doCommit = true
             try {
@@ -153,10 +158,10 @@ sealed class DBAction2<DB : Database, out O> {
     }
 
     class GenericAction<DB : Database, out O>(
-        val action: DBContext<DB>.(DBConnection2<DB>) -> O
+        val action: DBContext<DB>.(MonadicDBConnection<DB>) -> O
                                              ) : DBAction2<DB, O>() {
 
-        override fun <R> eval(connection: DBConnection2<DB>, block: (O) -> R): R {
+        override fun <R> eval(connection: MonadicDBConnection<DB>, block: (O) -> R): R {
             val context = SimpleDBContext(connection.db)
             return block(context.action(connection))
         }
