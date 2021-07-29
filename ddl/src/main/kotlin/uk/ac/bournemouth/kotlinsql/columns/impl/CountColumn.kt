@@ -21,17 +21,15 @@
 package uk.ac.bournemouth.kotlinsql.columns.impl
 
 import uk.ac.bournemouth.kotlinsql.*
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType
-import uk.ac.bournemouth.kotlinsql.columns.NumericColumn
+import uk.ac.bournemouth.kotlinsql.columns.*
 
-class CountColumn(private val colRef: ColumnRef<*, *, *>) : NumericColumn<Int, ColumnType.NumericColumnType.INT_T> {
+class CountColumn(private val colRef: ColumnRef<*, *, *>) : NumericColumn<Int, NumericColumnType.INT_T> {
     override val table: TableRef
         get() = colRef.table
     override val name: String
         get() = "COUNT( ${colRef.name} )"
-    override val type: ColumnType.NumericColumnType.INT_T
-        get() = ColumnType.NumericColumnType.INT_T
+    override val type: NumericColumnType.INT_T
+        get() = NumericColumnType.INT_T
     override val notnull: Boolean? get() = null
     override val unique: Boolean get() = false
     override val autoincrement: Boolean get() = false
@@ -44,26 +42,29 @@ class CountColumn(private val colRef: ColumnRef<*, *, *>) : NumericColumn<Int, C
     override val zerofill: Boolean get() = false
     override val displayLength: Int get() = 11
 
-    override fun copyConfiguration(newName: String?,
-                                   owner: Table
-    ): AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration<Int, ColumnType.NumericColumnType.INT_T> {
+    override fun copyConfiguration(
+        newName: String?,
+        owner: Table,
+    ): NumberColumnConfiguration<Int, NumericColumnType.INT_T> {
         throw UnsupportedOperationException()
     }
 
-    override fun ref(): ColumnRef<Int, ColumnType.NumericColumnType.INT_T, NumericColumn<Int, ColumnType.NumericColumnType.INT_T>> {
+    override fun ref(): ColumnRef<Int, NumericColumnType.INT_T, NumericColumn<Int, NumericColumnType.INT_T>> {
         throw UnsupportedOperationException()
     }
 
     override fun toDDL(): CharSequence {
-        throw UnsupportedOperationException()
+        throw UnsupportedOperationException("A table column cannot be a pure function.")
     }
 
-    override fun matches(typeName: String,
-                         size: Int,
-                         notNull: Boolean?,
-                         autoincrement: Boolean?,
-                         default: String?,
-                         comment: String?): Boolean {
+    override fun matches(
+        typeName: String,
+        size: Int,
+        notNull: Boolean?,
+        autoincrement: Boolean?,
+        default: String?,
+        comment: String?,
+    ): Boolean {
         return false
     }
 }

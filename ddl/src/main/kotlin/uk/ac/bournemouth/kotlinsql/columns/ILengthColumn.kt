@@ -22,6 +22,6 @@ package uk.ac.bournemouth.kotlinsql.columns
 
 import uk.ac.bournemouth.kotlinsql.Column
 
-interface ILengthColumn<T:Any, S: ColumnType.ILengthColumnType<T, S, C>, C: ILengthColumn<T, S, C>>: Column<T, S, C> {
+interface ILengthColumn<T:Any, S: ILengthColumnType<T, S, C>, C: ILengthColumn<T, S, C>>: Column<T, S, C> {
   val length:Int
 }

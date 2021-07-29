@@ -22,12 +22,13 @@ package uk.ac.bournemouth.kotlinsql.columns.impl
 
 import uk.ac.bournemouth.kotlinsql.*
 import uk.ac.bournemouth.kotlinsql.columns.ColumnType
-import uk.ac.bournemouth.kotlinsql.impl.toDDL
+import uk.ac.bournemouth.kotlinsql.impl.columnListToDDL
 
 /**
  * Implementation for the database API
  */
-internal abstract class ColumnImpl<T : Any, S : ColumnType<T, S, C>, C : Column<T, S, C>> internal constructor(
+internal abstract class ColumnImpl<T : Any, S : ColumnType<T, S, C>, C : Column<T, S, C>>
+internal constructor(
     override val table: TableRef,
     override val type: S,
     override val name: String,
@@ -79,7 +80,7 @@ internal abstract class ColumnImpl<T : Any, S : ColumnType<T, S, C>, C : Column<
             columnFormat?.let { append(" COLUMN_FORMAT ").append(it.name) }
             storageFormat?.let { append(" STORAGE ").append(it.name) }
             references?.let { append(" REFERENCES ").append(
-                toDDL(
+                columnListToDDL(
                     it.table._name,
                     it.columns
                 )

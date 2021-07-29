@@ -22,7 +22,7 @@ package uk.ac.bournemouth.kotlinsql.columns
 
 import uk.ac.bournemouth.kotlinsql.Column
 
-interface INumericColumn<T:Any, S: ColumnType.INumericColumnType<T, S, C>,C: INumericColumn<T, S, C>>: Column<T, S, C> {
+interface INumericColumn<T:Any, S: INumericColumnType<T, S, C>,C: INumericColumn<T, S, C>>: Column<T, S, C> {
   val unsigned: Boolean
   val zerofill: Boolean
   val displayLength: Int

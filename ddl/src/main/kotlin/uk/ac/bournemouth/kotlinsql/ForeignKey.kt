@@ -20,11 +20,15 @@
 
 package uk.ac.bournemouth.kotlinsql
 
-class ForeignKey constructor(private val fromCols:List<ColumnRef<*, *, *>>, internal val toTable: TableRef, private val toCols:List<ColumnRef<*, *, *>>) {
-  internal fun toDDL(): CharSequence {
-    val transform: (ColumnRef<*, *, *>) -> CharSequence = { it.name }
-    val result = fromCols.joinTo(StringBuilder(), "`, `", "FOREIGN KEY (`", "`) REFERENCES ", transform = transform)
-    result.append(toTable._name)
-    return toCols.joinTo(result, "`, `", " (`",  "`)", transform = transform)
-  }
+class ForeignKey constructor(
+    private val fromCols: List<ColumnRef<*, *, *>>,
+    internal val toTable: TableRef,
+    private val toCols: List<ColumnRef<*, *, *>>,
+) {
+    internal fun toDDL(): CharSequence {
+        val transform: (ColumnRef<*, *, *>) -> CharSequence = { it.name }
+        val result = fromCols.joinTo(StringBuilder(), "`, `", "FOREIGN KEY (`", "`) REFERENCES ", transform = transform)
+        result.append(toTable._name)
+        return toCols.joinTo(result, "`, `", " (`", "`)", transform = transform)
+    }
 }

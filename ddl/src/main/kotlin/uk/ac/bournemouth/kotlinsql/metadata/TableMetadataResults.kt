@@ -31,19 +31,19 @@ class TableMetadataResults(rs: ResultSet) : TableMetaResultBase(rs) {
         DERIVED
     }
 
-    private val idxTableType by lazyColIdx("TABLE_TYPE")
+    private val idxRefGeneration by lazyColIdx("REF_GENERATION")
     private val idxRemarks by lazyColIdx("REMARKS")
+    private val idxSelfReferencingColName by lazyColIdx("SELF_REFERENCING_COL_NAME")
+    private val idxTableType by lazyColIdx("TABLE_TYPE")
     private val idxTypeCat by lazyColIdx("TYPE_CAT")
     private val idxTypeSchem by lazyColIdx("TYPE_SCHEM")
     private val idxTypeName by lazyColIdx("TYPE_NAME")
-    private val idxSelfReferencingColName by lazyColIdx("SELF_REFERENCING_COL_NAME")
-    private val idxRefGeneration by lazyColIdx("REF_GENERATION")
 
-    val tableType: String get() = resultSet.getString(idxTableType)
+    val refGeneration: RefGeneration? get() = resultSet.getString(idxRefGeneration)?.let { RefGeneration.valueOf(it) }
     val remarks: String? get() = resultSet.getString(idxRemarks)
+    val selfReferencingColName: String? get() = resultSet.getString(idxSelfReferencingColName)
+    val tableType: String get() = resultSet.getString(idxTableType)
     val typeCatalog: String? get() = resultSet.getString(idxTypeCat)
     val typeScheme: String? get() = resultSet.getString(idxTypeSchem)
     val typeName: String? get() = resultSet.getString(idxTypeName)
-    val selfReferencingColName: String? get() = resultSet.getString(idxSelfReferencingColName)
-    val refGeneration: RefGeneration? get() = resultSet.getString(idxRefGeneration)?.let { RefGeneration.valueOf(it) }
 }

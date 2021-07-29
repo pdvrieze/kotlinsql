@@ -22,29 +22,31 @@ package uk.ac.bournemouth.kotlinsql.columns.impl
 
 import uk.ac.bournemouth.kotlinsql.Table
 import uk.ac.bournemouth.kotlinsql.TableRef
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType
-import uk.ac.bournemouth.kotlinsql.columns.LengthCharColumn
+import uk.ac.bournemouth.kotlinsql.columns.*
 
-internal class LengthCharColumnImpl<S : ColumnType.LengthCharColumnType<S>>(table: TableRef,
-                                                                            name: String,
-                                                                            configuration: AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration<S>
-) :
-    ColumnImpl<String, S, LengthCharColumn<S>>(table = table,
-                                               type = configuration.type,
-                                               name = name,
-                                               notnull = configuration.notnull,
-                                               unique = configuration.unique,
-                                               autoincrement = configuration.autoincrement,
-                                               default = configuration.default,
-                                               comment = configuration.comment,
-                                               columnFormat = configuration.columnFormat,
-                                               storageFormat = configuration.storageFormat,
-                                               references = configuration.references,
-                                               length = configuration.length,
-                                               binary = configuration.binary,
-                                               charset = configuration.charset,
-                                               collation = configuration.collation), LengthCharColumn<S> {
+internal class LengthCharColumnImpl<S : LengthCharColumnType<S>>
+constructor(
+    table: TableRef,
+    name: String,
+    configuration: LengthCharColumnConfiguration<S>,
+) : ColumnImpl<String, S, LengthCharColumn<S>>(
+    table = table,
+    type = configuration.type,
+    name = name,
+    notnull = configuration.notnull,
+    unique = configuration.unique,
+    autoincrement = configuration.autoincrement,
+    default = configuration.default,
+    comment = configuration.comment,
+    columnFormat = configuration.columnFormat,
+    storageFormat = configuration.storageFormat,
+    references = configuration.references,
+    length = configuration.length,
+    binary = configuration.binary,
+    charset = configuration.charset,
+    collation = configuration.collation
+), LengthCharColumn<S> {
+
     init {
         if (length < 1) {
             throw IllegalArgumentException("Lengths must be at least 1 and specified")
@@ -52,7 +54,7 @@ internal class LengthCharColumnImpl<S : ColumnType.LengthCharColumnType<S>>(tabl
     }
 
     override fun copyConfiguration(newName: String?, owner: Table) =
-        AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration(
+        LengthCharColumnConfiguration(
             type,
             newName ?: name,
             length

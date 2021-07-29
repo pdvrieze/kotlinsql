@@ -41,7 +41,7 @@ class GenerateStatementsKt {
 //      appendln("import uk.ac.bournemouth.kotlinsql.Database")
       appendLine("import uk.ac.bournemouth.kotlinsql.Database.*")
       appendLine("import uk.ac.bournemouth.kotlinsql.IColumnType")
-      appendLine("import uk.ac.bournemouth.kotlinsql.sql.NonMonadicApi")
+//      appendLine("import uk.ac.bournemouth.kotlinsql.sql.NonMonadicApi")
       appendLine("import java.sql.SQLException")
 
       for (n in 1..count) {

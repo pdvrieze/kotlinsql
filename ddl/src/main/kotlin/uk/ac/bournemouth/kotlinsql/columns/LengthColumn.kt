@@ -22,6 +22,6 @@ package uk.ac.bournemouth.kotlinsql.columns
 
 import uk.ac.bournemouth.kotlinsql.Table
 
-interface LengthColumn<T:Any, S: ColumnType.LengthColumnType<T, S>>: ILengthColumn<T, S, LengthColumn<T, S>> {
-  override fun copyConfiguration(newName:String?, owner: Table): AbstractColumnConfiguration.LengthColumnConfiguration<T, S>
+interface LengthColumn<T:Any, S: LengthColumnType<T, S>>: ILengthColumn<T, S, LengthColumn<T, S>> {
+  override fun copyConfiguration(newName:String?, owner: Table): LengthColumnConfiguration<T, S>
 }

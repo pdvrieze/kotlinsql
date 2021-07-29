@@ -25,11 +25,13 @@ import java.sql.ResultSet
 
 @Suppress("unused")
 class TablePrivilegesResult(privileges: ResultSet) : TableMetaResultBase(privileges) {
-    private val idxGrantor: Int by lazyColIdx("GRANTOR")
-    val grantor get():String? = resultSet.getString(idxGrantor)
     private val idxGrantee: Int by lazyColIdx("GRANTEE")
-    val grantee get(): String = resultSet.getString(idxGrantee)
-    private val idxPrivilege: Int by lazyColIdx("PRIVILEGE")
-    val privilege get():String = resultSet.getString(idxPrivilege)
+    private val idxGrantor: Int by lazyColIdx("GRANTOR")
     private val idxIsGrantable: Int by lazyColIdx("IS_GRANTABLE")
+    private val idxPrivilege: Int by lazyColIdx("PRIVILEGE")
+
+    val grantor get():String? = resultSet.getString(idxGrantor)
+    val grantee get(): String = resultSet.getString(idxGrantee)
+    val isGrantable get(): Boolean = resultSet.getBoolean(idxIsGrantable)
+    val privilege get():String = resultSet.getString(idxPrivilege)
 }

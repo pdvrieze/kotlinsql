@@ -20,18 +20,23 @@
 
 package uk.ac.bournemouth.kotlinsql.metadata
 
+import uk.ac.bournemouth.kotlinsql.impl.UnmanagedSql
 import uk.ac.bournemouth.kotlinsql.metadata.values.FetchDirection
 import uk.ac.bournemouth.kotlinsql.metadata.values.ResultSetType
-import uk.ac.bournemouth.kotlinsql.impl.WarningIterator
+import uk.ac.bournemouth.kotlinsql.util.WarningIterator
 import java.io.Closeable
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
 import java.sql.SQLException
 import java.sql.SQLWarning
 
-abstract class AbstractMetadataResultSet(protected val resultSet: ResultSet) : Closeable, AutoCloseable {
+abstract class AbstractMetadataResultSet(
+    @UnmanagedSql protected val resultSet: ResultSet
+) : Closeable, AutoCloseable {
+    @UnmanagedSql
     fun beforeFirst() = resultSet.beforeFirst()
 
+    @UnmanagedSql
     override fun close() = resultSet.close()
 
     fun getWarnings(): Iterator<SQLWarning> = WarningIterator(resultSet.warnings)
@@ -40,16 +45,21 @@ abstract class AbstractMetadataResultSet(protected val resultSet: ResultSet) : C
 
     val isLast: Boolean get() = resultSet.isLast
 
+    @UnmanagedSql
     fun last() = resultSet.last()
 
     val isAfterLast: Boolean get() = resultSet.isAfterLast
 
+    @UnmanagedSql
     fun relative(rows: Int) = resultSet.relative(rows)
 
+    @UnmanagedSql
     fun absolute(row: Int) = resultSet.absolute(row)
 
+    @UnmanagedSql
     fun next() = resultSet.next()
 
+    @UnmanagedSql
     fun first() = resultSet.first()
 
     val row: Int get() = resultSet.row
@@ -62,8 +72,10 @@ abstract class AbstractMetadataResultSet(protected val resultSet: ResultSet) : C
             else                              -> throw SQLException("Unexpected type found")
         }
 
+    @UnmanagedSql
     fun afterLast() = resultSet.afterLast()
 
+    @set:UnmanagedSql
     var fetchSize: Int
         get() = resultSet.fetchSize
         set(rows) {
@@ -72,6 +84,7 @@ abstract class AbstractMetadataResultSet(protected val resultSet: ResultSet) : C
 
     val holdability: Int get() = resultSet.holdability
 
+    @UnmanagedSql
     fun previous() = resultSet.previous()
 
     val isClosed: Boolean get() = resultSet.isClosed
@@ -80,16 +93,20 @@ abstract class AbstractMetadataResultSet(protected val resultSet: ResultSet) : C
 
     val isBeforeFirst: Boolean get() = resultSet.isBeforeFirst
 
+    @UnmanagedSql
     fun refreshRow() = resultSet.refreshRow()
 
     val concurrency: Int get() = resultSet.concurrency
 
+    @UnmanagedSql
     fun moveToCurrentRow() = resultSet.moveToCurrentRow()
 
+    @UnmanagedSql
     fun clearWarnings() = resultSet.clearWarnings()
 
     val metaData: ResultSetMetaData get() = resultSet.metaData
 
+    @set:UnmanagedSql
     var fetchDirection: FetchDirection
         get() = FetchDirection.fromSqlValue(resultSet.fetchDirection)
         set(value) {

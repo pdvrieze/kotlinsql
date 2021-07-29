@@ -20,21 +20,16 @@
 
 package uk.ac.bournemouth.kotlinsql
 
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType.NumericColumnType.INT_T
+import uk.ac.bournemouth.kotlinsql.columns.NumericColumnType.INT_T
 import uk.ac.bournemouth.kotlinsql.columns.ICharColumn
 import uk.ac.bournemouth.kotlinsql.columns.NumericColumn
 import uk.ac.bournemouth.kotlinsql.columns.impl.CountColumn
 import uk.ac.bournemouth.kotlinsql.impl.SqlComparisons
 import uk.ac.bournemouth.kotlinsql.impl.gen.DatabaseMethods
 import uk.ac.bournemouth.kotlinsql.impl.gen._Statement1
-import uk.ac.bournemouth.kotlinsql.sql.DBConnection
-import uk.ac.bournemouth.kotlinsql.sql.NonMonadicApi
-import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
+import uk.ac.bournemouth.kotlinsql.columns.PreparedStatementHelper
 import java.lang.reflect.*
-import java.sql.SQLException
 import java.util.*
-import javax.sql.*
 import kotlin.NoSuchElementException
 import kotlin.collections.ArrayList
 import kotlin.reflect.KProperty
@@ -103,7 +98,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
             return "( ${left.toSQL(prefixMap)} $rel ${right.toSQL(prefixMap)} )"
         }
 
-        override fun setParameters(statementHelper: StatementHelper, first: Int): Int {
+        override fun setParameters(statementHelper: PreparedStatementHelper, first: Int): Int {
             val i = left.setParameters(statementHelper, first)
             return right.setParameters(statementHelper, i)
         }
@@ -112,7 +107,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
     private class WhereBooleanUnary(val rel: String, val base: WhereClause) : BooleanWhereValue() {
         override fun toSQL(prefixMap: Map<String, String>?) = "$rel ${base.toSQL(prefixMap)}"
 
-        override fun setParameters(statementHelper: StatementHelper, first: Int): Int {
+        override fun setParameters(statementHelper: PreparedStatementHelper, first: Int): Int {
             return base.setParameters(statementHelper, first)
         }
     }
@@ -122,8 +117,8 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
 
         override fun toSQL(prefixMap: Map<String, String>?) = "${col.name(prefixMap)} LIKE ?"
 
-        override fun setParameters(statementHelper: StatementHelper, first: Int): Int {
-            statementHelper.setString(first, predicate)
+        override fun setParameters(statementHelper: PreparedStatementHelper, first: Int): Int {
+            statementHelper.setString(first, col.type.javaType, predicate)
             return first + 1
         }
 
@@ -135,7 +130,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
 
         override fun toSQL(prefixMap: Map<String, String>?) = "${col1.name(prefixMap)} $cmp ${col2.name(prefixMap)}"
 
-        override fun setParameters(statementHelper: StatementHelper, first: Int) = first
+        override fun setParameters(statementHelper: PreparedStatementHelper, first: Int) = first
     }
 
     private class WhereCmpParam<T : Any, S : IColumnType<T, S, *>>(val ref: ColumnRef<T, S, *>,
@@ -143,7 +138,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
                                                                    val value: T?) : BooleanWhereValue() {
         override fun toSQL(prefixMap: Map<String, String>?) = "`${ref.name}` $cmp ?"
 
-        override fun setParameters(statementHelper: StatementHelper, first: Int): Int {
+        override fun setParameters(statementHelper: PreparedStatementHelper, first: Int): Int {
             ref.type.setParam(statementHelper, first, value)
             return first + 1
         }
@@ -221,7 +216,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
         }
         val NULL: RefWhereValue = object : RefWhereValue() {
             override fun toSQL(prefixMap: Map<String, String>?) = "NULL"
-            override fun setParameters(statementHelper: StatementHelper, first: Int) = first
+            override fun setParameters(statementHelper: PreparedStatementHelper, first: Int) = first
         }
     }
 
@@ -233,7 +228,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
     interface ParameterizedStatement : Statement {
 
         /** Set the parameter values */
-        fun setParams(statementHelper: StatementHelper, first: Int = 1): Int
+        fun setParams(statementHelper: PreparedStatementHelper, first: Int = 1): Int
 
     }
 
@@ -258,13 +253,13 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
 
     abstract class WhereValue internal constructor() {
         abstract fun toSQL(prefixMap: Map<String, String>?): String
-        abstract fun setParameters(statementHelper: StatementHelper, first: Int = 1): Int
+        abstract fun setParameters(statementHelper: PreparedStatementHelper, first: Int = 1): Int
     }
 
     abstract class BooleanWhereValue : WhereClause()
 
     abstract class ConstBooleanWhereValue : BooleanWhereValue() {
-        override fun setParameters(statementHelper: StatementHelper, first: Int) = first
+        override fun setParameters(statementHelper: PreparedStatementHelper, first: Int) = first
     }
 
     abstract class RefWhereValue : WhereValue()
@@ -291,7 +286,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
             return "${update.toSQL(prefixMap)} WHERE ${where.toSQL(prefixMap)}"
         }
 
-        override fun setParams(statementHelper: StatementHelper, first: Int): Int {
+        override fun setParams(statementHelper: PreparedStatementHelper, first: Int): Int {
             val next = update.setParams(statementHelper, first)
             return where.setParameters(statementHelper, next)
         }
@@ -310,7 +305,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
             return "${select.toSQL(prefixMap)} WHERE ${where.toSQL(prefixMap)}"
         }
 
-        override fun setParams(statementHelper: StatementHelper, first: Int) =
+        override fun setParams(statementHelper: PreparedStatementHelper, first: Int) =
                 where.setParameters(statementHelper, first)
     }
 
@@ -318,7 +313,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
 
     class WhereEq(private val left: ColumnRef<*, *, *>, private val rel: String, private val right: RefWhereValue) : BooleanWhereValue() {
         override fun toSQL(prefixMap: Map<String, String>?) = "${left.name(prefixMap)} $rel ${right.toSQL(prefixMap)}"
-        override fun setParameters(statementHelper: StatementHelper, first: Int): Int {
+        override fun setParameters(statementHelper: PreparedStatementHelper, first: Int): Int {
             return right.setParameters(statementHelper, first)
         }
     }
@@ -352,7 +347,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
             }
         }
 
-        override fun setParams(statementHelper: StatementHelper, first: Int) = first
+        override fun setParams(statementHelper: PreparedStatementHelper, first: Int) = first
 
         private fun tableNames() = columns.map { it.table._name }.toSortedSet()
 
@@ -414,7 +409,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
         override fun toSQL(): String = "SELECT `${col1.name}` FROM `${col1.table._name}`"
         override fun toSQL(prefixMap: Map<String, String>?) = toSQL()
 
-        override fun setParams(statementHelper: StatementHelper, first: Int) = first
+        override fun setParams(statementHelper: PreparedStatementHelper, first: Int) = first
     }
 
     abstract class _UpdateBase internal constructor(val table: TableRef) : UpdatingStatement, ParameterizedStatement {
@@ -422,7 +417,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
 
         fun WHERE(config: _Where.() -> WhereClause?) = createUpdateStatement(this, _Where().config())
 
-        override fun setParams(statementHelper: StatementHelper, first: Int) = first
+        override fun setParams(statementHelper: PreparedStatementHelper, first: Int) = first
     }
 
     class _Delete internal constructor(table: TableRef) : _UpdateBase(table) {
@@ -437,7 +432,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
             return sets.joinToString(", ", "UPDATE ${table._name} SET ") { set -> "${set.column.name} = ?" }
         }
 
-        override fun setParams(statementHelper: StatementHelper, first: Int): Int {
+        override fun setParams(statementHelper: PreparedStatementHelper, first: Int): Int {
             sets.forEachIndexed { i, set ->
                 set.setParam(statementHelper, first + i)
             }
@@ -447,7 +442,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
 
     data class _Set<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>>(val column: ColumnRef<T, S, C>,
                                                                             val value: T?) {
-        fun setParam(statementHelper: StatementHelper, pos: Int) {
+        fun setParam(statementHelper: PreparedStatementHelper, pos: Int) {
             column.type.setParam(statementHelper, pos, value)
         }
     }
@@ -497,7 +492,7 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
 
         abstract inner class _BaseInsertValues(private vararg val values: Any?) {
 
-            fun setParams(statementHelper: StatementHelper, first: Int = 1): Int {
+            fun setParams(statementHelper: PreparedStatementHelper, first: Int = 1): Int {
                 for (i in columns.indices) {
                     columns[i].type.castSetParam(statementHelper, first + i, values[i])
                 }
@@ -587,24 +582,4 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
 
 }
 
-
-@NonMonadicApi
-inline fun <DB: Database, R> DB.connect(datasource: DataSource, block: DBConnection<DB>.() -> R): R {
-    val connection = datasource.connection
-    var doCommit = true
-    try {
-        return DBConnection(connection, this).block()
-    } catch (e: Exception) {
-        try {
-            connection.rollback()
-        } finally {
-            connection.close()
-            doCommit = false
-        }
-        throw e
-    } finally {
-        if (doCommit) connection.commit()
-        connection.close()
-    }
-}
 

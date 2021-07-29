@@ -25,6 +25,6 @@ import uk.ac.bournemouth.kotlinsql.ColumnRef
 
 internal val LINE_SEPARATOR: String by lazy { System.getProperty("line.separator")!! }
 
-internal fun toDDL(first: CharSequence, cols: List<ColumnRef<*, *, *>>): CharSequence {
+internal fun columnListToDDL(first: CharSequence, cols: List<ColumnRef<*, *, *>>): CharSequence {
     return cols.joinToString("`, `", "$first (`", "`)") { it.name }
 }

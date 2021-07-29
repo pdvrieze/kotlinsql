@@ -22,7 +22,7 @@ package uk.ac.bournemouth.kotlinsql.columns
 
 import uk.ac.bournemouth.kotlinsql.Column
 
-interface ICharColumn<S: ColumnType.ICharColumnType<S, C>, C: ICharColumn<S, C>>: Column<String, S, C> {
+interface ICharColumn<S: ICharColumnType<S, C>, C: ICharColumn<S, C>>: Column<String, S, C> {
   val charset: String?
   val collation: String?
   val binary: Boolean

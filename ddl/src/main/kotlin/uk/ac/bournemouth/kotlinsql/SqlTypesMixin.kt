@@ -18,23 +18,19 @@
  * under the License.
  */
 
-@file:Suppress("PropertyName", "FunctionName")
+@file:Suppress("PropertyName", "FunctionName", "unused")
 
 package uk.ac.bournemouth.kotlinsql
 
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration.AbstractCharColumnConfiguration.*
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration.NormalColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration.*
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.*
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType.CharColumnType.*
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType.DecimalColumnType.DECIMAL_T
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType.DecimalColumnType.NUMERIC_T
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType.LengthCharColumnType.CHAR_T
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType.LengthCharColumnType.VARCHAR_T
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType.LengthColumnType.*
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType.NumericColumnType.*
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType.SimpleColumnType.*
-import uk.ac.bournemouth.kotlinsql.columns.LengthColumn
+import uk.ac.bournemouth.kotlinsql.columns.*
+import uk.ac.bournemouth.kotlinsql.columns.CharColumnType.*
+import uk.ac.bournemouth.kotlinsql.columns.DecimalColumnType.DECIMAL_T
+import uk.ac.bournemouth.kotlinsql.columns.DecimalColumnType.NUMERIC_T
+import uk.ac.bournemouth.kotlinsql.columns.LengthCharColumnType.CHAR_T
+import uk.ac.bournemouth.kotlinsql.columns.LengthCharColumnType.VARCHAR_T
+import uk.ac.bournemouth.kotlinsql.columns.LengthColumnType.*
+import uk.ac.bournemouth.kotlinsql.columns.NumericColumnType.*
+import uk.ac.bournemouth.kotlinsql.columns.SimpleColumnType.*
 import java.sql.Date
 import java.sql.Time
 import java.sql.Timestamp

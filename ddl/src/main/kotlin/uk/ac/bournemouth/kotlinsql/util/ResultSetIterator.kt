@@ -18,7 +18,7 @@
  * under the License.
  */
 
-package uk.ac.bournemouth.kotlinsql.sql
+package uk.ac.bournemouth.kotlinsql.util
 
 import java.sql.ResultSet
 

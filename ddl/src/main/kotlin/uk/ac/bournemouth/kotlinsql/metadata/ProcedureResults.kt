@@ -28,24 +28,23 @@ class ProcedureResults(attributes: ResultSet) : AbstractMetadataResultSet(attrib
 
     private fun procedureType(sqlValue: Short) = ProcedureType.values().first { it.sqlValue == sqlValue }
 
+    private val idxProcedureCat by lazyColIdx("PROCEDURE_CAT")
+    private val idxProcedureSchem by lazyColIdx("PROCEDURE_SCHEM")
+    private val idxProcedureName by lazyColIdx("PROCEDURE_NAME")
+    private val idxProcedureType by lazyColIdx("PROCEDURE_TYPE")
+    private val idxRemarks by lazyColIdx("REMARKS")
+    private val idxSpecificName by lazyColIdx("SPECIFIC_NAME")
+
+    val procedureCatalog: String? get() = resultSet.getString(idxProcedureCat)
+    val procedureName: String get() = resultSet.getString(idxProcedureName)
+    val procedureScheme: String? get() = resultSet.getString(idxProcedureSchem)
+    val procedureType: ProcedureType get() = procedureType(resultSet.getShort(idxProcedureType))
+    val remarks: String? get() = resultSet.getString(idxRemarks)
+    val specificName: String get() = resultSet.getString(idxSpecificName)
+
     enum class ProcedureType(val sqlValue: Short) {
         PROCEDURE_RESULT_UNKNOWN(DatabaseMetaData.procedureResultUnknown.toShort()),
         PROCEDURE_NO_RESULT(DatabaseMetaData.procedureNoResult.toShort()),
         PROCEDURE_RETURNS_RESULT(DatabaseMetaData.procedureReturnsResult.toShort())
     }
-
-    private val idxProcedureCat by lazyColIdx("PROCEDURE_CAT")
-    private val idxProcedureSchem by lazyColIdx("PROCEDURE_SCHEM")
-    private val idxProcedureName by lazyColIdx("PROCEDURE_NAME")
-    private val idxSpecificName by lazyColIdx("SPECIFIC_NAME")
-    private val idxProcedureType by lazyColIdx("PROCEDURE_TYPE")
-    private val idxRemarks by lazyColIdx("REMARKS")
-
-    val procedureCatalog: String? get() = resultSet.getString(idxProcedureCat)
-    val procedureScheme: String? get() = resultSet.getString(idxProcedureSchem)
-    val procedureName: String get() = resultSet.getString(idxProcedureName)
-    val specificName: String get() = resultSet.getString(idxSpecificName)
-    val procedureType: ProcedureType get() = procedureType(resultSet.getShort(idxProcedureType))
-    val remarks: String? get() = resultSet.getString(idxRemarks)
-
 }

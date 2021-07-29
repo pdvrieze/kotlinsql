@@ -23,6 +23,6 @@ package uk.ac.bournemouth.kotlinsql.columns
 import uk.ac.bournemouth.kotlinsql.Column
 import uk.ac.bournemouth.kotlinsql.Table
 
-interface SimpleColumn<T:Any, S: ColumnType.SimpleColumnType<T, S>>: Column<T, S, SimpleColumn<T, S>> {
-  override fun copyConfiguration(newName:String?, owner: Table): AbstractColumnConfiguration.NormalColumnConfiguration<T, S>
+interface SimpleColumn<T:Any, S: SimpleColumnType<T, S>>: Column<T, S, SimpleColumn<T, S>> {
+  override fun copyConfiguration(newName:String?, owner: Table): NormalColumnConfiguration<T, S>
 }

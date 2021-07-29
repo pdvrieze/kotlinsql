@@ -22,26 +22,28 @@ package uk.ac.bournemouth.kotlinsql.columns.impl
 
 import uk.ac.bournemouth.kotlinsql.Table
 import uk.ac.bournemouth.kotlinsql.TableRef
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType
-import uk.ac.bournemouth.kotlinsql.columns.LengthColumn
+import uk.ac.bournemouth.kotlinsql.columns.*
 
-internal class LengthColumnImpl<T : Any, S : ColumnType.LengthColumnType<T, S>>(table: TableRef,
-                                                                                name: String,
-                                                                                configuration: AbstractColumnConfiguration.LengthColumnConfiguration<T, S>
-) :
-    ColumnImpl<T, S, LengthColumn<T, S>>(table = table,
-                                         type = configuration.type,
-                                         name = name,
-                                         notnull = configuration.notnull,
-                                         unique = configuration.unique,
-                                         autoincrement = configuration.autoincrement,
-                                         default = configuration.default,
-                                         comment = configuration.comment,
-                                         columnFormat = configuration.columnFormat,
-                                         storageFormat = configuration.storageFormat,
-                                         references = configuration.references,
-                                         length = configuration.length), LengthColumn<T, S> {
+internal class LengthColumnImpl<T : Any, S : LengthColumnType<T, S>>
+constructor(
+    table: TableRef,
+    name: String,
+    configuration: LengthColumnConfiguration<T, S>,
+) : ColumnImpl<T, S, LengthColumn<T, S>>(
+    table = table,
+    type = configuration.type,
+    name = name,
+    notnull = configuration.notnull,
+    unique = configuration.unique,
+    autoincrement = configuration.autoincrement,
+    default = configuration.default,
+    comment = configuration.comment,
+    columnFormat = configuration.columnFormat,
+    storageFormat = configuration.storageFormat,
+    references = configuration.references,
+    length = configuration.length
+), LengthColumn<T, S> {
+
     init {
         if (length < 1) {
             throw IllegalArgumentException("Lengths must be at least 1 and specified")
@@ -49,8 +51,5 @@ internal class LengthColumnImpl<T : Any, S : ColumnType.LengthColumnType<T, S>>(
     }
 
     override fun copyConfiguration(newName: String?, owner: Table) =
-        AbstractColumnConfiguration.LengthColumnConfiguration(
-            newName ?: name, type,
-            length
-        )
+        LengthColumnConfiguration(newName ?: name, type, length)
 }

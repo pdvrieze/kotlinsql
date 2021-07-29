@@ -22,6 +22,6 @@ package uk.ac.bournemouth.kotlinsql.columns
 
 import uk.ac.bournemouth.kotlinsql.Table
 
-interface NumericColumn<T:Any, S: ColumnType.NumericColumnType<T, S>>: INumericColumn<T, S, NumericColumn<T, S>> {
-  override fun copyConfiguration(newName:String?, owner: Table): AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration<T, S>
+interface NumericColumn<T:Any, S: NumericColumnType<T, S>>: INumericColumn<T, S, NumericColumn<T, S>> {
+  override fun copyConfiguration(newName:String?, owner: Table): NumberColumnConfiguration<T, S>
 }

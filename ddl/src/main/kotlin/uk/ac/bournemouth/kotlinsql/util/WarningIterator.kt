@@ -18,8 +18,20 @@
  * under the License.
  */
 
-package uk.ac.bournemouth.kotlinsql
+package uk.ac.bournemouth.kotlinsql.util
 
-interface DBContext<DB: Database> {
-    val db: DB
+import java.sql.SQLWarning
+
+class WarningIterator(initial: SQLWarning?) : AbstractIterator<SQLWarning>() {
+    private var current = initial
+
+    override fun computeNext() {
+        val w = current
+        if (w != null) {
+            setNext(w)
+            current = w.nextWarning
+        } else {
+            done()
+        }
+    }
 }

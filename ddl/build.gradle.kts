@@ -52,7 +52,7 @@ allprojects {
 
 sourceSets {
     val generators = named("main") {
-        val depth = 2
+        val depth = 10
         withConvention(GenerateSourceSet::class) {
 
             generate {

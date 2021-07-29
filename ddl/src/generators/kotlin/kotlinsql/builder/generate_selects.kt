@@ -41,7 +41,7 @@ class GenerateSelectClasses {
       appendLine("import uk.ac.bournemouth.kotlinsql.Database")
       appendLine("import uk.ac.bournemouth.kotlinsql.Database.*")
       appendLine("import uk.ac.bournemouth.kotlinsql.IColumnType")
-      appendLine("import uk.ac.bournemouth.kotlinsql.sql.NonMonadicApi")
+//      appendLine("import uk.ac.bournemouth.kotlinsql.sql.NonMonadicApi")
 //      appendLine("import uk.ac.bournemouth.kotlinsql.executeHelper")
 //      appendLine("import uk.ac.bournemouth.kotlinsql.sequenceHelper")
 

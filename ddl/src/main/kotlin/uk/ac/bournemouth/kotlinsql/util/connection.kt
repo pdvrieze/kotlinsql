@@ -22,27 +22,9 @@
 
 package uk.ac.bournemouth.kotlinsql.sql
 
-import uk.ac.bournemouth.kotlinsql.Database
 import java.sql.Connection
-import javax.sql.DataSource
-
-inline fun <DB : Database, R> DataSource.withConnection(db: DB, noinline block: (DBConnection<DB>) -> R): R {
-    val conn: DBConnection<DB>
-    try {
-        conn = DBConnection(connection, db)
-    } catch (e: Exception) {
-        try {
-            connection.close()
-        } catch (f: Exception) {
-            e.addSuppressed(f)
-        }
-        throw e
-    }
-    return conn.use(block)
-}
-
-
-//inline fun <R> DataSource.connection(username: String, password: String, block: (DBConnection) -> R) = getConnection(username, password).use { connection(it, block) }
+import java.sql.ResultSet
+import java.sql.Statement
 
 /**
  * Executes the given [block] function on this resource and then closes it down correctly whether an exception
@@ -67,8 +49,8 @@ inline fun <T : Connection, R> T.useTransacted(block: (T) -> R): R = useHelper({
 
 }
 
-
-inline fun <T, R> T.useHelper(close: (T) -> Unit, block: (T) -> R): R {
+@PublishedApi
+internal inline fun <T, R> T.useHelper(close: (T) -> Unit, block: (T) -> R): R {
     var closed = false
     try {
         return block(this)
@@ -86,3 +68,6 @@ inline fun <T, R> T.useHelper(close: (T) -> Unit, block: (T) -> R): R {
         }
     }
 }
+
+inline fun <T : Statement, R> T.use(block: (T) -> R) = useHelper({ it.close() }, block)
+inline fun <T : ResultSet, R> T.use(block: (T) -> R) = useHelper({ it.close() }, block)

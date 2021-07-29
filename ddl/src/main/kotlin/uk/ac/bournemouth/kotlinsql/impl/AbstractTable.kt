@@ -54,15 +54,17 @@ abstract class AbstractTable : Table {
         return column(property.name)!!
     }
 
+    /**
+     * Field accessor/delegate implementation that uses the property name.
+     */
     open class TypeFieldAccessor<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>>(val type: IColumnType<T, S, C>) :
         Table.FieldAccessor<T, S, C> {
         private var value: C? = null
         open fun name(property: KProperty<*>) = property.name
         override operator fun getValue(thisRef: Table, property: KProperty<*>): C {
             if (value == null) {
-                val field = thisRef.column(property.name) ?: throw IllegalArgumentException(
-                    "There is no field with the given name ${property.name}"
-                )
+                val field = thisRef.column(property.name)
+                    ?: throw IllegalArgumentException("There is no field with the given name ${property.name}")
                 value = type.cast(field)
             }
             return value!!
@@ -73,26 +75,25 @@ abstract class AbstractTable : Table {
     @PublishedApi
     internal fun <T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>> name(
         name: String,
-        type: IColumnType<T, S, C>
+        type: IColumnType<T, S, C>,
     ) =
         NamedFieldAccessor(name, type)
 
     @PublishedApi
-    internal class NamedFieldAccessor<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>>(
+    internal class NamedFieldAccessor<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>>
+    constructor(
         val name: String,
-        type: IColumnType<T, S, C>
-    ) : TypeFieldAccessor<T, S, C>(
-        type
-    ) {
+        type: IColumnType<T, S, C>,
+    ) : TypeFieldAccessor<T, S, C>(type) {
         override fun name(property: KProperty<*>): String = this.name
     }
 
     override fun appendDDL(appendable: Appendable) {
         appendable.appendLine("CREATE TABLE `$_name` (")
         sequenceOf(_cols.asSequence().map { it.toDDL() },
-                   _primaryKey?.let { sequenceOf(toDDL("PRIMARY KEY", it)) },
-                   _indices.asSequence().map { toDDL("INDEX", it) },
-                   _uniqueKeys.asSequence().map { toDDL("UNIQUE", it) },
+                   _primaryKey?.let { sequenceOf(columnListToDDL("PRIMARY KEY", it)) },
+                   _indices.asSequence().map { columnListToDDL("INDEX", it) },
+                   _uniqueKeys.asSequence().map { columnListToDDL("UNIQUE", it) },
                    _foreignKeys.asSequence().map { it.toDDL() })
             .filterNotNull()
             .flatten()

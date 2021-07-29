@@ -18,19 +18,17 @@
  * under the License.
  */
 
-package uk.ac.bournemouth.kotlinsql
+package uk.ac.bournemouth.kotlinsql.metadata
 
-import uk.ac.bournemouth.kotlinsql.metadata.*
-import uk.ac.bournemouth.util.kotlin.sql.use
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.RowIdLifetime
 
 /**
- * A class to handle access to connection metadata (available through jdbc.
+ * A class to handle access to connection metadata (available through jdbc).
  */
 @Suppress("unused")
-class ConnectionMetadata(private val metadata: DatabaseMetaData) {
+class SafeDatabaseMetaData(private val metadata: DatabaseMetaData) {
 
     val maxColumnsInIndex: Int get() = metadata.maxColumnsInIndex
 

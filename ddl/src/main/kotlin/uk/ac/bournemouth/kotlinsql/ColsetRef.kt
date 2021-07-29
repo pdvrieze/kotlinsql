@@ -20,6 +20,10 @@
 
 package uk.ac.bournemouth.kotlinsql
 
-class ColsetRef(val table: TableRef, val columns:List<ColumnRef<*, *, *>>) {
-  constructor(table: TableRef, col1: ColumnRef<*, *, *>, vararg cols: ColumnRef<*, *, *>): this(table, mutableListOf(col1).apply { addAll(cols) })
+class ColsetRef(val table: TableRef, val columns: List<ColumnRef<*, *, *>>) {
+    constructor(table: TableRef, col1: ColumnRef<*, *, *>, vararg cols: ColumnRef<*, *, *>)
+            : this(
+        table,
+        mutableListOf(col1).apply { addAll(cols) }
+    )
 }

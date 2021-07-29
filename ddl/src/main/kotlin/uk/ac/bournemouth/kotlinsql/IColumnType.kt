@@ -20,8 +20,8 @@
 
 package uk.ac.bournemouth.kotlinsql
 
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType
-import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
+import uk.ac.bournemouth.kotlinsql.columns.*
+import uk.ac.bournemouth.kotlinsql.columns.PreparedStatementHelper
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Types
@@ -73,12 +73,12 @@ interface IColumnType<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>> {
     /**
      * Set the parameter for the given input.
      */
-    fun setParam(statementHelper: StatementHelper, pos: Int, value: T?)
+    fun setParam(statementHelper: PreparedStatementHelper, pos: Int, value: T?)
 
     /**
      * Helper that sets the parameter based upon the input.
      */
-    fun castSetParam(statementHelper: StatementHelper, pos: Int, value: Any?) {
+    fun castSetParam(statementHelper: PreparedStatementHelper, pos: Int, value: Any?) {
         setParam(statementHelper, pos, maybeCast(value))
     }
 
@@ -87,26 +87,26 @@ interface IColumnType<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>> {
 
         fun fromSqlType(sqlType:Int): IColumnType<*,*,*> {
             return when (sqlType) {
-                Types.BIGINT      -> ColumnType.NumericColumnType.BIGINT_T
-                Types.BINARY      -> ColumnType.LengthColumnType.BINARY_T
-                Types.BIT         -> ColumnType.SimpleColumnType.BIT_T
-                Types.TINYINT     -> ColumnType.NumericColumnType.TINYINT_T
-                Types.SMALLINT    -> ColumnType.NumericColumnType.SMALLINT_T
-                Types.INTEGER     -> ColumnType.NumericColumnType.INT_T
-                Types.FLOAT       -> ColumnType.NumericColumnType.FLOAT_T
-                Types.DOUBLE      -> ColumnType.NumericColumnType.DOUBLE_T
-                Types.NUMERIC     -> ColumnType.DecimalColumnType.NUMERIC_T
-                Types.DECIMAL     -> ColumnType.DecimalColumnType.DECIMAL_T
-                Types.CHAR        -> ColumnType.LengthCharColumnType.CHAR_T
-                Types.VARCHAR     -> ColumnType.LengthCharColumnType.VARCHAR_T
-                Types.LONGVARCHAR -> ColumnType.CharColumnType.TEXT_T
-                Types.DATE        -> ColumnType.SimpleColumnType.DATE_T
-                Types.TIME        -> ColumnType.SimpleColumnType.TIME_T
-                Types.TIMESTAMP   -> ColumnType.SimpleColumnType.TIMESTAMP_T
-                Types.VARBINARY   -> ColumnType.LengthColumnType.VARBINARY_T
-                Types.BLOB        -> ColumnType.SimpleColumnType.BLOB_T
-                Types.CLOB        -> ColumnType.SimpleColumnType.BLOB_T
-                Types.BOOLEAN     -> ColumnType.SimpleColumnType.BIT_T
+                Types.BIGINT      -> NumericColumnType.BIGINT_T
+                Types.BINARY      -> LengthColumnType.BINARY_T
+                Types.BIT         -> SimpleColumnType.BIT_T
+                Types.TINYINT     -> NumericColumnType.TINYINT_T
+                Types.SMALLINT    -> NumericColumnType.SMALLINT_T
+                Types.INTEGER     -> NumericColumnType.INT_T
+                Types.FLOAT       -> NumericColumnType.FLOAT_T
+                Types.DOUBLE      -> NumericColumnType.DOUBLE_T
+                Types.NUMERIC     -> DecimalColumnType.NUMERIC_T
+                Types.DECIMAL     -> DecimalColumnType.DECIMAL_T
+                Types.CHAR        -> LengthCharColumnType.CHAR_T
+                Types.VARCHAR     -> LengthCharColumnType.VARCHAR_T
+                Types.LONGVARCHAR -> CharColumnType.TEXT_T
+                Types.DATE        -> SimpleColumnType.DATE_T
+                Types.TIME        -> SimpleColumnType.TIME_T
+                Types.TIMESTAMP   -> SimpleColumnType.TIMESTAMP_T
+                Types.VARBINARY   -> LengthColumnType.VARBINARY_T
+                Types.BLOB        -> SimpleColumnType.BLOB_T
+                Types.CLOB        -> SimpleColumnType.BLOB_T
+                Types.BOOLEAN     -> SimpleColumnType.BIT_T
                 else              -> throw SQLException("Unsupported column type")
             }
         }

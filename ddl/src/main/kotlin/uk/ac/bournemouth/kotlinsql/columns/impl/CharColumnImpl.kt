@@ -22,28 +22,29 @@ package uk.ac.bournemouth.kotlinsql.columns.impl
 
 import uk.ac.bournemouth.kotlinsql.Table
 import uk.ac.bournemouth.kotlinsql.TableRef
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.CharColumn
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType
+import uk.ac.bournemouth.kotlinsql.columns.*
 
-internal class CharColumnImpl<S : ColumnType.CharColumnType<S>>(table: TableRef,
-                                                                name: String,
-                                                                configuration: AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration<S>
-) :
-    ColumnImpl<String, S, CharColumn<S>>(table = table,
-                                         type = configuration.type,
-                                         name = name,
-                                         notnull = configuration.notnull,
-                                         unique = configuration.unique,
-                                         autoincrement = configuration.autoincrement,
-                                         default = configuration.default,
-                                         comment = configuration.comment,
-                                         columnFormat = configuration.columnFormat,
-                                         storageFormat = configuration.storageFormat,
-                                         references = configuration.references,
-                                         binary = configuration.binary,
-                                         charset = configuration.charset,
-                                         collation = configuration.collation), CharColumn<S> {
+internal class CharColumnImpl<S : CharColumnType<S>>(
+    table: TableRef,
+    name: String,
+    configuration: CharColumnConfiguration<S>,
+) : ColumnImpl<String, S, CharColumn<S>>(
+    table = table,
+    type = configuration.type,
+    name = name,
+    notnull = configuration.notnull,
+    unique = configuration.unique,
+    autoincrement = configuration.autoincrement,
+    default = configuration.default,
+    comment = configuration.comment,
+    columnFormat = configuration.columnFormat,
+    storageFormat = configuration.storageFormat,
+    references = configuration.references,
+    binary = configuration.binary,
+    charset = configuration.charset,
+    collation = configuration.collation
+), CharColumn<S> {
+
     override fun copyConfiguration(newName: String?, owner: Table) =
-        AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration(type, newName ?: name)
+        CharColumnConfiguration(type, newName ?: name)
 }

@@ -23,8 +23,8 @@ package uk.ac.bournemouth.kotlinsql.columns
 import uk.ac.bournemouth.kotlinsql.Table
 import java.math.BigDecimal
 
-interface DecimalColumn<S: ColumnType.DecimalColumnType<S>>: INumericColumn<BigDecimal, S, DecimalColumn<S>> {
+interface DecimalColumn<S: DecimalColumnType<S>>: INumericColumn<BigDecimal, S, DecimalColumn<S>> {
   val precision:Int
   val scale:Int
-  override fun copyConfiguration(newName:String?, owner: Table): AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration<S>
+  override fun copyConfiguration(newName:String?, owner: Table): DecimalColumnConfiguration<S>
 }

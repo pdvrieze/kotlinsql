@@ -20,9 +20,7 @@
 
 package uk.ac.bournemouth.kotlinsql
 
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType
-import uk.ac.bournemouth.kotlinsql.columns.LengthColumn
+import uk.ac.bournemouth.kotlinsql.columns.*
 import java.sql.Date
 import java.sql.Time
 import java.sql.Timestamp
@@ -30,7 +28,7 @@ import java.sql.Timestamp
 /**
  * The main class that caries a lot of the load for the class.
  */
-@Suppress("NOTHING_TO_INLINE", "unused")
+@Suppress("NOTHING_TO_INLINE", "unused", "FunctionName")
 class TableConfiguration(override val _name:String, val extra:String?=null): TableRef {
 
   val cols = mutableListOf<Column<*, *, *>>()
@@ -47,77 +45,77 @@ class TableConfiguration(override val _name:String, val extra:String?=null): Tab
 
   // @formatter:off
   /* Versions with configuration closure. */
-  fun BIT(name:String, block: AbstractColumnConfiguration.NormalColumnConfiguration<Boolean, ColumnType.SimpleColumnType.BIT_T>.() -> Unit) = AbstractColumnConfiguration.NormalColumnConfiguration(  ColumnType.SimpleColumnType.BIT_T, name).add(block)
-  fun BIT(name:String, length:Int, block: AbstractColumnConfiguration.BaseLengthColumnConfiguration<BooleanArray, ColumnType.LengthColumnType.BITFIELD_T, LengthColumn<BooleanArray,ColumnType.LengthColumnType.BITFIELD_T>>.() -> Unit) = AbstractColumnConfiguration.LengthColumnConfiguration( name, ColumnType.LengthColumnType.BITFIELD_T, length).add( block)
-  fun TINYINT(name: String, block: AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration<Byte, ColumnType.NumericColumnType.TINYINT_T>.() -> Unit) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration( ColumnType.NumericColumnType.TINYINT_T, name).add( block)
-  fun SMALLINT(name: String, block: AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration<Short, ColumnType.NumericColumnType.SMALLINT_T>.() -> Unit) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration( ColumnType.NumericColumnType.SMALLINT_T, name).add( block)
-  fun MEDIUMINT(name: String, block: AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration<Int, ColumnType.NumericColumnType.MEDIUMINT_T>.() -> Unit) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration( ColumnType.NumericColumnType.MEDIUMINT_T, name).add( block)
-  fun INT(name: String, block: AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration<Int, ColumnType.NumericColumnType.INT_T>.() -> Unit) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration( ColumnType.NumericColumnType.INT_T, name).add( block)
-  fun BIGINT(name: String, block: AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration<Long, ColumnType.NumericColumnType.BIGINT_T>.() -> Unit) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration( ColumnType.NumericColumnType.BIGINT_T, name).add( block)
-  fun FLOAT(name: String, block: AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration<Float, ColumnType.NumericColumnType.FLOAT_T>.() -> Unit) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration( ColumnType.NumericColumnType.FLOAT_T, name).add( block)
-  fun DOUBLE(name: String, block: AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration<Double, ColumnType.NumericColumnType.DOUBLE_T>.() -> Unit) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration( ColumnType.NumericColumnType.DOUBLE_T, name).add( block)
-  fun DECIMAL(name: String, precision: Int = -1, scale: Int = -1, block: AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration<ColumnType.DecimalColumnType.DECIMAL_T>.() -> Unit) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration(
-      ColumnType.DecimalColumnType.DECIMAL_T, name, precision, scale).add(block)
-  fun NUMERIC(name: String, precision: Int = -1, scale: Int = -1, block: AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration<ColumnType.DecimalColumnType.NUMERIC_T>.() -> Unit) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration(
-      ColumnType.DecimalColumnType.NUMERIC_T, name, precision, scale).add(block)
-  fun DATE(name: String, block: AbstractColumnConfiguration.NormalColumnConfiguration<Date, ColumnType.SimpleColumnType.DATE_T>.() -> Unit) = AbstractColumnConfiguration.NormalColumnConfiguration(  ColumnType.SimpleColumnType.DATE_T, name).add( block)
-  fun TIME(name: String, block: AbstractColumnConfiguration.NormalColumnConfiguration<Time, ColumnType.SimpleColumnType.TIME_T>.() -> Unit) = AbstractColumnConfiguration.NormalColumnConfiguration(  ColumnType.SimpleColumnType.TIME_T, name).add( block)
-  fun TIMESTAMP(name: String, block: AbstractColumnConfiguration.NormalColumnConfiguration<Timestamp, ColumnType.SimpleColumnType.TIMESTAMP_T>.() -> Unit) = AbstractColumnConfiguration.NormalColumnConfiguration(  ColumnType.SimpleColumnType.TIMESTAMP_T, name).add( block)
-  fun DATETIME(name: String, block: AbstractColumnConfiguration.NormalColumnConfiguration<Timestamp, ColumnType.SimpleColumnType.DATETIME_T>.() -> Unit) = AbstractColumnConfiguration.NormalColumnConfiguration(  ColumnType.SimpleColumnType.DATETIME_T, name).add( block)
-  fun YEAR(name: String, block: AbstractColumnConfiguration.NormalColumnConfiguration<Date, ColumnType.SimpleColumnType.YEAR_T>.() -> Unit) = AbstractColumnConfiguration.NormalColumnConfiguration(  ColumnType.SimpleColumnType.YEAR_T, name).add( block)
-  fun CHAR(name: String, length: Int = -1, block: AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration<ColumnType.LengthCharColumnType.CHAR_T>.() -> Unit) = AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration(
-      ColumnType.LengthCharColumnType.CHAR_T, name, length).add(block)
-  fun VARCHAR(name: String, length: Int, block: AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration<ColumnType.LengthCharColumnType.VARCHAR_T>.() -> Unit) = AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration(
-      ColumnType.LengthCharColumnType.VARCHAR_T, name, length).add(block)
-  fun BINARY(name: String, length: Int, block: AbstractColumnConfiguration.BaseLengthColumnConfiguration<ByteArray, ColumnType.LengthColumnType.BINARY_T, LengthColumn<ByteArray, ColumnType.LengthColumnType.BINARY_T>>.() -> Unit) = AbstractColumnConfiguration.LengthColumnConfiguration( name, ColumnType.LengthColumnType.BINARY_T, length).add( block)
-  fun VARBINARY(name: String, length: Int, block: AbstractColumnConfiguration.BaseLengthColumnConfiguration<ByteArray, ColumnType.LengthColumnType.VARBINARY_T, LengthColumn<ByteArray, ColumnType.LengthColumnType.VARBINARY_T>>.() -> Unit) = AbstractColumnConfiguration.LengthColumnConfiguration( name, ColumnType.LengthColumnType.VARBINARY_T, length).add( block)
-  fun TINYBLOB(name: String, block: AbstractColumnConfiguration.NormalColumnConfiguration<ByteArray, ColumnType.SimpleColumnType.TINYBLOB_T>.() -> Unit) = AbstractColumnConfiguration.NormalColumnConfiguration(  ColumnType.SimpleColumnType.TINYBLOB_T, name).add( block)
-  fun BLOB(name: String, block: AbstractColumnConfiguration.NormalColumnConfiguration<ByteArray, ColumnType.SimpleColumnType.BLOB_T>.() -> Unit) = AbstractColumnConfiguration.NormalColumnConfiguration(  ColumnType.SimpleColumnType.BLOB_T, name).add( block)
-  fun MEDIUMBLOB(name: String, block: AbstractColumnConfiguration.NormalColumnConfiguration<ByteArray, ColumnType.SimpleColumnType.MEDIUMBLOB_T>.() -> Unit) = AbstractColumnConfiguration.NormalColumnConfiguration(  ColumnType.SimpleColumnType.MEDIUMBLOB_T, name).add( block)
-  fun LONGBLOB(name: String, block: AbstractColumnConfiguration.NormalColumnConfiguration<ByteArray, ColumnType.SimpleColumnType.LONGBLOB_T>.() -> Unit) = AbstractColumnConfiguration.NormalColumnConfiguration(  ColumnType.SimpleColumnType.LONGBLOB_T, name).add( block)
-  fun TINYTEXT(name: String, block: AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration<ColumnType.CharColumnType.TINYTEXT_T>.() -> Unit) = AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration(
-      ColumnType.CharColumnType.TINYTEXT_T,
+  fun BIT(name:String, block: NormalColumnConfiguration<Boolean, SimpleColumnType.BIT_T>.() -> Unit) = NormalColumnConfiguration(  SimpleColumnType.BIT_T, name).add(block)
+  fun BIT(name:String, length:Int, block: BaseLengthColumnConfiguration<BooleanArray, LengthColumnType.BITFIELD_T, LengthColumn<BooleanArray,LengthColumnType.BITFIELD_T>>.() -> Unit) = LengthColumnConfiguration( name, LengthColumnType.BITFIELD_T, length).add( block)
+  fun TINYINT(name: String, block: NumberColumnConfiguration<Byte, NumericColumnType.TINYINT_T>.() -> Unit) = NumberColumnConfiguration( NumericColumnType.TINYINT_T, name).add( block)
+  fun SMALLINT(name: String, block: NumberColumnConfiguration<Short, NumericColumnType.SMALLINT_T>.() -> Unit) = NumberColumnConfiguration( NumericColumnType.SMALLINT_T, name).add( block)
+  fun MEDIUMINT(name: String, block: NumberColumnConfiguration<Int, NumericColumnType.MEDIUMINT_T>.() -> Unit) = NumberColumnConfiguration( NumericColumnType.MEDIUMINT_T, name).add( block)
+  fun INT(name: String, block: NumberColumnConfiguration<Int, NumericColumnType.INT_T>.() -> Unit) = NumberColumnConfiguration( NumericColumnType.INT_T, name).add( block)
+  fun BIGINT(name: String, block: NumberColumnConfiguration<Long, NumericColumnType.BIGINT_T>.() -> Unit) = NumberColumnConfiguration( NumericColumnType.BIGINT_T, name).add( block)
+  fun FLOAT(name: String, block: NumberColumnConfiguration<Float, NumericColumnType.FLOAT_T>.() -> Unit) = NumberColumnConfiguration( NumericColumnType.FLOAT_T, name).add( block)
+  fun DOUBLE(name: String, block: NumberColumnConfiguration<Double, NumericColumnType.DOUBLE_T>.() -> Unit) = NumberColumnConfiguration( NumericColumnType.DOUBLE_T, name).add( block)
+  fun DECIMAL(name: String, precision: Int = -1, scale: Int = -1, block: DecimalColumnConfiguration<DecimalColumnType.DECIMAL_T>.() -> Unit) = DecimalColumnConfiguration(
+      DecimalColumnType.DECIMAL_T, name, precision, scale).add(block)
+  fun NUMERIC(name: String, precision: Int = -1, scale: Int = -1, block: DecimalColumnConfiguration<DecimalColumnType.NUMERIC_T>.() -> Unit) = DecimalColumnConfiguration(
+      DecimalColumnType.NUMERIC_T, name, precision, scale).add(block)
+  fun DATE(name: String, block: NormalColumnConfiguration<Date, SimpleColumnType.DATE_T>.() -> Unit) = NormalColumnConfiguration(  SimpleColumnType.DATE_T, name).add( block)
+  fun TIME(name: String, block: NormalColumnConfiguration<Time, SimpleColumnType.TIME_T>.() -> Unit) = NormalColumnConfiguration(  SimpleColumnType.TIME_T, name).add( block)
+  fun TIMESTAMP(name: String, block: NormalColumnConfiguration<Timestamp, SimpleColumnType.TIMESTAMP_T>.() -> Unit) = NormalColumnConfiguration(  SimpleColumnType.TIMESTAMP_T, name).add( block)
+  fun DATETIME(name: String, block: NormalColumnConfiguration<Timestamp, SimpleColumnType.DATETIME_T>.() -> Unit) = NormalColumnConfiguration(  SimpleColumnType.DATETIME_T, name).add( block)
+  fun YEAR(name: String, block: NormalColumnConfiguration<Date, SimpleColumnType.YEAR_T>.() -> Unit) = NormalColumnConfiguration(  SimpleColumnType.YEAR_T, name).add( block)
+  fun CHAR(name: String, length: Int = -1, block: LengthCharColumnConfiguration<LengthCharColumnType.CHAR_T>.() -> Unit) = LengthCharColumnConfiguration(
+      LengthCharColumnType.CHAR_T, name, length).add(block)
+  fun VARCHAR(name: String, length: Int, block: LengthCharColumnConfiguration<LengthCharColumnType.VARCHAR_T>.() -> Unit) = LengthCharColumnConfiguration(
+      LengthCharColumnType.VARCHAR_T, name, length).add(block)
+  fun BINARY(name: String, length: Int, block: BaseLengthColumnConfiguration<ByteArray, LengthColumnType.BINARY_T, LengthColumn<ByteArray, LengthColumnType.BINARY_T>>.() -> Unit) = LengthColumnConfiguration( name, LengthColumnType.BINARY_T, length).add( block)
+  fun VARBINARY(name: String, length: Int, block: BaseLengthColumnConfiguration<ByteArray, LengthColumnType.VARBINARY_T, LengthColumn<ByteArray, LengthColumnType.VARBINARY_T>>.() -> Unit) = LengthColumnConfiguration( name, LengthColumnType.VARBINARY_T, length).add( block)
+  fun TINYBLOB(name: String, block: NormalColumnConfiguration<ByteArray, SimpleColumnType.TINYBLOB_T>.() -> Unit) = NormalColumnConfiguration(  SimpleColumnType.TINYBLOB_T, name).add( block)
+  fun BLOB(name: String, block: NormalColumnConfiguration<ByteArray, SimpleColumnType.BLOB_T>.() -> Unit) = NormalColumnConfiguration(  SimpleColumnType.BLOB_T, name).add( block)
+  fun MEDIUMBLOB(name: String, block: NormalColumnConfiguration<ByteArray, SimpleColumnType.MEDIUMBLOB_T>.() -> Unit) = NormalColumnConfiguration(  SimpleColumnType.MEDIUMBLOB_T, name).add( block)
+  fun LONGBLOB(name: String, block: NormalColumnConfiguration<ByteArray, SimpleColumnType.LONGBLOB_T>.() -> Unit) = NormalColumnConfiguration(  SimpleColumnType.LONGBLOB_T, name).add( block)
+  fun TINYTEXT(name: String, block: CharColumnConfiguration<CharColumnType.TINYTEXT_T>.() -> Unit) = CharColumnConfiguration(
+      CharColumnType.TINYTEXT_T,
       name).add(block)
-  fun TEXT(name: String, block: AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration<ColumnType.CharColumnType.TEXT_T>.() -> Unit) = AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration(ColumnType.CharColumnType.TEXT_T,
+  fun TEXT(name: String, block: CharColumnConfiguration<CharColumnType.TEXT_T>.() -> Unit) = CharColumnConfiguration(CharColumnType.TEXT_T,
                                                                                                       name).add(block)
-  fun MEDIUMTEXT(name: String, block: AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration<ColumnType.CharColumnType.MEDIUMTEXT_T>.() -> Unit) = AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration(
-      ColumnType.CharColumnType.MEDIUMTEXT_T,
+  fun MEDIUMTEXT(name: String, block: CharColumnConfiguration<CharColumnType.MEDIUMTEXT_T>.() -> Unit) = CharColumnConfiguration(
+      CharColumnType.MEDIUMTEXT_T,
       name).add(block)
-  fun LONGTEXT(name: String, block: AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration<ColumnType.CharColumnType.LONGTEXT_T>.() -> Unit) = AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration(
-      ColumnType.CharColumnType.LONGTEXT_T,
+  fun LONGTEXT(name: String, block: CharColumnConfiguration<CharColumnType.LONGTEXT_T>.() -> Unit) = CharColumnConfiguration(
+      CharColumnType.LONGTEXT_T,
       name).add(block)
 
   /* Versions without configuration closure */
-  fun BIT(name: String) = AbstractColumnConfiguration.NormalColumnConfiguration( ColumnType.SimpleColumnType.BIT_T, name).add {}
-  fun BIT(name:String, length:Int) = AbstractColumnConfiguration.LengthColumnConfiguration(name, ColumnType.LengthColumnType.BITFIELD_T, length).add {}
-  fun TINYINT(name: String) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration(ColumnType.NumericColumnType.TINYINT_T, name).add {}
-  fun SMALLINT(name:String) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration(ColumnType.NumericColumnType.SMALLINT_T, name).add {}
-  fun MEDIUMINT(name:String) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration(ColumnType.NumericColumnType.MEDIUMINT_T, name).add {}
-  fun INT(name: String) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration(ColumnType.NumericColumnType.INT_T, name).add {}
-  fun BIGINT(name:String) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration(ColumnType.NumericColumnType.BIGINT_T, name).add {}
-  fun FLOAT(name:String) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration(ColumnType.NumericColumnType.FLOAT_T, name).add {}
-  fun DOUBLE(name:String) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration(ColumnType.NumericColumnType.DOUBLE_T, name).add {}
-  fun DECIMAL(name:String, precision:Int=-1, scale:Int=-1) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration(ColumnType.DecimalColumnType.DECIMAL_T, name, precision,
+  fun BIT(name: String) = NormalColumnConfiguration( SimpleColumnType.BIT_T, name).add {}
+  fun BIT(name:String, length:Int) = LengthColumnConfiguration(name, LengthColumnType.BITFIELD_T, length).add {}
+  fun TINYINT(name: String) = NumberColumnConfiguration(NumericColumnType.TINYINT_T, name).add {}
+  fun SMALLINT(name:String) = NumberColumnConfiguration(NumericColumnType.SMALLINT_T, name).add {}
+  fun MEDIUMINT(name:String) = NumberColumnConfiguration(NumericColumnType.MEDIUMINT_T, name).add {}
+  fun INT(name: String) = NumberColumnConfiguration(NumericColumnType.INT_T, name).add {}
+  fun BIGINT(name:String) = NumberColumnConfiguration(NumericColumnType.BIGINT_T, name).add {}
+  fun FLOAT(name:String) = NumberColumnConfiguration(NumericColumnType.FLOAT_T, name).add {}
+  fun DOUBLE(name:String) = NumberColumnConfiguration(NumericColumnType.DOUBLE_T, name).add {}
+  fun DECIMAL(name:String, precision:Int=-1, scale:Int=-1) = DecimalColumnConfiguration(DecimalColumnType.DECIMAL_T, name, precision,
                                                                                         scale).add {}
-  fun NUMERIC(name: String, precision: Int = -1, scale: Int = -1) = AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration(ColumnType.DecimalColumnType.NUMERIC_T, name,
+  fun NUMERIC(name: String, precision: Int = -1, scale: Int = -1) = DecimalColumnConfiguration(DecimalColumnType.NUMERIC_T, name,
                                                                                                precision, scale).add {}
-  fun DATE(name: String) = AbstractColumnConfiguration.NormalColumnConfiguration( ColumnType.SimpleColumnType.DATE_T, name).add {}
-  fun TIME(name:String) = AbstractColumnConfiguration.NormalColumnConfiguration( ColumnType.SimpleColumnType.TIME_T, name).add {}
-  fun TIMESTAMP(name:String) = AbstractColumnConfiguration.NormalColumnConfiguration( ColumnType.SimpleColumnType.TIMESTAMP_T, name).add {}
-  fun DATETIME(name: String) = AbstractColumnConfiguration.NormalColumnConfiguration( ColumnType.SimpleColumnType.DATETIME_T, name).add {}
-  fun YEAR(name:String) = AbstractColumnConfiguration.NormalColumnConfiguration( ColumnType.SimpleColumnType.YEAR_T, name).add {}
-  fun CHAR(name:String, length:Int = -1) = AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration(ColumnType.LengthCharColumnType.CHAR_T, name, length).add {}
-  fun VARCHAR(name: String, length: Int) = AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration(ColumnType.LengthCharColumnType.VARCHAR_T, name, length).add {}
-  fun BINARY(name: String, length: Int) = AbstractColumnConfiguration.LengthColumnConfiguration(name, ColumnType.LengthColumnType.BINARY_T, length).add {}
-  fun VARBINARY(name: String, length: Int) = AbstractColumnConfiguration.LengthColumnConfiguration(name, ColumnType.LengthColumnType.VARBINARY_T, length).add {}
-  fun TINYBLOB(name: String) = AbstractColumnConfiguration.NormalColumnConfiguration( ColumnType.SimpleColumnType.TINYBLOB_T, name).add {}
-  fun BLOB(name:String) = AbstractColumnConfiguration.NormalColumnConfiguration( ColumnType.SimpleColumnType.BLOB_T, name).add {}
-  fun MEDIUMBLOB(name:String) = AbstractColumnConfiguration.NormalColumnConfiguration( ColumnType.SimpleColumnType.MEDIUMBLOB_T, name).add {}
-  fun LONGBLOB(name: String) = AbstractColumnConfiguration.NormalColumnConfiguration( ColumnType.SimpleColumnType.LONGBLOB_T, name).add {}
-  fun TINYTEXT(name:String) = AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration(ColumnType.CharColumnType.TINYTEXT_T, name).add {}
-  fun TEXT(name:String) = AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration(ColumnType.CharColumnType.TEXT_T, name).add {}
-  fun MEDIUMTEXT(name:String) = AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration(ColumnType.CharColumnType.MEDIUMTEXT_T, name).add {}
-  fun LONGTEXT(name: String) = AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration(ColumnType.CharColumnType.LONGTEXT_T, name).add {}
+  fun DATE(name: String) = NormalColumnConfiguration( SimpleColumnType.DATE_T, name).add {}
+  fun TIME(name:String) = NormalColumnConfiguration( SimpleColumnType.TIME_T, name).add {}
+  fun TIMESTAMP(name:String) = NormalColumnConfiguration( SimpleColumnType.TIMESTAMP_T, name).add {}
+  fun DATETIME(name: String) = NormalColumnConfiguration( SimpleColumnType.DATETIME_T, name).add {}
+  fun YEAR(name:String) = NormalColumnConfiguration( SimpleColumnType.YEAR_T, name).add {}
+  fun CHAR(name:String, length:Int = -1) = LengthCharColumnConfiguration(LengthCharColumnType.CHAR_T, name, length).add {}
+  fun VARCHAR(name: String, length: Int) = LengthCharColumnConfiguration(LengthCharColumnType.VARCHAR_T, name, length).add {}
+  fun BINARY(name: String, length: Int) = LengthColumnConfiguration(name, LengthColumnType.BINARY_T, length).add {}
+  fun VARBINARY(name: String, length: Int) = LengthColumnConfiguration(name, LengthColumnType.VARBINARY_T, length).add {}
+  fun TINYBLOB(name: String) = NormalColumnConfiguration( SimpleColumnType.TINYBLOB_T, name).add {}
+  fun BLOB(name:String) = NormalColumnConfiguration( SimpleColumnType.BLOB_T, name).add {}
+  fun MEDIUMBLOB(name:String) = NormalColumnConfiguration( SimpleColumnType.MEDIUMBLOB_T, name).add {}
+  fun LONGBLOB(name: String) = NormalColumnConfiguration( SimpleColumnType.LONGBLOB_T, name).add {}
+  fun TINYTEXT(name:String) = CharColumnConfiguration(CharColumnType.TINYTEXT_T, name).add {}
+  fun TEXT(name:String) = CharColumnConfiguration(CharColumnType.TEXT_T, name).add {}
+  fun MEDIUMTEXT(name:String) = CharColumnConfiguration(CharColumnType.MEDIUMTEXT_T, name).add {}
+  fun LONGTEXT(name: String) = CharColumnConfiguration(CharColumnType.LONGTEXT_T, name).add {}
 
   fun INDEX(col1: ColumnRef<*,*,*>, vararg cols: ColumnRef<*,*,*>) { indices.add(mutableListOf(col1).apply { addAll(cols) })}
   fun UNIQUE(col1: ColumnRef<*,*,*>, vararg cols: ColumnRef<*,*,*>) { uniqueKeys.add(mutableListOf(col1).apply { addAll(cols) })}
@@ -142,7 +140,7 @@ class TableConfiguration(override val _name:String, val extra:String?=null): Tab
                           ref4:ColumnRef<T4, S4, C4>,
                           ref5:ColumnRef<T5, S5, C5>,
                           ref6:ColumnRef<T6, S6, C6>) {
-      configuration.foreignKeys.add(ForeignKey(listOf(col1, col2, col3, col4, col5, col6), ref1.table, listOf(ref1, ref2, ref3, ref4, ref5, ref6).apply { forEach { require(it.table==ref1.table) } }))
+      configuration.foreignKeys.add(ForeignKey(listOf(col1, col2, col3, col4, col5, col6), ref1.table, listOf(ref1, ref2, ref3, ref4, ref5, ref6).onEach { require(it.table==ref1.table) }))
     }
   }
 
@@ -162,7 +160,7 @@ class TableConfiguration(override val _name:String, val extra:String?=null): Tab
                          T4:Any, S4: IColumnType<T4,S4,C4>, C4:Column<T4,S4,C4>,
                          T5:Any, S5: IColumnType<T5,S5,C5>, C5:Column<T5,S5,C5>>(val configuration:TableConfiguration, val col1:ColumnRef<T1, S1, C1>, val col2:ColumnRef<T2, S2, C2>, val col3:ColumnRef<T3, S3, C3>, val col4:ColumnRef<T4, S4, C4>, val col5:ColumnRef<T5, S5, C5>) {
     inline fun REFERENCES(ref1:ColumnRef<T1, S1, C1>, ref2:ColumnRef<T2, S2, C2>, ref3:ColumnRef<T3, S3, C3>, ref4:ColumnRef<T4, S4, C4>, ref5:ColumnRef<T5, S5, C5>) {
-      configuration.foreignKeys.add(ForeignKey(listOf(col1, col2, col3, col4, col5), ref1.table, listOf(ref1, ref2, ref3, ref4, ref5).apply { forEach { require(it.table==ref1.table) } }))
+      configuration.foreignKeys.add(ForeignKey(listOf(col1, col2, col3, col4, col5), ref1.table, listOf(ref1, ref2, ref3, ref4, ref5).onEach { require(it.table==ref1.table) }))
     }
   }
 
@@ -194,7 +192,7 @@ class TableConfiguration(override val _name:String, val extra:String?=null): Tab
                          T2:Any, S2: IColumnType<T2,S2,C2>, C2:Column<T2,S2,C2>,
                          T3:Any, S3: IColumnType<T3,S3,C3>, C3:Column<T3,S3,C3>>(val configuration:TableConfiguration, val col1:ColumnRef<T1, S1, C1>, val col2:ColumnRef<T2, S2, C2>, val col3:ColumnRef<T3, S3, C3>) {
     inline fun REFERENCES(ref1:ColumnRef<T1, S1, C1>, ref2:ColumnRef<T2, S2, C2>, ref3:ColumnRef<T3, S3, C3>) {
-      configuration.foreignKeys.add(ForeignKey(listOf(col1, col2, col3), ref1.table, listOf(ref1, ref2, ref3).apply { forEach { require(it.table==ref1.table) } }))
+      configuration.foreignKeys.add(ForeignKey(listOf(col1, col2, col3), ref1.table, listOf(ref1, ref2, ref3).onEach { require(it.table==ref1.table) }))
     }
   }
 

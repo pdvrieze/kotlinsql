@@ -56,25 +56,37 @@ import uk.ac.bournemouth.kotlinsql.impl.AbstractTable
  * @property _extra Extra table configuration to be appended after the definition. This contains information such as the
  *                  engine or charset to use.
  */
-abstract class ImmutableTable private constructor(override val _name: String,
-                                                  override val _cols: List<Column<*,*,*>>,
-                                                  override val _primaryKey: List<Column<*,*,*>>?,
-                                                  override val _foreignKeys: List<ForeignKey>,
-                                                  override val _uniqueKeys: List<List<Column<*,*,*>>>,
-                                                  override val _indices: List<List<Column<*,*,*>>>,
-                                                  override val _extra: String?) : AbstractTable() {
+abstract class ImmutableTable private constructor(
+    override val _name: String,
+    override val _cols: List<Column<*, *, *>>,
+    override val _primaryKey: List<Column<*, *, *>>?,
+    override val _foreignKeys: List<ForeignKey>,
+    override val _uniqueKeys: List<List<Column<*, *, *>>>,
+    override val _indices: List<List<Column<*, *, *>>>,
+    override val _extra: String?,
+) : AbstractTable() {
 
-  @Suppress("unused")
-  private constructor(c: TableConfiguration):this(c._name, c.cols, c.primaryKey?.let {c.cols.resolveAll(it)}, c.foreignKeys, c.uniqueKeys.map {c.cols.resolveAll(it)}, c.indices.map {c.cols.resolveAll(it)}, c.extra)
+    @Suppress("unused")
+    private constructor(c: TableConfiguration)
+            : this(
+        c._name,
+        c.cols,
+        c.primaryKey?.let { c.cols.resolveAll(it) },
+        c.foreignKeys,
+        c.uniqueKeys.map { c.cols.resolveAll(it) },
+        c.indices.map { c.cols.resolveAll(it) },
+        c.extra
+    )
 
-  /**
-   * The main use of this class is through inheriting this constructor.
-   */
-  constructor(name:String, extra: String? = null, block: TableConfiguration.()->Unit):
-      this(TableConfiguration(name, extra).apply(block))
+    /**
+     * The main use of this class is through inheriting this constructor.
+     */
+    constructor(name: String, extra: String? = null, block: TableConfiguration.() -> Unit)
+            : this(TableConfiguration(name, extra).apply(block))
 
-  protected fun <T:Any, S: ColumnType<T, S, C>, C:Column<T,S,C>> type(type: ColumnType<T, S, C>) = TypeFieldAccessor(
-        type)
+    protected fun <T : Any, S : ColumnType<T, S, C>, C : Column<T, S, C>> type(
+        type: ColumnType<T, S, C>,
+    ): Table.FieldAccessor<T, S, C> = TypeFieldAccessor(type)
 
 }
 

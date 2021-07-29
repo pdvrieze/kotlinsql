@@ -22,6 +22,6 @@ package uk.ac.bournemouth.kotlinsql.columns
 
 import uk.ac.bournemouth.kotlinsql.Table
 
-interface CharColumn<S: ColumnType.CharColumnType<S>>: ICharColumn<S, CharColumn<S>> {
-  override fun copyConfiguration(newName:String?, owner: Table): AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration<S>
+interface CharColumn<S: CharColumnType<S>>: ICharColumn<S, CharColumn<S>> {
+  override fun copyConfiguration(newName:String?, owner: Table): CharColumnConfiguration<S>
 }

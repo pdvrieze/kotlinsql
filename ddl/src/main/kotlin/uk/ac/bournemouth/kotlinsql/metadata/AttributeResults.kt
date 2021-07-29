@@ -24,22 +24,22 @@ import java.sql.ResultSet
 
 @Suppress("unused")
 class AttributeResults(attributes: ResultSet) : DataResults(attributes) {
-    private val idxTypeCat by lazyColIdx("TYPE_CAT")
-    private val idxTypeSchem by lazyColIdx("TYPE_SCHEM")
+    private val idxAttrDef by lazyColIdx("ATTR_DEF")
     private val idxAttrName by lazyColIdx("ATTR_NAME")
-    private val idxAttrTypeName by lazyColIdx("ATTR_TYPE_NAME")
     private val idxAttrSize by lazyColIdx("ATTR_SIZE")
+    private val idxAttrTypeName by lazyColIdx("ATTR_TYPE_NAME")
     private val idxDecimalDigits by lazyColIdx("DECIMAL_DIGITS")
     private val idxNumPrecRadix by lazyColIdx("NUM_REC_RADIX")
-    private val idxAttrDef by lazyColIdx("ATTR_DEF")
+    private val idxTypeCat by lazyColIdx("TYPE_CAT")
+    private val idxTypeSchem by lazyColIdx("TYPE_SCHEM")
 
-    val typeCatalog: String? get() = resultSet.getString(idxTypeCat)
-    val typeScheme: String? get() = resultSet.getString(idxTypeSchem)
+    val attrDefault: String? get() = resultSet.getString(idxAttrDef)
     val attrName: String get() = resultSet.getString(idxAttrName)
-    val attrTypeName: String? get() = resultSet.getString(idxAttrTypeName)
     val attrSize: Int get() = resultSet.getInt(idxAttrSize)
+    val attrTypeName: String? get() = resultSet.getString(idxAttrTypeName)
     val decimalDigits: Int get() = resultSet.getInt(idxDecimalDigits)
     val numPrecRadix: Int get() = resultSet.getInt(idxNumPrecRadix)
-    val attrDefault: String? get() = resultSet.getString(idxAttrDef)
+    val typeCatalog: String? get() = resultSet.getString(idxTypeCat)
+    val typeScheme: String? get() = resultSet.getString(idxTypeSchem)
 
 }

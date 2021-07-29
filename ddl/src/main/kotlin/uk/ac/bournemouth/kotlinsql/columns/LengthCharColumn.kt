@@ -22,7 +22,7 @@ package uk.ac.bournemouth.kotlinsql.columns
 
 import uk.ac.bournemouth.kotlinsql.Table
 
-interface LengthCharColumn<S: ColumnType.LengthCharColumnType<S>>: ICharColumn<S, LengthCharColumn<S>>,
+interface LengthCharColumn<S: LengthCharColumnType<S>>: ICharColumn<S, LengthCharColumn<S>>,
                                                                    ILengthColumn<String, S, LengthCharColumn<S>> {
-  override fun copyConfiguration(newName:String?, owner: Table): AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration<S>
+  override fun copyConfiguration(newName:String?, owner: Table): LengthCharColumnConfiguration<S>
 }

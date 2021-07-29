@@ -26,20 +26,20 @@ import java.sql.ResultSet
 
 @Suppress("unused")
 abstract class DataResults(rs: ResultSet) : AbstractMetadataResultSet(rs) {
-    private val idxDataType by lazyColIdx("DATA_TYPE")
-    private val idxTypeName by lazyColIdx("TYPE_NAME")
-    private val idxNullable by lazyColIdx("NULLABLE")
-    private val idxRemarks by lazyColIdx("REMARKS")
     private val idxCharOctetLength by lazyColIdx("CHAR_OCTET_LENGTH")
-    private val idxOrdinalPosition by lazyColIdx("ORDINAL_POSITION")
+    private val idxDataType by lazyColIdx("DATA_TYPE")
     private val idxIsNullable by lazyColIdx("IS_NULLABLE")
+    private val idxNullable by lazyColIdx("NULLABLE")
+    private val idxOrdinalPosition by lazyColIdx("ORDINAL_POSITION")
+    private val idxRemarks by lazyColIdx("REMARKS")
+    private val idxTypeName by lazyColIdx("TYPE_NAME")
 
-    val dataType: IColumnType<*, *, *> get() = IColumnType.fromSqlType(resultSet.getInt(idxDataType))
-    val typeName: String get() = resultSet.getString(idxTypeName)
-    val nullable: Nullable get() = Nullable.from(resultSet.getInt(idxNullable).toShort())
-    val remarks: String? get() = resultSet.getString(idxRemarks).let { if (it.isNullOrEmpty()) null else it }
     val charOctetLength: Int get() = resultSet.getInt(idxCharOctetLength)
-    val ordinalPosition: Int get() = resultSet.getInt(idxOrdinalPosition)
+    val dataType: IColumnType<*, *, *> get() = IColumnType.fromSqlType(resultSet.getInt(idxDataType))
     val isNullable: Boolean? get() = resultSet.optionalBoolean(idxIsNullable)
+    val nullable: Nullable get() = Nullable.from(resultSet.getInt(idxNullable).toShort())
+    val ordinalPosition: Int get() = resultSet.getInt(idxOrdinalPosition)
+    val remarks: String? get() = resultSet.getString(idxRemarks).let { if (it.isNullOrEmpty()) null else it }
+    val typeName: String get() = resultSet.getString(idxTypeName)
 
 }

@@ -22,7 +22,7 @@ package uk.ac.bournemouth.kotlinsql
 
 import kotlin.reflect.KProperty
 
-@Suppress("FunctionName")
+@Suppress("FunctionName", "PropertyName")
 interface ColumnConfiguration<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>, out CONF_T : Any> {
     var name: String?
     val type: S
@@ -44,15 +44,18 @@ interface ColumnConfiguration<T : Any, S : IColumnType<T, S, C>, C : Column<T, S
         get() {
             notnull = true
         }
+
     val AUTO_INCREMENT: Unit
         get() {
             autoincrement = true
         }
+
     val UNIQUE: Unit
         get() {
             unique = true
         }
 
+    @Suppress("unused")
     fun DEFAULT(value: T) {
         default = value
     }
@@ -84,7 +87,9 @@ interface ColumnConfiguration<T : Any, S : IColumnType<T, S, C>, C : Column<T, S
 
     fun newColumn(table: TableRef): C
 
+    @Suppress("unused")
     enum class ColumnFormat { FIXED, MEMORY, DEFAULT }
 
+    @Suppress("unused")
     enum class StorageFormat { DISK, MEMORY, DEFAULT }
 }

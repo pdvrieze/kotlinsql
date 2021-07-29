@@ -21,7 +21,6 @@
 package uk.ac.bournemouth.kotlinsql.columns
 
 import uk.ac.bournemouth.kotlinsql.*
-import uk.ac.bournemouth.util.kotlin.sql.StatementHelper
 import java.sql.ResultSet
 import java.sql.Types
 import kotlin.reflect.KClass
@@ -101,7 +100,7 @@ constructor(
 
     override fun fromResultSet(rs: ResultSet, pos: Int): U? = baseColumnType.fromResultSet(rs, pos)?.let(fromDb)
 
-    override fun setParam(statementHelper: StatementHelper, pos: Int, value: U?): Unit = baseColumnType.setParam(
+    override fun setParam(statementHelper: PreparedStatementHelper, pos: Int, value: U?): Unit = baseColumnType.setParam(
         statementHelper, pos, value?.let(toDB)
     )
 

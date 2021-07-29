@@ -22,12 +22,12 @@
 
 package uk.ac.bournemouth.kotlinsql
 
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration.AbstractCharColumnConfiguration.CharColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration.AbstractCharColumnConfiguration.LengthCharColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration.AbstractNumberColumnConfiguration.NumberColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration.LengthColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration.NormalColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.columns.CharColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.columns.LengthCharColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.columns.DecimalColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.columns.NumberColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.columns.LengthColumnConfiguration
+import uk.ac.bournemouth.kotlinsql.columns.NormalColumnConfiguration
 import uk.ac.bournemouth.kotlinsql.columns.ColumnType.*
 import uk.ac.bournemouth.kotlinsql.columns.*
 import uk.ac.bournemouth.kotlinsql.impl.AbstractTable

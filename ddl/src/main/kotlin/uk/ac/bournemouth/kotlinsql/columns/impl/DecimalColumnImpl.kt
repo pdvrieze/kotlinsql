@@ -22,34 +22,37 @@ package uk.ac.bournemouth.kotlinsql.columns.impl
 
 import uk.ac.bournemouth.kotlinsql.Table
 import uk.ac.bournemouth.kotlinsql.TableRef
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType
-import uk.ac.bournemouth.kotlinsql.columns.DecimalColumn
+import uk.ac.bournemouth.kotlinsql.columns.*
 import java.math.BigDecimal
 
-internal class DecimalColumnImpl<S : ColumnType.DecimalColumnType<S>>(table: TableRef,
-                                                                      name: String,
-                                                                      configuration: AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration<S>
-) :
-    ColumnImpl<BigDecimal, S, DecimalColumn<S>>(table = table,
-                                                type = configuration.type,
-                                                name = name,
-                                                notnull = configuration.notnull,
-                                                unique = configuration.unique,
-                                                autoincrement = configuration.autoincrement,
-                                                default = configuration.default,
-                                                comment = configuration.comment,
-                                                columnFormat = configuration.columnFormat,
-                                                storageFormat = configuration.storageFormat,
-                                                references = configuration.references,
-                                                unsigned = configuration.unsigned,
-                                                zerofill = configuration.zerofill,
-                                                displayLength = configuration.displayLength,
-                                                precision = configuration.precision,
-                                                scale = configuration.scale), DecimalColumn<S> {
+internal class DecimalColumnImpl<S : DecimalColumnType<S>>
+constructor(
+    table: TableRef,
+    name: String,
+    configuration: DecimalColumnConfiguration<S>,
+) : ColumnImpl<BigDecimal, S, DecimalColumn<S>>(
+    table = table,
+    type = configuration.type,
+    name = name,
+    notnull = configuration.notnull,
+    unique = configuration.unique,
+    autoincrement = configuration.autoincrement,
+    default = configuration.default,
+    comment = configuration.comment,
+    columnFormat = configuration.columnFormat,
+    storageFormat = configuration.storageFormat,
+    references = configuration.references,
+    unsigned = configuration.unsigned,
+    zerofill = configuration.zerofill,
+    displayLength = configuration.displayLength,
+    precision = configuration.precision,
+    scale = configuration.scale
+), DecimalColumn<S> {
+
     override fun copyConfiguration(newName: String?, owner: Table) =
-        AbstractColumnConfiguration.AbstractNumberColumnConfiguration.DecimalColumnConfiguration(
+        DecimalColumnConfiguration(
             type, newName ?: name,
             precision, scale
         )
+
 }

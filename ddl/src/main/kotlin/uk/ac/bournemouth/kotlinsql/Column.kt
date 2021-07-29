@@ -42,7 +42,7 @@ interface Column<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>> : Colum
     fun fromResultSet(rs: ResultSet, pos: Int): T? = type.fromResultSet(rs, pos)
 
     /**
-     * Determine whether has the given properties
+     * Determine whether the column has the given properties
      */
     fun matches(
         typeName: String,

@@ -22,14 +22,12 @@ package uk.ac.bournemouth.kotlinsql.columns.impl
 
 import uk.ac.bournemouth.kotlinsql.Table
 import uk.ac.bournemouth.kotlinsql.TableRef
-import uk.ac.bournemouth.kotlinsql.columns.AbstractColumnConfiguration
-import uk.ac.bournemouth.kotlinsql.columns.ColumnType
-import uk.ac.bournemouth.kotlinsql.columns.SimpleColumn
+import uk.ac.bournemouth.kotlinsql.columns.*
 
-internal class NormalColumnImpl<T : Any, S : ColumnType.SimpleColumnType<T, S>>(
+internal class NormalColumnImpl<T : Any, S : SimpleColumnType<T, S>>(
     table: TableRef,
     name: String,
-    configuration: AbstractColumnConfiguration.NormalColumnConfiguration<T, S>
+    configuration: NormalColumnConfiguration<T, S>
 ) : ColumnImpl<T, S, SimpleColumn<T, S>>(
     table = table,
     type = configuration.type,
@@ -44,5 +42,5 @@ internal class NormalColumnImpl<T : Any, S : ColumnType.SimpleColumnType<T, S>>(
     references = configuration.references
 ), SimpleColumn<T, S> {
     override fun copyConfiguration(newName: String?, owner: Table) =
-        AbstractColumnConfiguration.NormalColumnConfiguration(type, newName ?: name)
+        NormalColumnConfiguration(type, newName ?: name)
 }

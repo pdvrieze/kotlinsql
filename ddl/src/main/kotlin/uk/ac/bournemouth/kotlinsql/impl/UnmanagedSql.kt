@@ -18,11 +18,7 @@
  * under the License.
  */
 
-package uk.ac.bournemouth.kotlinsql.sql
+package uk.ac.bournemouth.kotlinsql.impl
 
-import uk.ac.bournemouth.kotlinsql.Database
-
-interface Transaction<DB: Database> {
-    fun commit()
-}
-
+@RequiresOptIn("Functions that are unmanaged access to the underlying structures. Should be used with extreme caution.")
+annotation class UnmanagedSql()
