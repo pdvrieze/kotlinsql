@@ -130,8 +130,3 @@ idea {
         isDownloadSources = true
     }
 }
-
-/*
-sourceCompatibility = myJavaVersion
-targetCompatibility = myJavaVersion
-*/
