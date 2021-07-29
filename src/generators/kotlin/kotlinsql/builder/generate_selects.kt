@@ -33,7 +33,7 @@ class GenerateSelectClasses {
     output.apply {
       appendCopyright()
       appendLine()
-      appendLine("package uk.ac.bournemouth.util.kotlin.sql.impl.gen")
+      appendLine("package uk.ac.bournemouth.kotlinsql.impl.gen")
       appendLine()
       appendLine("import java.sql.SQLException")
       appendLine()

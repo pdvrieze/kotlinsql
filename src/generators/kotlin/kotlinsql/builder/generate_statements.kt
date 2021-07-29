@@ -34,7 +34,7 @@ class GenerateStatementsKt {
     output.apply {
       appendCopyright()
       appendLine()
-      appendLine("package uk.ac.bournemouth.util.kotlin.sql.impl.gen")
+      appendLine("package uk.ac.bournemouth.kotlinsql.impl.gen")
       appendLine()
       appendLine("import uk.ac.bournemouth.kotlinsql.Column")
       appendLine("import uk.ac.bournemouth.kotlinsql.executeHelper")

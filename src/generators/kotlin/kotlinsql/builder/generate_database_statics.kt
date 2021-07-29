@@ -34,7 +34,7 @@ class GenerateDatabaseBaseKt {
 
       appendCopyright()
       appendLine()
-      appendLine("package uk.ac.bournemouth.util.kotlin.sql.impl.gen")
+      appendLine("package uk.ac.bournemouth.kotlinsql.impl.gen")
       appendLine()
       appendLine("import uk.ac.bournemouth.kotlinsql.Column")
       appendLine("import uk.ac.bournemouth.kotlinsql.IColumnType")
@@ -42,10 +42,10 @@ class GenerateDatabaseBaseKt {
       appendLine("import uk.ac.bournemouth.kotlinsql.TableRef")
       appendLine("import uk.ac.bournemouth.kotlinsql.Table")
       appendLine()
-      appendLine("abstract class DatabaseMethods {")
+      appendLine("interface DatabaseMethods {")
 //      appendln("  companion object {")
 
-      appendLine("    abstract operator fun get(key:TableRef):Table")
+      appendLine("    operator fun get(key:TableRef):Table")
 
       appendFunctionGroup("SELECT", "_Select", count, "_Select")
       appendFunctionGroup("INSERT", "_Insert", count)

@@ -37,7 +37,7 @@ class GenerateInsertsKt {
       appendLine()
       appendLine(
         """
-        package uk.ac.bournemouth.util.kotlin.sql.impl.gen
+        package uk.ac.bournemouth.kotlinsql.impl.gen
 
         import uk.ac.bournemouth.kotlinsql.Column
         import uk.ac.bournemouth.kotlinsql.ColumnRef
