@@ -43,8 +43,9 @@ class GenerateDatabaseBaseKt {
       appendLine("import uk.ac.bournemouth.kotlinsql.Database")
       appendLine("import uk.ac.bournemouth.kotlinsql.TableRef")
       appendLine("import uk.ac.bournemouth.kotlinsql.Table")
+      appendLine("import uk.ac.bournemouth.kotlinsql.impl.DatabaseMethodsBase")
       appendLine()
-      appendLine("interface DatabaseMethods {")
+      appendLine("interface DatabaseMethods : DatabaseMethodsBase {")
 //      appendln("  companion object {")
 
       appendLine("    operator fun get(key:TableRef):Table")

@@ -40,8 +40,7 @@ import kotlin.reflect.KProperty
  */
 
 @Suppress("unused")
-abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") val _version: Int) : DatabaseMethods {
-
+abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") val _version: Int) {
 
     @Suppress("PropertyName")
     val _tables: List<Table> by lazy {
@@ -88,22 +87,8 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
         return _tables.find { it._name == key } ?: throw NoSuchElementException("There is no table with the key $key")
     }
 
-    override operator fun get(key: TableRef) = get(key._name)
+    operator fun get(key: TableRef) = get(key._name)
 
-
-    @Suppress("FunctionName")
-    fun DELETE_FROM(table: Table): Delete = _Delete(table)
-
-    @Suppress("FunctionName")
-    fun UPDATE(config: _UpdateBuilder.() -> Unit): Update = _UpdateBuilder().apply(config).build()
-
-    @Suppress("FunctionName")
-    fun COUNT(col: ColumnRef<*, *, *>): NumericColumn<Int, INT_T> {
-        return CountColumn(col)
-    }
-
-    @Suppress("FunctionName")
-    fun SELECT(columns: List<Column<*, *, *>>): Select = _ListSelect(columns)
 
     companion object {
 
