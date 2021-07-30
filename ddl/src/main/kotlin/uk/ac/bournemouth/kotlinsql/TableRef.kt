@@ -25,4 +25,8 @@ interface TableRef {
     @Suppress("PropertyName")
             /** The name of the table. */
     val _name: String
+
+    fun name(prefixMap: Map<String, String>?): String {
+        return prefixMap?.let { map -> map[this._name]?.let { "`$_name` AS $it" } } ?: "`$_name`"
+    }
 }

@@ -21,12 +21,8 @@
 package uk.ac.bournemouth.kotlinsql.queries.impl
 
 import uk.ac.bournemouth.kotlinsql.Column
-import uk.ac.bournemouth.kotlinsql.Database
 import uk.ac.bournemouth.kotlinsql.columns.PreparedStatementHelper
-import uk.ac.bournemouth.kotlinsql.name
 import uk.ac.bournemouth.kotlinsql.queries.Select
-import uk.ac.bournemouth.kotlinsql.queries.SelectStatement
-import java.util.*
 
 abstract class _BaseSelect(override vararg val columns: Column<*, *, *>) : Select {
     override val select: Select get() = this

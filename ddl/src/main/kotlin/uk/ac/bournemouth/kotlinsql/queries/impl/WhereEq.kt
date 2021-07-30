@@ -22,7 +22,6 @@ package uk.ac.bournemouth.kotlinsql.queries.impl
 
 import uk.ac.bournemouth.kotlinsql.ColumnRef
 import uk.ac.bournemouth.kotlinsql.columns.PreparedStatementHelper
-import uk.ac.bournemouth.kotlinsql.name
 import uk.ac.bournemouth.kotlinsql.queries.BooleanWhereValue
 
 class WhereEq(private val left: ColumnRef<*, *, *>, private val rel: String, private val right: RefWhereValue) :

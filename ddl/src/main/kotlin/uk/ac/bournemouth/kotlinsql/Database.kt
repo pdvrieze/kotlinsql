@@ -134,8 +134,3 @@ abstract class Database constructor(@Suppress("MemberVisibilityCanBePrivate") va
     }
 
 }
-
-//@PublishedApi
-/*internal*/ fun TableRef.name(prefixMap: Map<String, String>?): String {
-    return prefixMap?.let { map -> map[this._name]?.let { "`$_name` AS $it" } } ?: "`$_name`"
-}

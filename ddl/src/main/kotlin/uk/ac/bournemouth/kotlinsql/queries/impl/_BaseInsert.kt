@@ -23,7 +23,6 @@ package uk.ac.bournemouth.kotlinsql.queries.impl
 import uk.ac.bournemouth.kotlinsql.ColumnRef
 import uk.ac.bournemouth.kotlinsql.Table
 import uk.ac.bournemouth.kotlinsql.columns.PreparedStatementHelper
-import uk.ac.bournemouth.kotlinsql.name
 import uk.ac.bournemouth.kotlinsql.queries.Insert
 import uk.ac.bournemouth.kotlinsql.queries.InsertValues
 
@@ -41,6 +40,7 @@ abstract class _BaseInsert(val table: Table, private val update: Boolean, vararg
     override fun toSQL(prefixMap: Map<String, String>?): String {
         return buildString {
             columns.joinTo(this, ", ", "INSERT INTO ${table.name(prefixMap)} (", ")") { col -> col.name(prefixMap) }
+//            columns.joinTo(this, ", ", "INSERT INTO ${table.name(prefixMap)} (", ")") { col -> col.name(prefixMap) }
             (1..columns.size).joinTo(this, prefix = " VALUES (", postfix = ")") { "?" }
             if (update) {
                 val primaryKey = table._primaryKey

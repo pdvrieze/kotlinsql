@@ -100,6 +100,11 @@ kotlin {
     }
 }
 
+tasks.named<Test>("test") {
+    doFirst {
+        logger.lifecycle("Test classpath: ${classpath.joinToString()}")
+    }
+}
 
 /*
 publishing {

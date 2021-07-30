@@ -79,11 +79,14 @@ open class DBConnection<DB: Database> constructor(val rawConnection: Connection,
     fun <R> raw(block: (Connection) -> R): R = block(rawConnection)
 
     @Suppress("DEPRECATION")
-    inline fun <R> transaction(block: (DBConnection<DB>) -> R): R {
+    inline fun <R> transaction(block: DBConnection<DB>.() -> R): R {
         rawConnection.autoCommit = false
         val savePoint = rawConnection.setSavepoint()
         try {
-            return block(this).apply { commit() }
+            return block().apply {
+                releaseSavepoint(savePoint)
+                commit()
+            }
         } catch (e: Exception) {
             rawConnection.rollback(savePoint)
             throw e

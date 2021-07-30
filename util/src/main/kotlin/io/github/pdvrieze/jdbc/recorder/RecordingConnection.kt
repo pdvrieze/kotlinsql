@@ -301,7 +301,7 @@ class RecordingConnection(delegate: Connection, val db: Database? = null) : Wrap
     }
 
     override fun toString(): String {
-        return "RecordingConnection($db)"
+        return "RecordingConnection(${db?.javaClass?.simpleName})"
     }
 
     inner class RecordingCallableStatement(delegate: CallableStatement, sql: String) :

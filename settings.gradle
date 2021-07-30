@@ -40,5 +40,6 @@ pluginManagement {
 rootProject.name="kotlinsql"
 
 include(":ddl")
-//include(":sql")
-//include(":monads")
+include(":util")
+include(":monads")
+include(":sql")
