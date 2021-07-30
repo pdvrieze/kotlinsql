@@ -36,6 +36,8 @@ class GenerateDatabaseBaseKt {
       appendLine()
       appendLine("package uk.ac.bournemouth.kotlinsql.impl.gen")
       appendLine()
+      appendLine("import uk.ac.bournemouth.kotlinsql.queries.*")
+      appendLine("import uk.ac.bournemouth.kotlinsql.queries.impl.*")
       appendLine("import uk.ac.bournemouth.kotlinsql.Column")
       appendLine("import uk.ac.bournemouth.kotlinsql.IColumnType")
       appendLine("import uk.ac.bournemouth.kotlinsql.Database")
@@ -73,7 +75,7 @@ class GenerateDatabaseBaseKt {
       (1..n).joinToString { m -> "col$m: C$m" }.apply { append(this) }
       append("): ")
       if (n == 1 && funName == "SELECT") {
-        append("Database.$interfaceName$n<T1, S1, C1>")
+        append("$interfaceName$n<T1, S1, C1>")
       } else {
         (1..n).joinTo(this, prefix = "$interfaceName$n<", postfix = ">") { m -> "T$m, S$m, C$m" }
       }
@@ -82,7 +84,7 @@ class GenerateDatabaseBaseKt {
         val update = funName == "INSERT_OR_UPDATE"
         append("            $className$n(get(col1.table), $update, ")
       } else if (n == 1 && funName == "SELECT") {
-        append("            Database.$className$n(")
+        append("            $className$n(")
       } else {
         append("            $className$n(")
       }

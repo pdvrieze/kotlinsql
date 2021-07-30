@@ -40,14 +40,8 @@ version = "0.8.0-SNAPSHOT"
 group = "io.github.pdvrieze.kotlinsql"
 description = "A utility library for working with databases in kotlin"
 
-allprojects {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-    tasks.withType<Test> {
-        useJUnitPlatform()
-    }
+base {
+    archivesBaseName = "kotlinsql-ddl"
 }
 
 sourceSets {

@@ -21,9 +21,9 @@
 package uk.ac.bournemouth.kotlinsql
 
 class ForeignKey constructor(
-    private val fromCols: List<ColumnRef<*, *, *>>,
-    internal val toTable: TableRef,
-    private val toCols: List<ColumnRef<*, *, *>>,
+    val fromCols: List<ColumnRef<*, *, *>>,
+    val toTable: TableRef,
+    val toCols: List<ColumnRef<*, *, *>>,
 ) {
     internal fun toDDL(): CharSequence {
         val transform: (ColumnRef<*, *, *>) -> CharSequence = { it.name }

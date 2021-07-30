@@ -27,7 +27,8 @@ import java.sql.SQLException
 
 import uk.ac.bournemouth.kotlinsql.Column
 import uk.ac.bournemouth.kotlinsql.Database
-import uk.ac.bournemouth.kotlinsql.Database.*
+import uk.ac.bournemouth.kotlinsql.queries.*
+import uk.ac.bournemouth.kotlinsql.queries.impl.*
 import uk.ac.bournemouth.kotlinsql.IColumnType
 
 interface Select2<T1: Any, S1: IColumnType<T1,S1,C1>, C1: Column<T1, S1, C1>,

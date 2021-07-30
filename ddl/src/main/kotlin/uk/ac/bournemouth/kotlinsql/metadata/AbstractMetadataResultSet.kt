@@ -116,3 +116,19 @@ abstract class AbstractMetadataResultSet(
     @Suppress("NOTHING_TO_INLINE")
     protected inline fun lazyColIdx(name: String) = lazy { resultSet.findColumn(name) }
 }
+
+@OptIn(UnmanagedSql::class)
+inline fun <RS: AbstractMetadataResultSet> RS.forEach(body: (RS) -> Unit) {
+    use { rs ->
+        while (rs.next()) {
+            body(rs)
+        }
+    }
+}
+
+@OptIn(UnmanagedSql::class)
+inline fun <RS: AbstractMetadataResultSet, R> RS.map(body: (RS) -> R): List<R> {
+    return mutableListOf<R>().also { r ->
+        forEach { rs -> r.add(body(rs)) }
+    }
+}

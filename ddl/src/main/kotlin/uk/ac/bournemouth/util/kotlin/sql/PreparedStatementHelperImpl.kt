@@ -44,18 +44,35 @@ class PreparedStatementHelperImpl constructor(val statement: PreparedStatement, 
         }
     }
 
-    fun setParam(index: Int, value: Int?) = if (value == null) statement.setNull(index,
-                                                                                 Types.INTEGER) else statement.setInt(index, value)
-    fun setParam(index: Int, value: Long?) = if (value == null) statement.setNull(index,
-                                                                                  Types.BIGINT) else statement.setLong(index, value)
-    fun setParam(index: Int, value: CharSequence?) = if (value == null) statement.setNull(index,
-                                                                                          Types.VARCHAR) else statement.setString(index, value.toString())
-    fun setParam(index: Int, value: Boolean?) = if (value == null) statement.setNull(index,
-                                                                                     Types.BOOLEAN) else statement.setBoolean(index, value)
-    fun setParam(index: Int, value: Byte?) = if (value == null) statement.setNull(index,
-                                                                                  Types.TINYINT) else statement.setByte(index, value)
-    fun setParam(index: Int, value: Short?) = if (value == null) statement.setNull(index,
-                                                                                   Types.SMALLINT) else statement.setShort(index, value)
+    fun setParam(index: Int, value: Int?) = when (value) {
+        null -> statement.setNull(index, Types.INTEGER)
+        else -> statement.setInt(index, value)
+    }
+
+    fun setParam(index: Int, value: Long?) = when (value) {
+        null -> statement.setNull(index, Types.BIGINT)
+        else -> statement.setLong(index, value)
+    }
+
+    fun setParam(index: Int, value: CharSequence?) = when (value) {
+        null -> statement.setNull(index, Types.VARCHAR)
+        else -> statement.setString(index, value.toString())
+    }
+
+    fun setParam(index: Int, value: Boolean?) = when (value) {
+        null -> statement.setNull(index, Types.BOOLEAN)
+        else -> statement.setBoolean(index, value)
+    }
+
+    fun setParam(index: Int, value: Byte?) = when (value) {
+        null -> statement.setNull(index, Types.TINYINT)
+        else -> statement.setByte(index, value)
+    }
+
+    fun setParam(index: Int, value: Short?) = when (value) {
+        null -> statement.setNull(index, Types.SMALLINT)
+        else -> statement.setShort(index, value)
+    }
 
     @Suppress("unused", "NOTHING_TO_INLINE")
     class ParamHelper_(val sh: PreparedStatementHelperImpl) {

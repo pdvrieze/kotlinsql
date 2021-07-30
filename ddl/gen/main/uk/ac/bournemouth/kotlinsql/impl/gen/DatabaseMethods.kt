@@ -23,6 +23,8 @@
  */
 package uk.ac.bournemouth.kotlinsql.impl.gen
 
+import uk.ac.bournemouth.kotlinsql.queries.*
+import uk.ac.bournemouth.kotlinsql.queries.impl.*
 import uk.ac.bournemouth.kotlinsql.Column
 import uk.ac.bournemouth.kotlinsql.IColumnType
 import uk.ac.bournemouth.kotlinsql.Database
@@ -33,8 +35,8 @@ interface DatabaseMethods {
     operator fun get(key:TableRef):Table
 
     fun <T1:Any, S1:IColumnType<T1,S1,C1>, C1: Column<T1, S1, C1>>
-        SELECT(col1: C1): Database._Select1<T1, S1, C1> =
-            Database._Select1(col1)
+        SELECT(col1: C1): _Select1<T1, S1, C1> =
+            _Select1(col1)
 
     fun <T1:Any, S1:IColumnType<T1,S1,C1>, C1: Column<T1, S1, C1>,
          T2:Any, S2:IColumnType<T2,S2,C2>, C2: Column<T2, S2, C2>>

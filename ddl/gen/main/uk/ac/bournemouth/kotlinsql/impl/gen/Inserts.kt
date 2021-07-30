@@ -26,7 +26,7 @@ package uk.ac.bournemouth.kotlinsql.impl.gen
 import uk.ac.bournemouth.kotlinsql.Column
 import uk.ac.bournemouth.kotlinsql.ColumnRef
 import uk.ac.bournemouth.kotlinsql.Table
-import uk.ac.bournemouth.kotlinsql.Database._BaseInsert
+import uk.ac.bournemouth.kotlinsql.queries.impl._BaseInsert
 import uk.ac.bournemouth.kotlinsql.IColumnType
 
 class _Insert1<T1:Any, S1:IColumnType<T1,S1,C1>, C1: Column<T1, S1, C1>>

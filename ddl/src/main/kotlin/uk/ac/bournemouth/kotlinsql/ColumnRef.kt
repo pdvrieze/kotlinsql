@@ -23,11 +23,17 @@ package uk.ac.bournemouth.kotlinsql
 /**
  * A reference to a column.
  */
-interface ColumnRef<T:Any, S: IColumnType<T, S, C>, C: Column<T, S, C>> {
-  /** The table the column is a part of */
-  val table: TableRef
-  /** The name of the column */
-  val name:String
-  /** The [IColumnType] of the column. */
-  val type: S
+interface ColumnRef<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>> {
+    /** The table the column is a part of */
+    val table: TableRef
+
+    /** The name of the column */
+    val name: String
+
+    /** The [IColumnType] of the column. */
+    val type: S
+
+    fun name(prefixMap: Map<String, String>?): String {
+        return prefixMap?.run { get(table._name)?.let { "$it.`$name`" } } ?: "`$name`"
+    }
 }

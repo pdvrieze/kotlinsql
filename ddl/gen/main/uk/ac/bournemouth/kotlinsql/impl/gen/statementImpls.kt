@@ -24,7 +24,8 @@
 package uk.ac.bournemouth.kotlinsql.impl.gen
 
 import uk.ac.bournemouth.kotlinsql.Column
-import uk.ac.bournemouth.kotlinsql.Database.*
+import uk.ac.bournemouth.kotlinsql.queries.*
+import uk.ac.bournemouth.kotlinsql.queries.impl.*
 import uk.ac.bournemouth.kotlinsql.IColumnType
 import java.sql.SQLException
 
