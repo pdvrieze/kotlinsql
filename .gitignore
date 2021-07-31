@@ -10,3 +10,4 @@ build
 local.properties
 /.idea/kotlinsql.iml
 *.iml
+*/gen
