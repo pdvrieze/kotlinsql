@@ -26,6 +26,7 @@ import java.sql.ResultSet
 
 @Suppress("unused")
 abstract class DataResults(rs: ResultSet) : AbstractMetadataResultSet(rs) {
+
     private val idxCharOctetLength by lazyColIdx("CHAR_OCTET_LENGTH")
     private val idxDataType by lazyColIdx("DATA_TYPE")
     private val idxIsNullable by lazyColIdx("IS_NULLABLE")
@@ -42,4 +43,15 @@ abstract class DataResults(rs: ResultSet) : AbstractMetadataResultSet(rs) {
     val remarks: String? get() = resultSet.getString(idxRemarks).let { if (it.isNullOrEmpty()) null else it }
     val typeName: String get() = resultSet.getString(idxTypeName)
 
+    protected abstract fun data(): Data
+
+    open class Data(results: DataResults) {
+        val charOctetLength: Int = results.charOctetLength
+        val dataType: IColumnType<*, *, *> = results.dataType
+        val isNullable: Boolean? = results.isNullable
+        val nullable: Nullable = results.nullable
+        val ordinalPosition: Int = results.ordinalPosition
+        val remarks: String? = results.remarks
+        val typeName: String = results.typeName
+    }
 }

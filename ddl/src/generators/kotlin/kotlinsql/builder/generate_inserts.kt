@@ -55,7 +55,7 @@ class GenerateInsertsKt {
           ",\n${indent(n, 15)}"
         ) { m -> "T$m:Any, S$m:IColumnType<T$m,S$m,C$m>, C$m: Column<T$m, S$m, C$m>" }
         appendLine(">")
-        append("      internal constructor(table: Table, update:Boolean, ")
+        append("      constructor(table: Table, update:Boolean, ")
         (1..n).joinTo(output, ",\n${indent(1, 27)}") { m -> "col$m: ColumnRef<T$m,S$m,C$m>" }
         append("): _BaseInsert(table, update, ")
         (1..n).joinTo(output, ",") { m -> "col$m" }

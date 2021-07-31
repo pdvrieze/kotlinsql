@@ -47,4 +47,20 @@ class ProcedureColumnResults(rs: ResultSet) : DataResults(rs) {
     val radix: Short get() = resultSet.getShort(idxRadix)
     val scale: Short? get() = resultSet.getShort(idxScale).let { result -> if (resultSet.wasNull()) null else result }
     val specificName: String get() = resultSet.getString(idxSpecificName)
+
+    public override fun data(): Data =  Data(this)
+
+    class Data(result: ProcedureColumnResults): DataResults.Data(result) {
+        val columnDef: String? = result.columnDef
+        val columnName: String = result.columnName
+        val columnType: String = result.columnType
+        val length: Int = result.length
+        val precision: Int = result.precision
+        val procedureCatalog: String? = result.procedureCatalog
+        val procedureName: String = result.procedureName
+        val procedureScheme: String? = result.procedureScheme
+        val radix: Short = result.radix
+        val scale: Short? = result.scale
+        val specificName: String = result.specificName
+    }
 }

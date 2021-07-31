@@ -305,12 +305,4 @@ open class DBConnection<DB: Database> constructor(val rawConnection: Connection,
     }
 
 
-    enum class TransactionIsolation constructor(val intValue: Int, @Suppress("UNUSED_PARAMETER") dummy: Unit) {
-        TRANSACTION_NONE(Connection.TRANSACTION_NONE, Unit),
-        TRANSACTION_READ_UNCOMMITTED(Connection.TRANSACTION_READ_UNCOMMITTED, Unit),
-        TRANSACTION_READ_COMMITTED(Connection.TRANSACTION_READ_COMMITTED, Unit),
-        TRANSACTION_REPEATABLE_READ(Connection.TRANSACTION_REPEATABLE_READ, Unit),
-        TRANSACTION_SERIALIZABLE(Connection.TRANSACTION_SERIALIZABLE, Unit),
-    }
-
 }

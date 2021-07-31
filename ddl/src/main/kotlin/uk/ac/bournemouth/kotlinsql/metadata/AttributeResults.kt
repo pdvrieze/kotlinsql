@@ -42,4 +42,16 @@ class AttributeResults(attributes: ResultSet) : DataResults(attributes) {
     val typeCatalog: String? get() = resultSet.getString(idxTypeCat)
     val typeScheme: String? get() = resultSet.getString(idxTypeSchem)
 
+    public override fun data(): Data = Data(this)
+
+    class Data(result: AttributeResults): DataResults.Data(result) {
+        val attrDefault: String? = result.attrDefault
+        val attrName: String = result.attrName
+        val attrSize: Int = result.attrSize
+        val attrTypeName: String? = result.attrTypeName
+        val decimalDigits: Int = result.decimalDigits
+        val numPrecRadix: Int = result.numPrecRadix
+        val typeCatalog: String? = result.typeCatalog
+        val typeScheme: String? = result.typeScheme
+    }
 }

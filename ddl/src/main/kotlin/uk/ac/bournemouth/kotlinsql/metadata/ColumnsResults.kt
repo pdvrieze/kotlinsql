@@ -24,6 +24,8 @@ import java.sql.ResultSet
 
 @Suppress("unused")
 class ColumnsResults(rs: ResultSet) : DataResults(rs) {
+    public override fun data(): Data = Data(this)
+
     //TableMetaResultBase
     private val idxBufferLength by lazyColIdx("BUFFER_LENGTH")
     private val idxColumnDef by lazyColIdx("COLUMN_DEF")
@@ -50,4 +52,21 @@ class ColumnsResults(rs: ResultSet) : DataResults(rs) {
     val tableName: String get() = resultSet.getString(idxTableName)
     val tableScheme: String? get() = resultSet.getString(idxTableSchem)
     val tableType: String get() = resultSet.getString(idxTableType)
+
+    class Data(result: ColumnsResults): DataResults.Data(result) {
+        val bufferLength: String = result.bufferLength
+        val columnDefault: String? = result.columnDefault
+        val columnName: String = result.columnName
+        val columnSize: Int = result.columnSize
+        val decimalDigits: Int = result.decimalDigits
+        val isAutoIncrement: Boolean? = result.isAutoIncrement
+        val isGeneratedColumn: Boolean? = result.isGeneratedColumn
+        val numPrecRadix: Int = result.numPrecRadix
+        val tableCatalog: String? = result.tableCatalog
+        val tableName: String = result.tableName
+        val tableScheme: String? = result.tableScheme
+        val tableType: String = result.tableType
+    }
+
+
 }
