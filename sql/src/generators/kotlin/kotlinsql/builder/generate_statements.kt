@@ -34,14 +34,13 @@ class GenerateStatementsKt {
     output.apply {
       appendCopyright()
       appendLine()
-      appendLine("package uk.ac.bournemouth.kotlinsql.impl.gen")
+      appendLine("package io.github.pdvrieze.kotlinsql.dml.impl")
       appendLine()
-      appendLine("import uk.ac.bournemouth.kotlinsql.Column")
-//      appendLine("import uk.ac.bournemouth.kotlinsql.executeHelper")
-//      appendln("import uk.ac.bournemouth.kotlinsql.Database")
-      appendLine("import uk.ac.bournemouth.kotlinsql.Database.*")
-      appendLine("import uk.ac.bournemouth.kotlinsql.IColumnType")
-//      appendLine("import uk.ac.bournemouth.kotlinsql.sql.NonMonadicApi")
+      appendLine("import io.github.pdvrieze.kotlinsql.ddl.Column")
+      appendLine("import io.github.pdvrieze.kotlinsql.ddl.IColumnType")
+      appendLine("import io.github.pdvrieze.kotlinsql.dml.Select1")
+      appendLine("import io.github.pdvrieze.kotlinsql.dml.WhereClause")
+
       appendLine("import java.sql.SQLException")
 
       for (n in 1..count) {

@@ -1,6 +1,9 @@
 pluginManagement {
     repositories {
         mavenLocal()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
         gradlePluginPortal()
         mavenCentral()
     }
@@ -39,7 +42,8 @@ pluginManagement {
 
 rootProject.name="kotlinsql"
 
-include(":ddl")
-include(":util")
-include(":monads")
 include(":sql")
+include(":util")
+include(":monadic")
+include(":direct")
+include(":testlib")

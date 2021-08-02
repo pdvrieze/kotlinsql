@@ -34,15 +34,16 @@ class GenerateDatabaseBaseKt {
 
       appendCopyright()
       appendLine()
-      appendLine("package uk.ac.bournemouth.kotlinsql.impl.gen")
+      appendLine("package io.github.pdvrieze.kotlinsql.dml")
       appendLine()
-      appendLine("import uk.ac.bournemouth.kotlinsql.Column")
-      appendLine("import uk.ac.bournemouth.kotlinsql.IColumnType")
-      appendLine("import uk.ac.bournemouth.kotlinsql.Database")
-      appendLine("import uk.ac.bournemouth.kotlinsql.TableRef")
-      appendLine("import uk.ac.bournemouth.kotlinsql.Table")
+      appendLine("import io.github.pdvrieze.kotlinsql.ddl.Column")
+      appendLine("import io.github.pdvrieze.kotlinsql.ddl.IColumnType")
+      appendLine("import io.github.pdvrieze.kotlinsql.ddl.Table")
+      appendLine("import io.github.pdvrieze.kotlinsql.ddl.TableRef")
+      appendLine("import io.github.pdvrieze.kotlinsql.dml.impl.*")
+      appendLine("import io.github.pdvrieze.kotlinsql.dml.impl.DatabaseMethodsBase")
       appendLine()
-      appendLine("interface DatabaseMethods {")
+      appendLine("interface DatabaseMethods : DatabaseMethodsBase {")
 //      appendln("  companion object {")
 
       appendLine("    operator fun get(key:TableRef):Table")
@@ -73,7 +74,7 @@ class GenerateDatabaseBaseKt {
       (1..n).joinToString { m -> "col$m: C$m" }.apply { append(this) }
       append("): ")
       if (n == 1 && funName == "SELECT") {
-        append("Database.$interfaceName$n<T1, S1, C1>")
+        append("$interfaceName$n<T1, S1, C1>")
       } else {
         (1..n).joinTo(this, prefix = "$interfaceName$n<", postfix = ">") { m -> "T$m, S$m, C$m" }
       }
@@ -82,7 +83,7 @@ class GenerateDatabaseBaseKt {
         val update = funName == "INSERT_OR_UPDATE"
         append("            $className$n(get(col1.table), $update, ")
       } else if (n == 1 && funName == "SELECT") {
-        append("            Database.$className$n(")
+        append("            $className$n(")
       } else {
         append("            $className$n(")
       }

@@ -20,11 +20,9 @@
 
 package io.github.pdvrieze.jdbc.recorder
 
-import uk.ac.bournemouth.kotlinsql.Database
-import uk.ac.bournemouth.kotlinsql.Table
+import io.github.pdvrieze.kotlinsql.ddl.Database
 import java.io.PrintWriter
 import java.sql.Connection
-import java.sql.SQLException
 import java.util.logging.Logger
 import javax.sql.DataSource
 

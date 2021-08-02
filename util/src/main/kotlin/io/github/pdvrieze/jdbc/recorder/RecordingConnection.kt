@@ -21,8 +21,7 @@
 package io.github.pdvrieze.jdbc.recorder
 
 import io.github.pdvrieze.jdbc.recorder.actions.*
-import uk.ac.bournemouth.kotlinsql.Database
-import uk.ac.bournemouth.kotlinsql.Table
+import io.github.pdvrieze.kotlinsql.ddl.Database
 import java.sql.*
 import java.util.*
 import java.util.concurrent.Executor

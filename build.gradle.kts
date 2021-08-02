@@ -1,6 +1,3 @@
-import net.devrieze.gradlecodegen.GenerateSourceSet
-import org.gradle.api.internal.tasks.DefaultSourceSet
-
 /*
  * Copyright (c) 2018.
  *
@@ -22,11 +19,11 @@ import org.gradle.api.internal.tasks.DefaultSourceSet
  */
 
 plugins {
-    kotlin("jvm")
-    id("maven-publish")
-    id("signing")
-    id("net.devrieze.gradlecodegen")
-    id("org.jetbrains.dokka")
+    kotlin("jvm") apply false
+//    id("maven-publish") apply false
+//    id("signing") apply false
+    id("net.devrieze.gradlecodegen") apply false
+    id("org.jetbrains.dokka") apply false
     idea
 }
 
@@ -50,83 +47,6 @@ allprojects {
     }
 }
 
-sourceSets {
-    val generators = named("main") {
-        val depth = 10
-        withConvention(GenerateSourceSet::class) {
-
-            generate {
-                val databaseFunctions by registering {
-                    output = "uk/ac/bournemouth/kotlinsql/impl/gen/DatabaseMethods.kt"
-                    generator = "kotlinsql.builder.GenerateDatabaseBaseKt"
-                    input = depth
-                }
-                val selects by registering {
-                    output = "uk/ac/bournemouth/kotlinsql/impl/gen/selectImpls.kt"
-                    generator = "kotlinsql.builder.GenerateSelectClasses"
-                    input = depth
-                }
-                val statements by registering {
-                    output = "uk/ac/bournemouth/kotlinsql/impl/gen/statementImpls.kt"
-                    generator = "kotlinsql.builder.GenerateStatementsKt"
-                    input = depth
-                }
-                val inserts by registering {
-                    output = "uk/ac/bournemouth/kotlinsql/impl/gen/Inserts.kt"
-                    generator = "kotlinsql.builder.GenerateInsertsKt"
-                    input = depth
-                }
-                val monadAccess by registering {
-                    output = "uk/ac/bournemouth/kotlinsql/monads/impl/gen/Monads.kt"
-                    generator = "kotlinsql.builder.GenerateConnectionSource"
-                    input = depth
-                }
-
-            }
-        }
-    }
-}
-
-kotlin {
-    target {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "1.8"
-            }
-        }
-    }
-}
-
-
-
-/*
-publishing {
-    publications {
-        KotlinSqlPublication(MavenPublication) {
-            from components.java
-            groupId group
-            artifactId 'kotlinsql'
-
-            artifact sourceJar {
-                classifier "sources"
-            }
-        }
-    }
-}
-*/
 
 val kotlin_version: String by project
 val jupiterVersion: String by project
-
-dependencies {
-    generatorsImplementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
-
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
-}
-
-idea {
-    module {
-        isDownloadSources = true
-    }
-}

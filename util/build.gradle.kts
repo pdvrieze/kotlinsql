@@ -72,7 +72,7 @@ val jupiterVersion: String by project
 
 dependencies {
 
-    implementation(project(":ddl"))
+    implementation(project(":sql"))
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")

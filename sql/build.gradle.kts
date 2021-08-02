@@ -1,3 +1,5 @@
+import net.devrieze.gradlecodegen.GenerateSpec
+
 /*
  * Copyright (c) 2018.
  *
@@ -17,8 +19,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import net.devrieze.gradlecodegen.GenerateSourceSet
 
 plugins {
     kotlin("jvm")
@@ -40,56 +40,46 @@ group = "io.github.pdvrieze.kotlinsql"
 description = "A utility library for working with databases in kotlin"
 
 base {
-    archivesBaseName = "kotlinsql-sql"
+    archivesName.set("kotlinsql-sql")
 }
 
 sourceSets {
-    val generators = named("main") {
+    main {
         val depth = 10
-        withConvention(GenerateSourceSet::class) {
-
-            generate {
-/*
-                val databaseFunctions by registering {
-                    output = "uk/ac/bournemouth/kotlinsql/impl/gen/DatabaseMethods.kt"
-                    generator = "kotlinsql.builder.GenerateDatabaseBaseKt"
-                    input = depth
-                }
-*/
-/*
-                val selects by registering {
-                    output = "uk/ac/bournemouth/kotlinsql/impl/gen/selectImpls.kt"
-                    generator = "kotlinsql.builder.GenerateSelectClasses"
-                    input = depth
-                }
-*/
-/*
-                val statements by registering {
-                    output = "uk/ac/bournemouth/kotlinsql/impl/gen/statementImpls.kt"
-                    generator = "kotlinsql.builder.GenerateStatementsKt"
-                    input = depth
-                }
-*/
-/*
-                val inserts by registering {
-                    output = "uk/ac/bournemouth/kotlinsql/impl/gen/Inserts.kt"
-                    generator = "kotlinsql.builder.GenerateInsertsKt"
-                    input = depth
-                }
-*/
+        generate {
+            val databaseFunctions by registering {
+                output = "io/github/pdvrieze/kotlinsql/dml/DatabaseMethods.kt"
+                generator = "kotlinsql.builder.GenerateDatabaseBaseKt"
+                input = depth
+            }
+            val selects by registering {
+                output = "io/github/pdvrieze/kotlinsql/dml/impl/selectImpls.kt"
+                generator = "kotlinsql.builder.GenerateSelectClasses"
+                input = depth
+            }
+            val statements by registering {
+                output = "io/github/pdvrieze/kotlinsql/dml/impl/statementImpls.kt"
+                generator = "kotlinsql.builder.GenerateStatementsKt"
+                input = depth
+            }
+            val inserts by registering {
+                output = "io/github/pdvrieze/kotlinsql/dml/impl/insertImpls.kt"
+                generator = "kotlinsql.builder.GenerateInsertsKt"
+                input = depth
+            }
 /*
                 val monadAccess by registering {
-                    output = "uk/ac/bournemouth/util/kotlin/sql/impl/gen/Monads.kt"
+                    output = "uk/ac/bournemouth/kotlinsql/monads/impl/gen/Monads.kt"
                     generator = "kotlinsql.builder.GenerateConnectionSource"
                     input = depth
                 }
 */
 
-            }
+//            }
         }
     }
-
 }
+
 kotlin {
     target {
         compilations.all {
@@ -97,14 +87,15 @@ kotlin {
                 jvmTarget = "1.8"
             }
         }
+        sourceSets.all {
+            languageSettings.apply {
+                useExperimentalAnnotation("kotlin.RequiresOptIn")
+            }
+        }
     }
 }
 
-tasks.named<Test>("test") {
-    doFirst {
-        logger.lifecycle("Test classpath: ${classpath.joinToString()}")
-    }
-}
+
 
 /*
 publishing {
@@ -128,10 +119,7 @@ val jupiterVersion: String by project
 dependencies {
     generatorsImplementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
 
-    implementation(project(":ddl"))
-
     testImplementation("org.junit.jupiter:junit-jupiter-api:$jupiterVersion")
-    testImplementation(project(":util"))
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
 }
 

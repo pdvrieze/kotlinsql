@@ -25,7 +25,7 @@ enum class SetAutoCommit : Action {
     FALSE;
 
     override fun toString(): String {
-        return "SetAutoCommit($name)"
+        return "SetAutoCommit.$name"
     }
     companion object {
         operator fun invoke(autoCommit: Boolean) = when (autoCommit) {
