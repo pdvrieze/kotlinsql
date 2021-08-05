@@ -23,18 +23,16 @@
 package io.github.pdvrieze.kotlinsql.direct
 
 import io.github.pdvrieze.kotlinsql.ddl.*
-import io.github.pdvrieze.kotlinsql.direct.DBConnection
 import io.github.pdvrieze.kotlinsql.dml.*
 import io.github.pdvrieze.kotlinsql.dml.impl._BaseInsert
 import io.github.pdvrieze.kotlinsql.dml.impl._Statement1Base
 import io.github.pdvrieze.kotlinsql.dml.impl._UpdateBase
 import io.github.pdvrieze.kotlinsql.dml.impl._UpdateStatement
-import io.github.pdvrieze.kotlinsql.metadata.forEach
+import io.github.pdvrieze.kotlinsql.metadata.closingForEach
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.util.*
 import javax.sql.DataSource
-import kotlin.NoSuchElementException
 
 
 internal fun <T> SelectStatement.executeHelper(connection: DBConnection<*>,
@@ -180,7 +178,7 @@ fun <DB: Database> DB.ensureTables(connection: DBConnection<DB>, retainExtraColu
 
     connection.apply {
         withMetaData {
-            getTables(null, null, null, arrayOf("TABLE")).forEach { rs ->
+            getTables(null, null, null, arrayOf("TABLE")).closingForEach { rs ->
                 val tableName = rs.tableName
                 if (missingTables.remove(tableName)) {
 

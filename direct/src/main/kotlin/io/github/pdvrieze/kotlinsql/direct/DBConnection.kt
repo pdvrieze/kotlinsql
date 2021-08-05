@@ -28,7 +28,7 @@ import io.github.pdvrieze.kotlinsql.ddl.TableRef
 import io.github.pdvrieze.kotlinsql.direct.impl.DDLPreparedStatementHelper
 import io.github.pdvrieze.kotlinsql.dml.DatabaseMethods
 import io.github.pdvrieze.kotlinsql.metadata.SafeDatabaseMetaData
-import io.github.pdvrieze.kotlinsql.metadata.forEach
+import io.github.pdvrieze.kotlinsql.metadata.closingForEach
 import io.github.pdvrieze.kotlinsql.util.WarningIterator
 import java.sql.*
 import java.util.*
@@ -263,7 +263,7 @@ open class DBConnection<DB: Database> constructor(val rawConnection: Connection,
         _cols.associateByTo(missingColumns) { it.name.toLowerCase(Locale.ENGLISH) }
 
         withMetaData {
-            (getColumns(null, null, _name, null)).forEach { rs ->
+            (getColumns(null, null, _name, null)).closingForEach { rs ->
                 val colName = rs.columnName
                 val colType = rs.dataType
                 val col = column(colName)

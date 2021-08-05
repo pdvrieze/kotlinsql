@@ -22,9 +22,13 @@ package io.github.pdvrieze.kotlinsql.direct.test
 
 import io.github.pdvrieze.jdbc.recorder.RecordingConnection
 import io.github.pdvrieze.jdbc.recorder.actions.*
-import io.github.pdvrieze.kotlinsql.direct.*
+import io.github.pdvrieze.kotlinsql.direct.connect
+import io.github.pdvrieze.kotlinsql.direct.ensureTables
+import io.github.pdvrieze.kotlinsql.direct.executeUpdate
+import io.github.pdvrieze.kotlinsql.direct.getList
 import io.github.pdvrieze.kotlinsql.test.helpers.DummyConnection
 import io.github.pdvrieze.kotlinsql.test.helpers.DummyDataSource
+import io.github.pdvrieze.kotlinsql.test.helpers.WebAuthDB
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.sql.Wrapper
@@ -45,6 +49,8 @@ class TestCreateTransitive {
         val expectedActions = listOf(
             dc.DummyPreparedStatement(q),
             dc.DummyResultSet(q),
+            StringAction("""ResultSet().next() -> true"""),
+            StringAction("""ResultSet().getString(1) -> "Joe Blogs""""),
             StringAction("""ResultSet().next() -> false"""),
             ResultSetClose,
             StatementClose(q),

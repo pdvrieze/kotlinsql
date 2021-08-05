@@ -28,6 +28,7 @@ import io.github.pdvrieze.kotlinsql.monadic.invoke
 import io.github.pdvrieze.kotlinsql.test.helpers.DummyConnection
 import io.github.pdvrieze.kotlinsql.test.helpers.DummyDataSource
 import io.github.pdvrieze.kotlinsql.test.helpers.WebAuthDB
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.sql.Wrapper
@@ -41,6 +42,9 @@ class TestCreateTransitive {
         val names:List<String> = WebAuthDB(source) {
             SELECT(users.fullname).transform().commit()
         }
+        val expectedNames= arrayOf("Joe Blogs")
+
+        assertArrayEquals(expectedNames, names.toTypedArray())
 
         val c = source.lastConnection!!
         val dc = c.unwrap<DummyConnection>()
@@ -49,7 +53,8 @@ class TestCreateTransitive {
             SetAutoCommit(false),
             dc.DummyPreparedStatement(q),
             dc.DummyResultSet(q),
-            StringAction("""ResultSet().next() -> false"""),
+            StringAction("""ResultSet().next() -> true"""),
+            StringAction("""ResultSet().getString(1) -> "Joe Blogs""""),
             ResultSetClose,
             StatementClose(q),
             Commit,
@@ -63,13 +68,13 @@ class TestCreateTransitive {
                     filterText.none { t -> t in action.string }
         }
         assertEquals(expectedActions.joinToString(",\n"), filteredActions.joinToString(",\n"))
-//        assertArrayEquals(expectedActions.toTypedArray(), filteredActions.toTypedArray())
+        assertArrayEquals(expectedActions.toTypedArray(), filteredActions.toTypedArray())
     }
 
     @Test
     fun testInsert() {
         val source = DummyDataSource(WebAuthDB)
-        val insertCount = WebAuthDB(source) {
+        val insertCount: IntArray = WebAuthDB(source) {
 //            transaction {
                 INSERT(users.user, users.fullname, users.alias)
                     .VALUES("jdoe", "John Doe", "John")
@@ -80,13 +85,12 @@ class TestCreateTransitive {
 
         val c = source.lastConnection!!
         val dc = c.unwrap(DummyConnection::class.java)
-        assertEquals(2, insertCount)
+        assertEquals(2, insertCount.size)
 
         val q = "INSERT INTO `users` (`user`, `fullname`, `alias`) VALUES (?, ?, ?)"
         val psstr = "RecordingPreparedStatement(\"$q\")"
         val expectedActions = listOf(
             SetAutoCommit.FALSE,
-            StringAction("""RecordingConnection(WebAuthDB).setSavepoint() -> DummySavePoint(id=1)"""),
             dc.DummyPreparedStatement(q),
             StringAction("$psstr.setString(1, \"jdoe\")"),
             StringAction("$psstr.setString(2, \"John Doe\")"),
@@ -98,15 +102,14 @@ class TestCreateTransitive {
             StringAction("$psstr.addBatch()"),
             StringAction("$psstr.executeBatch() -> [1, 1]"),
             StatementClose(q),
-            ReleaseSavepoint(1),
-            Commit,
             Commit,
             ConnectionClose
         )
 
         val filteredActions = c.getFilteredActions()
 
-        assertEquals(expectedActions, filteredActions)
+        assertEquals(expectedActions.joinToString(",\n"), filteredActions.joinToString(",\n"))
+        assertArrayEquals(expectedActions.toTypedArray(), filteredActions.toTypedArray())
 
     }
 
@@ -114,15 +117,19 @@ class TestCreateTransitive {
     fun testCreateTransitive() {
         val source = DummyDataSource()
         source.setTables(WebAuthDB.roles)
+        val tableNames = WebAuthDB(source) {
+            metadata.getTables().mapEach { it.tableName }
+                .commit()
+        }
+        assertEquals(listOf("roles"), tableNames)
         WebAuthDB(source) {
             ensureTables()
                 .commit()
         }
-        val actualActions = source.lastConnection!!.getFilteredActions()
+        val filteredActions = source.lastConnection!!.getFilteredActions()
 
         val expectedActions = listOf<Action>(
             SetAutoCommit.FALSE,
-            StringAction("""RecordingConnection(null).setSavepoint() -> DummySavePoint(id=1)"""),
             StringAction("""RecordingConnection(null).getMetaData() -> <metadata>"""),
             StringAction("""<metadata>.getTables(null, null, null, ["TABLE"]) -> ResultSet(getTables())"""),
             StringAction("""ResultSet(getTables()).next() -> true"""),
@@ -133,31 +140,58 @@ class TestCreateTransitive {
             StringAction("""RecordingConnection(null).getMetaData() -> <metadata>"""),
             StringAction("""<metadata>.getColumns(null, null, "roles", null) -> ResultSet(metadata.getColumns())"""),
             StringAction("""ResultSet(metadata.getColumns()).next() -> true"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("COLUMN_NAME") -> 4"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(4) -> "role""""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("CHAR_OCTET_LENGTH") -> 16"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(16) -> 0"""),
             StringAction("""ResultSet(metadata.getColumns()).findColumn("DATA_TYPE") -> 5"""),
             StringAction("""ResultSet(metadata.getColumns()).getInt(5) -> 12"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("TYPE_NAME") -> 6"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(6) -> "VARCHAR""""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("COLUMN_SIZE") -> 7"""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(7) -> 30"""),
             StringAction("""ResultSet(metadata.getColumns()).findColumn("IS_NULLABLE") -> 18"""),
             StringAction("""ResultSet(metadata.getColumns()).getString(18) -> "NO""""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("IS_AUTOINCREMENT") -> 23"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(23) -> "NO""""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("COLUMN_DEF") -> 13"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(13) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("NULLABLE") -> 11"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(11) -> 1"""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("ORDINAL_POSITION") -> 17"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(17) -> 0"""),
             StringAction("""ResultSet(metadata.getColumns()).findColumn("REMARKS") -> 12"""),
             StringAction("""ResultSet(metadata.getColumns()).getString(12) -> null"""),
-            StringAction("""ResultSet(metadata.getColumns()).next() -> true"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(4) -> "description""""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(5) -> 12"""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("TYPE_NAME") -> 6"""),
             StringAction("""ResultSet(metadata.getColumns()).getString(6) -> "VARCHAR""""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(7) -> 120"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(18) -> "NO""""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(23) -> "NO""""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("COLUMN_DEF") -> 13"""),
             StringAction("""ResultSet(metadata.getColumns()).getString(13) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("COLUMN_NAME") -> 4"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(4) -> "role""""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("COLUMN_SIZE") -> 7"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(7) -> 30"""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("DECIMAL_DIGITS") -> 9"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(9) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("IS_AUTOINCREMENT") -> 23"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(23) -> "NO""""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("IS_GENERATEDCOLUMN") -> 24"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(24) -> "NO""""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("NUM_PREC_RADIX") -> 10"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(10) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("TABLE_CAT") -> 1"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(1) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("TABLE_NAME") -> 3"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(3) -> "roles""""),
+            StringAction("""ResultSet(metadata.getColumns()).findColumn("TABLE_SCHEM") -> 2"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(2) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).next() -> true"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(16) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(5) -> 12"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(18) -> "NO""""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(11) -> 1"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(17) -> 0"""),
             StringAction("""ResultSet(metadata.getColumns()).getString(12) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(6) -> "VARCHAR""""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(13) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(4) -> "description""""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(7) -> 120"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(9) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(23) -> "NO""""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(24) -> "NO""""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(10) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(1) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(3) -> "roles""""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(2) -> null"""),
             StringAction("""ResultSet(metadata.getColumns()).next() -> false"""),
             ResultSetClose,
 
@@ -218,12 +252,12 @@ class TestCreateTransitive {
             StringAction("""<metadata>.getTables(null, null, "challenges", null) -> ResultSet(getTables())"""),
             StringAction("""ResultSet(getTables()).next() -> true"""),
             ResultSetClose,
-            ReleaseSavepoint(1),
-            Commit,
             Commit,
             ConnectionClose
         )
-        assertEquals(expectedActions, actualActions)
+        assertEquals(expectedActions.joinToString(",\n"), filteredActions.joinToString(",\n"))
+        assertArrayEquals(expectedActions.toTypedArray(), filteredActions.toTypedArray())
+//        assertEquals(expectedActions, actualActions)
     }
 
     companion object {

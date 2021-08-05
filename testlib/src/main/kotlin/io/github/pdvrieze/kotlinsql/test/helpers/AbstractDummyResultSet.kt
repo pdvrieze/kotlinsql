@@ -60,7 +60,7 @@ abstract class AbstractDummyResultSet(
     }
 
     override fun findColumn(columnLabel: String): Int {
-        return columns.indexOf(columnLabel).also { if (it < 0) throw SQLException("Column not found") } + 1
+        return columns.indexOf(columnLabel).also { if (it < 0) throw SQLException("Column `$columnLabel` not found") } + 1
     }
 
     override fun getNClob(columnIndex: Int): NClob {

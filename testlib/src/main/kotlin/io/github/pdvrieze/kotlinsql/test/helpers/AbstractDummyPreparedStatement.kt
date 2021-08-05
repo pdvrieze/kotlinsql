@@ -82,8 +82,9 @@ abstract class AbstractDummyPreparedStatement(
 
     override fun setClob(parameterIndex: Int, reader: Reader?) {}
 
-    override fun executeQuery(): ResultSet {
-        return connection.DummyResultSet(sql)
+    override fun executeQuery(): ResultSet = when (sql) {
+        "SELECT `fullname` FROM `users`" -> connection.DummyResultSet(sql, arrayOf("fullname"), listOf(arrayOf("Joe Blogs")))
+        else -> connection.DummyResultSet(sql)
     }
 
     override fun executeQuery(sql: String?): ResultSet {

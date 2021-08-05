@@ -118,7 +118,7 @@ abstract class AbstractMetadataResultSet(
 }
 
 @OptIn(UnmanagedSql::class)
-inline fun <RS: AbstractMetadataResultSet> RS.forEach(body: (RS) -> Unit) {
+inline fun <RS: AbstractMetadataResultSet> RS.closingForEach(body: (RS) -> Unit) {
     use { rs ->
         while (rs.next()) {
             body(rs)
@@ -127,8 +127,8 @@ inline fun <RS: AbstractMetadataResultSet> RS.forEach(body: (RS) -> Unit) {
 }
 
 @OptIn(UnmanagedSql::class)
-inline fun <RS: AbstractMetadataResultSet, R> RS.map(body: (RS) -> R): List<R> {
+inline fun <RS: AbstractMetadataResultSet, R> RS.closingMap(body: (RS) -> R): List<R> {
     return mutableListOf<R>().also { r ->
-        forEach { rs -> r.add(body(rs)) }
+        closingForEach { rs -> r.add(body(rs)) }
     }
 }
