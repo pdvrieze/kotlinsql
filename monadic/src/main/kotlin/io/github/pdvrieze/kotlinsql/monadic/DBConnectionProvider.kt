@@ -91,24 +91,29 @@ internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSourc
             .getTables(types = arrayOf("TABLE"))
             .mapEach { it.tableName }
             .flatMap { tableNames ->
-                val missingTables = db._tables.map { it._name }.toMutableSet()
-                val tablesToVerify = ArrayList<String>()
+                val missingTables = db._tables.associateBy { it._name }.toMutableMap()
+                val tablesToVerify = ArrayList<Table>()
                 val notUsedTables = mutableListOf<String>()
                 for (tableName in tableNames) {
-                    if (missingTables.remove(tableName)) {
-                        tablesToVerify.add(tableName)
+                    val table = missingTables.remove(tableName)
+                    if (table!=null) {
+                        tablesToVerify.add(table)
                     } else {
                         notUsedTables.add(tableName)
                     }
                 }
                 mutableListOf<DBAction<DB, Any?>>().apply {
 
+                    val pendingTables = mutableSetOf<Table>()
+
                     for (tableName in tablesToVerify) {
                         add(db[tableName].ensureTable(retainExtraColumns))
                     }
 
-                    for (tableName in missingTables) {
-                        addAll(db[tableName].createTransitive(ifNotExists = true))
+                    for (table in missingTables.values) {
+                        if (table !in pendingTables) {
+                            addAll(table.createTransitive(ifNotExists = true, pendingTables))
+                        }
                     }
 
                 }
