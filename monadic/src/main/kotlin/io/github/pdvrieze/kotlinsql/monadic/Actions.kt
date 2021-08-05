@@ -177,11 +177,17 @@ interface InsertActionCommon<DB : Database, S : Insert> {
 class ValuelessInsertAction<DB : Database, S : Insert>(override val insert: S) : InsertActionCommon<DB, S>
 
 @DbActionDSL
-class InsertAction<DB : Database, S : Insert>(override val insert: S) : DBAction<DB, Int>(),
+class InsertAction<DB : Database, S : Insert>(override val insert: S) : DBAction<DB, IntArray>(),
                                                                         InsertActionCommon<DB, S> {
-    override fun <R> eval(connection: MonadicDBConnection<DB>, action: (Int) -> R): R {
-        TODO("XXX - actually implement this")
-//        return action(insert.executeUpdate(connection))
+    override fun <R> eval(connection: MonadicDBConnection<DB>, action: (IntArray) -> R): R {
+        return connection.prepareStatement(insert.toSQL()) {
+            for (dataRow in insert.batch) {
+                dataRow.setParams(this)
+                statement.addBatch()
+            }
+
+            action(statement.executeBatch())
+        }
     }
 }
 
