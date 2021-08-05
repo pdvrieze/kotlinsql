@@ -183,7 +183,12 @@ abstract class AbstractDummyMetadata : DatabaseMetaData {
             "TABLE_CAT", "TABLE_SCHEM", "TABLE_NAME", "TABLE_TYPE", "REMARKS",
             "TYPE_CAT", "TYPE_SCHEM", "TYPE_NAME", "SELF_REFERENCING_COL_NAME", "REF_GENERATION"
                              )
-        val data = connection.tables.map { table ->
+        val data = connection.tables
+            .filter { table ->
+                tableNamePattern == null ||
+                        tableNamePattern in table._name
+            }
+            .map { table ->
             columns.dataArray(
                 "TABLE_NAME" to table._name,
                 "TABLE_TYPE" to "TABLE",

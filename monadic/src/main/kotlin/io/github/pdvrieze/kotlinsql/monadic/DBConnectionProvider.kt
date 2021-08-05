@@ -104,15 +104,15 @@ internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSourc
                 }
                 mutableListOf<DBAction<DB, Any?>>().apply {
 
-                    val pendingTables = mutableSetOf<Table>()
-
                     for (tableName in tablesToVerify) {
                         add(db[tableName].ensureTable(retainExtraColumns))
                     }
 
+                    val pendingOrExistingTables = tablesToVerify.toMutableSet()
+
                     for (table in missingTables.values) {
-                        if (table !in pendingTables) {
-                            addAll(table.createTransitive(ifNotExists = true, pendingTables))
+                        if (table !in pendingOrExistingTables) {
+                            addAll(table.createTransitive(ifNotExists = true, pendingOrExistingTables))
                         }
                     }
 

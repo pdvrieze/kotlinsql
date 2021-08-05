@@ -35,9 +35,11 @@ import java.util.*
 import javax.sql.DataSource
 
 
-internal fun <T> SelectStatement.executeHelper(connection: DBConnection<*>,
-                                               block: T,
-                                               invokeHelper: (ResultSet, T) -> Unit): Boolean {
+internal fun <T> SelectStatement.executeHelper(
+    connection: DBConnection<*>,
+    block: T,
+    invokeHelper: (ResultSet, T) -> Unit,
+): Boolean {
     return connection.prepareStatement(toSQL()) {
         val select: SelectStatement = this@executeHelper
         select.setParams(this)
@@ -63,8 +65,10 @@ internal fun <T> SelectStatement.executeHelper(connection: DBConnection<*>,
  *
  * @throws SQLException If there are more results than expected, or if there is an underlying SQL error.
  */
-fun <R> SelectStatement.getSingleListOrNull(connection: DBConnection<*>,
-                                            resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R): R? {
+fun <R> SelectStatement.getSingleListOrNull(
+    connection: DBConnection<*>,
+    resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R,
+): R? {
     return connection.prepareStatement(toSQL()) {
         setParams(this)
         execute { rs ->
@@ -85,8 +89,10 @@ fun <R> SelectStatement.getSingleListOrNull(connection: DBConnection<*>,
          *
          * @see getSingleListOrNull
          */
-fun <R> SelectStatement.getSingleList(connection: DBConnection<*>,
-                                      resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R): R {
+fun <R> SelectStatement.getSingleList(
+    connection: DBConnection<*>,
+    resultHandler: (List<Column<*, *, *>>, List<Any?>) -> R,
+): R {
     return getSingleListOrNull(connection, resultHandler) ?: throw NoSuchElementException()
 }
 
@@ -100,7 +106,7 @@ private fun TableRef.name(prefixMap: Map<String, String>?): String {
 }
 
 @Deprecated("Use companion member", ReplaceWith("IColumnType.fromSqlType(sqlType)"))
-fun columnType(sqlType:Int): IColumnType<*, *, *> = IColumnType.fromSqlType(sqlType)
+fun columnType(sqlType: Int): IColumnType<*, *, *> = IColumnType.fromSqlType(sqlType)
 
 fun createUpdateStatement(update: _UpdateBase, where: WhereClause?): UpdatingStatement =
     if (where == null) update else _UpdateStatement(update, where)
@@ -133,7 +139,7 @@ internal fun createTablePrefixMap(tableNames: SortedSet<String>): Map<String, St
     }
 }
 
-inline fun <DB: Database, R> DB.connect(datasource: DataSource, block: DBConnection<DB>.() -> R): R {
+inline fun <DB : Database, R> DB.connect(datasource: DataSource, block: DBConnection<DB>.() -> R): R {
     val connection = datasource.connection
     var doCommit = true
     try {
@@ -152,7 +158,7 @@ inline fun <DB: Database, R> DB.connect(datasource: DataSource, block: DBConnect
     }
 }
 
-inline operator fun <DB: Database, R> DB.invoke(datasource: DataSource, block: DB.(DBConnection<DB>) -> R): R {
+inline operator fun <DB : Database, R> DB.invoke(datasource: DataSource, block: DB.(DBConnection<DB>) -> R): R {
     val connection = datasource.connection
     var doCommit = true
     try {
@@ -171,38 +177,40 @@ inline operator fun <DB: Database, R> DB.invoke(datasource: DataSource, block: D
     }
 }
 
-fun <DB: Database> DB.ensureTables(connection: DBConnection<DB>, retainExtraColumns: Boolean = true) {
-    val missingTables = _tables.map { it._name }.toMutableSet()
-    val tablesToVerify = ArrayList<String>()
+fun <DB : Database> DB.ensureTables(connection: DBConnection<DB>, retainExtraColumns: Boolean = true) {
+    val missingTables = _tables.associateBy { it._name }.toMutableMap()
+    val tablesToVerify = ArrayList<Table>()
     val notUsedTables = mutableListOf<String>()
 
     connection.apply {
         withMetaData {
             getTables(null, null, null, arrayOf("TABLE")).closingForEach { rs ->
                 val tableName = rs.tableName
-                if (missingTables.remove(tableName)) {
-
-                    tablesToVerify.add(tableName)
+                val table = missingTables.remove(tableName)
+                if (table != null) {
+                    tablesToVerify.add(table)
                 } else {
                     notUsedTables.add(tableName)
                 }
             }
 
         }
-        for (tableName in tablesToVerify) {
-            get(tableName).ensureTable(retainExtraColumns)
+        for (table in tablesToVerify) {
+            table.ensureTable(retainExtraColumns)
         }
 
-        for (tableName in missingTables) {
-            get(tableName).createTransitive(ifNotExists = true)
+        val pendingOrExistingTables = tablesToVerify.toMutableSet()
+
+        for (table in missingTables.values) {
+            table.createTransitive(ifNotExists = true, pendingOrExistingTables)
         }
     }
 
 }
 
-fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
+fun <DB : Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
         _Statement1Base<T1, S1, C1>.getSingleOrNull(
-    connection: DBConnection<DB>
+    connection: DBConnection<DB>,
 ): T1? {
     return connection.prepareStatement(toSQL()) {
         setParams(this)
@@ -217,7 +225,7 @@ fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C
     }
 }
 
-fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
+fun <DB : Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
         _Statement1Base<T1, S1, C1>.hasRows(connection: DBConnection<DB>): Boolean {
     return connection.prepareStatement(toSQL()) {
         setParams(this)
@@ -225,12 +233,12 @@ fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C
     }
 }
 
-fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
+fun <DB : Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
         _Statement1Base<T1, S1, C1>.getSingle(connection: DBConnection<DB>): T1 {
     return getSingleOrNull(connection) ?: throw java.util.NoSuchElementException()
 }
 
-fun <DB: Database> _UpdateStatement.excuteUpdate(connection: DBConnection<DB>): Int {
+fun <DB : Database> _UpdateStatement.excuteUpdate(connection: DBConnection<DB>): Int {
     return connection.prepareStatement(toSQL()) {
         setParams(this)
         executeUpdate()
@@ -243,7 +251,7 @@ fun <DB: Database> _UpdateStatement.excuteUpdate(connection: DBConnection<DB>): 
  * @return The amount of rows changed
  * @see java.sql.PreparedStatement.executeUpdate
  */
-fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
+fun <DB : Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
         Select1<T1, S1, C1>.execute(connection: DBConnection<DB>): Boolean {
     return connection.prepareStatement(toSQL()) {
         setParams(this)
@@ -251,19 +259,19 @@ fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C
     }
 }
 
-fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
+fun <DB : Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
         Select1<T1, S1, C1>.execute(connection: DBConnection<DB>, block: (T1?) -> Unit): Boolean {
     return executeHelper(connection, block) { rs, block2 ->
         block2(col1.type.fromResultSet(rs, 1))
     }
 }
 
-fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
+fun <DB : Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
         Select1<T1, S1, C1>.getSingle(connection: DBConnection<DB>): T1 {
     return getSingleOrNull(connection) ?: throw java.util.NoSuchElementException()
 }
 
-fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
+fun <DB : Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
         Select1<T1, S1, C1>.getSingleOrNull(connection: DBConnection<DB>): T1? {
     return connection.prepareStatement(toSQL()) {
         setParams(this)
@@ -278,7 +286,7 @@ fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C
     }
 }
 
-fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
+fun <DB : Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
         Select1<T1, S1, C1>.hasRows(connection: DBConnection<DB>): Boolean {
     return connection.prepareStatement(toSQL()) {
         setParams(this)
@@ -286,9 +294,10 @@ fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C
     }
 }
 
-fun <DB: Database> SelectStatement.executeList(
+fun <DB : Database> SelectStatement.executeList(
     connection: DBConnection<DB>,
-    resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit): Boolean {
+    resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit,
+): Boolean {
     val columns = select.columns.asList()
     return executeHelper(connection, resultHandler) { rs, block ->
         val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i + 1) }
@@ -296,10 +305,11 @@ fun <DB: Database> SelectStatement.executeList(
     }
 }
 
-fun <DB: Database>
+fun <DB : Database>
         Select.executeList(
     connection: DBConnection<DB>,
-    resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit): Boolean {
+    resultHandler: (List<Column<*, *, *>>, List<Any?>) -> Unit,
+): Boolean {
     val columns = select.columns.asList()
     return executeHelper(connection, resultHandler) { rs, block ->
         val data = select.columns.mapIndexed { i, column -> column.type.fromResultSet(rs, i + 1) }
@@ -307,21 +317,21 @@ fun <DB: Database>
     }
 }
 
-fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>, R>
+fun <DB : Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>, R>
         Select1<T1, S1, C1>.getList(connection: DBConnection<DB>, factory: (T1?) -> R): List<R> {
     val result = mutableListOf<R>()
     execute(connection) { p1 -> result.add(factory(p1)) }
     return result
 }
 
-fun <DB: Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
+fun <DB : Database, T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
         Select1<T1, S1, C1>.getList(connection: DBConnection<DB>): List<T1?> {
     val result = mutableListOf<T1?>()
     execute(connection) { p1 -> result.add(p1) }
     return result
 }
 
-fun <DB: Database> Delete.executeUpdate(connection: DBConnection<DB>): Int {
+fun <DB : Database> Delete.executeUpdate(connection: DBConnection<DB>): Int {
     return connection.prepareStatement(toSQL(createTablePrefixMap())) {
         executeUpdate()
     }
@@ -330,9 +340,14 @@ fun <DB: Database> Delete.executeUpdate(connection: DBConnection<DB>): Int {
 //fun <DB: Database, T : Any, R> Insert.executeSeq(connection: DBConnection<DB>, key: Column<T, *, *>, autogeneratedKeys: (T?) -> R): Sequence<R>
 //fun <DB: Database, T : Any> Insert.executeSeq(connection: DBConnection<DB>, key: Column<T, *, *>): Sequence<T>
 
-fun <DB: Database, T : Any, R> Insert.execute(connection: DBConnection<DB>, key: Column<T, *, *>, autogeneratedKeys: (T?) -> R): List<R> =
+fun <DB : Database, T : Any, R> Insert.execute(
+    connection: DBConnection<DB>,
+    key: Column<T, *, *>,
+    autogeneratedKeys: (T?) -> R,
+): List<R> =
     executeSeq(connection, key, autogeneratedKeys).toList()
-fun <DB: Database, T : Any> Insert.execute(connection: DBConnection<DB>, key: Column<T, *, *>): List<T> =
+
+fun <DB : Database, T : Any> Insert.execute(connection: DBConnection<DB>, key: Column<T, *, *>): List<T> =
     executeSeq(connection, key).toList()
 
 /**
@@ -342,7 +357,7 @@ fun <DB: Database, T : Any> Insert.execute(connection: DBConnection<DB>, key: Co
  * @return The amount of rows changed
  * @see java.sql.PreparedStatement.executeUpdate
  */
-fun <DB: Database> _BaseInsert.executeUpdate(connection: DBConnection<DB>): Int {
+fun <DB : Database> _BaseInsert.executeUpdate(connection: DBConnection<DB>): Int {
     if (batch.isEmpty()) {
         return 0
     }
@@ -366,10 +381,11 @@ fun <DB: Database> _BaseInsert.executeUpdate(connection: DBConnection<DB>): Int 
  * @return A list of the results.
  * @see java.sql.PreparedStatement.executeUpdate
  */
-fun <DB: Database, T : Any, R> Insert.executeSeq(
+fun <DB : Database, T : Any, R> Insert.executeSeq(
     connection: DBConnection<DB>,
     key: Column<T, *, *>,
-    autogeneratedKeys: (T?) -> R): Sequence<R> {
+    autogeneratedKeys: (T?) -> R,
+): Sequence<R> {
     if (batch.isEmpty()) {
         throw IllegalStateException("There are no values to add")
     }
@@ -379,7 +395,7 @@ fun <DB: Database, T : Any, R> Insert.executeSeq(
             addBatch()
         }
         when (executeUpdate()) {
-            0    -> emptySequence()
+            0 -> emptySequence()
             else -> withGeneratedKeys { rs ->
                 sequence {
                     while (rs.next()) {
@@ -397,7 +413,7 @@ fun <DB: Database, T : Any, R> Insert.executeSeq(
  * @return A list with the resulting rows.
  * @see java.sql.PreparedStatement.executeUpdate
  */
-fun <DB: Database, T : Any> Insert.executeSeq(connection: DBConnection<DB>, key: Column<T, *, *>): Sequence<T> {
+fun <DB : Database, T : Any> Insert.executeSeq(connection: DBConnection<DB>, key: Column<T, *, *>): Sequence<T> {
     if (batch.isEmpty()) {
         throw IllegalStateException("There are no values to add")
     }
