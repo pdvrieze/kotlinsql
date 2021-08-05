@@ -26,7 +26,6 @@ import io.github.pdvrieze.kotlinsql.ddl.IColumnType
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.metadata.AbstractMetadataResultSet
 import io.github.pdvrieze.kotlinsql.metadata.SafeDatabaseMetaData
-import io.github.pdvrieze.kotlinsql.metadata.forEach
 import io.github.pdvrieze.kotlinsql.monadic.impl.ResultSetIterator
 import io.github.pdvrieze.kotlinsql.dml.*
 import io.github.pdvrieze.kotlinsql.dml.impl._Where
@@ -198,9 +197,12 @@ class TransformAction<DB : Database, I, out O>(val source: DBAction<DB, I>, val 
 
 // TODO change this to take a "save variant of the resultset rather than the raw one"
 abstract class ResultSetWrapperProducingAction<DB : Database, RS : AbstractMetadataResultSet> : DBAction<DB, RS>() {
+    @OptIn(UnmanagedSql::class)
     fun <T> mapEach(transform: (RS) -> T): DBAction<DB, List<T>> = TransformAction<DB, RS, List<T>>(this) { resultSet ->
         mutableListOf<T>().also { result ->
-            resultSet.forEach { result.add(transform(it)) }
+            while (resultSet.next()) {
+                result.add(transform(resultSet))
+            }
         }
     }
 

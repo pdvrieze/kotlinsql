@@ -241,7 +241,7 @@ internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSourc
         get() {
             return hasTable(this).flatMap { hasTable ->
                 when (hasTable) {
-                    true -> listOf(GenericAction<DB, Boolean> { conn -> // TODO use better action
+                    false -> listOf(GenericAction<DB, Boolean> { conn -> // TODO use better action
                         conn.prepareStatement(buildString { appendDDL(this) }) { statement.execute() }
                     })
                     else -> emptyList<DBAction<DB, Boolean>>()
