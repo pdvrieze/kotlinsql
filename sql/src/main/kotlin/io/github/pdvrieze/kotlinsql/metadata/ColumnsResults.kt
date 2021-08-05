@@ -27,20 +27,17 @@ class ColumnsResults(rs: ResultSet) : DataResults(rs) {
     public override fun data(): Data = Data(this)
 
     //TableMetaResultBase
-    private val idxBufferLength by lazyColIdx("BUFFER_LENGTH")
     private val idxColumnDef by lazyColIdx("COLUMN_DEF")
     private val idxColumnName by lazyColIdx("COLUMN_NAME")
     private val idxColumnSize by lazyColIdx("COLUMN_SIZE")
     private val idxDecimalDigits by lazyColIdx("DECIMAL_DIGITS")
     private val idxIsAutoIncrement by lazyColIdx("IS_AUTOINCREMENT")
     private val idxIsGeneratedColumn by lazyColIdx("IS_GENERATEDCOLUMN")
-    private val idxNumPrecRadix by lazyColIdx("NUM_REC_RADIX")
+    private val idxNumPrecRadix by lazyColIdx("NUM_PREC_RADIX")
     private val idxTableCat by lazyColIdx("TABLE_CAT")
     private val idxTableName by lazyColIdx("TABLE_NAME")
     private val idxTableSchem by lazyColIdx("TABLE_SCHEM")
-    private val idxTableType by lazyColIdx("TABLE_TYPE")
 
-    val bufferLength: String get() = resultSet.getString(idxBufferLength)
     val columnDefault: String? get() = resultSet.getString(idxColumnDef)
     val columnName: String get() = resultSet.getString(idxColumnName)
     val columnSize: Int get() = resultSet.getInt(idxColumnSize)
@@ -51,10 +48,8 @@ class ColumnsResults(rs: ResultSet) : DataResults(rs) {
     val tableCatalog: String? get() = resultSet.getString(idxTableCat)
     val tableName: String get() = resultSet.getString(idxTableName)
     val tableScheme: String? get() = resultSet.getString(idxTableSchem)
-    val tableType: String get() = resultSet.getString(idxTableType)
 
     class Data(result: ColumnsResults): DataResults.Data(result) {
-        val bufferLength: String = result.bufferLength
         val columnDefault: String? = result.columnDefault
         val columnName: String = result.columnName
         val columnSize: Int = result.columnSize
@@ -65,7 +60,6 @@ class ColumnsResults(rs: ResultSet) : DataResults(rs) {
         val tableCatalog: String? = result.tableCatalog
         val tableName: String = result.tableName
         val tableScheme: String? = result.tableScheme
-        val tableType: String = result.tableType
     }
 
 
