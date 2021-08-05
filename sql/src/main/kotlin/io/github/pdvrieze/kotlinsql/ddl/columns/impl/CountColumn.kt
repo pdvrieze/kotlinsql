@@ -22,6 +22,7 @@ package io.github.pdvrieze.kotlinsql.ddl.columns.impl
 
 import io.github.pdvrieze.kotlinsql.ddl.columns.*
 import io.github.pdvrieze.kotlinsql.ddl.*
+import io.github.pdvrieze.kotlinsql.metadata.ColumnsResults
 
 class CountColumn(private val colRef: ColumnRef<*, *, *>) : NumericColumn<Int, NumericColumnType.INT_T> {
     override val table: TableRef
@@ -67,4 +68,6 @@ class CountColumn(private val colRef: ColumnRef<*, *, *>) : NumericColumn<Int, N
     ): Boolean {
         return false
     }
+
+    override fun matches(columnData: ColumnsResults.Data): Boolean = false
 }

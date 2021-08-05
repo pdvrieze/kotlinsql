@@ -20,15 +20,12 @@
 
 package io.github.pdvrieze.kotlinsql.direct
 
-import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.ddl.Column
 import io.github.pdvrieze.kotlinsql.ddl.Database
 import io.github.pdvrieze.kotlinsql.ddl.Table
 import io.github.pdvrieze.kotlinsql.ddl.TableRef
 import io.github.pdvrieze.kotlinsql.direct.impl.DDLPreparedStatementHelper
 import io.github.pdvrieze.kotlinsql.dml.DatabaseMethods
-import io.github.pdvrieze.kotlinsql.metadata.SafeDatabaseMetaData
-import io.github.pdvrieze.kotlinsql.metadata.closingForEach
 import io.github.pdvrieze.kotlinsql.util.WarningIterator
 import java.sql.*
 import java.util.*
@@ -153,16 +150,15 @@ open class DBConnection<DB: Database> constructor(val rawConnection: Connection,
     fun createStruct(typeName: String, attributes: Array<Any>): Struct =
         rawConnection.createStruct(typeName, attributes)
 
-    @OptIn(UnmanagedSql::class)
     fun hasTable(tableRef: TableRef): Boolean {
-        return getMetaData().getTables(null, null, tableRef._name, null).use { rs ->
+        return rawConnection.metaData.getTables(null, null, tableRef._name, null).use { rs ->
             rs.next()
         }
     }
 
+    @Deprecated("Not needed, just use run", ReplaceWith("getMetaData().run(action)"))
     fun <R> withMetaData(action: SafeDatabaseMetaData.() -> R): R {
-        return SafeDatabaseMetaData(rawConnection.metaData)
-            .action()
+        return getMetaData().run(action)
     }
 
     /**
@@ -260,35 +256,33 @@ open class DBConnection<DB: Database> constructor(val rawConnection: Connection,
     fun Table.ensureTable(retainExtraColumns: Boolean) {
         val extraColumns = ArrayList<String>()
         val missingColumns = mutableMapOf<String, Column<*, *, *>>()
-        _cols.associateByTo(missingColumns) { it.name.toLowerCase(Locale.ENGLISH) }
+        _cols.associateByTo(missingColumns) { it.name.lowercase() }
 
-        withMetaData {
-            (getColumns(null, null, _name, null)).closingForEach { rs ->
-                val colName = rs.columnName
-                val colType = rs.dataType
-                val col = column(colName)
-                missingColumns.remove(colName.toLowerCase(Locale.ENGLISH))
-                if (col != null) {
-                    val columnCorrect = col.matches(
-                        rs.typeName, rs.columnSize, rs.isNullable?.not(),
-                        rs.isAutoIncrement, rs.columnDefault, rs.remarks
-                    )
-                    if (!columnCorrect) {
-                        try {
-                            prepareStatement("ALTER TABLE $_name MODIFY COLUMN ${col.toDDL()}") {
-                                executeUpdate()
-                            }
-                        } catch (e: SQLException) {
-                            throw SQLException(
-                                "Failure updating table $_name column $colName from $colType to ${col.type}", e
-                            )
+        for (actualCol in getMetaData().getColumns(tableNamePattern = _name)) {
+            val colName = actualCol.columnName
+
+            val neededCol = column(colName)
+
+            missingColumns.remove(colName.lowercase())
+
+            if (neededCol != null) {
+
+                if (!neededCol.matches(actualCol)) {
+                    try {
+                        prepareStatement("ALTER TABLE $_name MODIFY COLUMN ${neededCol.toDDL()}") {
+                            executeUpdate()
                         }
+                    } catch (e: SQLException) {
+                        throw SQLException(
+                            "Failure updating table $_name column $colName from ${actualCol.dataType} to ${neededCol.type}",
+                            e
+                        )
                     }
-                } else {
-                    extraColumns.add(colName)
                 }
-
+            } else {
+                extraColumns.add(colName)
             }
+
         }
 
         if (!retainExtraColumns) {

@@ -25,7 +25,7 @@ import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.RowIdLifetime
 
-abstract class AbstractRecordingMetadata(delegate: DatabaseMetaData) : WrappingActionRecorder<DatabaseMetaData>(delegate), DatabaseMetaData {
+abstract class AbstractRecordingDatabaseMetaData(delegate: DatabaseMetaData) : WrappingActionRecorder<DatabaseMetaData>(delegate), DatabaseMetaData {
     abstract override fun getConnection(): RecordingConnection
 
     override fun supportsSubqueriesInQuantifieds(): Boolean = record {
@@ -834,12 +834,5 @@ abstract class AbstractRecordingMetadata(delegate: DatabaseMetaData) : WrappingA
 
     override fun toString(): String {
         return "<metadata>"
-    }
-}
-
-private fun Array<String>.dataArray(vararg data: Pair<String, Any?>): Array<Any?> {
-    return Array(size) { idx ->
-        val colName = get(idx)
-        data.firstOrNull { it.first == colName }?.second
     }
 }

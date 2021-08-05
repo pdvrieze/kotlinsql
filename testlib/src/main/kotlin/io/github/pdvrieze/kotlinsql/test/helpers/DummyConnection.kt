@@ -288,6 +288,8 @@ class DummyConnection(val db: Database? = null) : Connection {
         data: List<Array<out Any?>>
     ) : AbstractDummyResultSet(query, columns, data) {
         constructor(query: String) : this(query, emptyArray(), emptyList())
+
+        override fun getMetaData(): AbstractDummyResultSetMetaData = AbstractDummyResultSetMetaData(this)
     }
 
     inner class DummyMetaData() : AbstractDummyMetadata() {

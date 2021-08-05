@@ -20,21 +20,39 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.metadata.impl.TableColumnResultBase
 import java.sql.ResultSet
 
+@OptIn(UnmanagedSql::class)
 @Suppress("unused")
-class ColumnPrivilegesResult(privileges: ResultSet) : TableColumnResultBase(privileges) {
-    private val idxGrantor: Int by lazyColIdx("GRANTOR")
-    val grantor get():String? = resultSet.getString(idxGrantor)
+class ColumnPrivilegesResult
+@UnmanagedSql
+constructor(privileges: ResultSet) : TableColumnResultBase(privileges) {
+
     private val idxGrantee: Int by lazyColIdx("GRANTEE")
-    val grantee get(): String = resultSet.getString(idxGrantee)
+    private val idxGrantor: Int by lazyColIdx("GRANTOR")
     private val idxPrivilege: Int by lazyColIdx("PRIVILEGE")
-    val privilege get():String = resultSet.getString(idxPrivilege)
+
+    val grantor:String? get() = resultSet.getString(idxGrantor)
+    val grantee: String get() = resultSet.getString(idxGrantee)
+    val privilege:String get() = resultSet.getString(idxPrivilege)
 
     private val idxIsGrantable: Int by lazyColIdx("IS_GRANTABLE")
 
     val isGrantable
         get():Boolean? = resultSet.getString(
-                idxIsGrantable)?.let { if (it == "YES") true else if (it == "NO") false else null }
+            idxIsGrantable)?.let { if (it == "YES") true else if (it == "NO") false else null }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    override fun toList(): List<Data> = buildList {
+        while(next()) add(Data(this@ColumnPrivilegesResult))
+    }
+
+    class Data(data: ColumnPrivilegesResult): TableColumnResultBase.Data(data) {
+        val grantor:String? = data.grantor
+        val grantee: String = data.grantee
+        val privilege:String = data.privilege
+    }
+
 }

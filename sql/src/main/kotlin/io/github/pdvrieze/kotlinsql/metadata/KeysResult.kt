@@ -20,12 +20,16 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.metadata.values.KeyDeferrability
 import io.github.pdvrieze.kotlinsql.metadata.values.KeyRule
 import java.sql.ResultSet
 
 @Suppress("unused")
-class KeysResult(resultSet: ResultSet) : AbstractMetadataResultSet(resultSet) {
+@OptIn(UnmanagedSql::class)
+class KeysResult
+@UnmanagedSql
+constructor(resultSet: ResultSet) : AbstractMetadataResultSet(resultSet) {
     private val idxDeleterule by lazyColIdx("DELETE_RULE")
     private val idxDeferrability by lazyColIdx("DEFERRABILITY")
 
@@ -63,4 +67,26 @@ class KeysResult(resultSet: ResultSet) : AbstractMetadataResultSet(resultSet) {
     val pkTableSchema: String? get() = resultSet.getString(idxPkTableSchem)
 
     val updateRule: KeyRule get() = KeyRule.from(resultSet.getShort(idxUpdateRule))
+
+    @OptIn(ExperimentalStdlibApi::class)
+    fun toList(): List<Data> = buildList {
+        while(next()) add(Data(this@KeysResult))
+    }
+
+    class Data(data: KeysResult) {
+        val deferrability: KeyDeferrability = data.deferrability
+        val deleteRule: KeyRule = data.deleteRule
+        val fkColumnName: String = data.fkColumnName
+        val fkName: String = data.fkName
+        val fkTableCat: String? = data.fkTableCat
+        val fkTableName: String = data.fkTableName
+        val fkTableSchema: String? = data.fkTableSchema
+        val keySeq: Short = data.keySeq
+        val pkColumnName: String = data.pkColumnName
+        val pkName: String = data.pkName
+        val pkTableCat: String? = data.pkTableCat
+        val pkTableName: String = data.pkTableName
+        val pkTableSchema: String? = data.pkTableSchema
+        val updateRule: KeyRule = data.updateRule
+    }
 }

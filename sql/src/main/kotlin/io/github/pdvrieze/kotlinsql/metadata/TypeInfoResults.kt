@@ -20,13 +20,17 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.ddl.IColumnType
 import io.github.pdvrieze.kotlinsql.metadata.values.Nullable
 import io.github.pdvrieze.kotlinsql.metadata.values.Searchable
 import java.sql.ResultSet
 
 @Suppress("unused")
-class TypeInfoResults(resultSet: ResultSet) : AbstractMetadataResultSet(resultSet) {
+@OptIn(UnmanagedSql::class)
+class TypeInfoResults
+@UnmanagedSql
+constructor(resultSet: ResultSet) : AbstractMetadataResultSet(resultSet) {
     private val idxAutoIncrement by lazyColIdx("AUTO_INCREMENT")
     private val idxCaseSensitive by lazyColIdx("CASE_SENSITIVE")
     private val idxCreateParams by lazyColIdx("CREATE_PARAMS")
@@ -60,4 +64,28 @@ class TypeInfoResults(resultSet: ResultSet) : AbstractMetadataResultSet(resultSe
     val searchable: Searchable get() = Searchable.from(resultSet.getShort(idxSearchable))
     val typeName: String get() = resultSet.getString(idxTypeName)
     val unsignedAttribute: Boolean get() = resultSet.getBoolean(idxUnsignedAttribute)
+
+    @OptIn(ExperimentalStdlibApi::class)
+    fun toList(): List<Data> = buildList {
+        while (next()) add(Data(this@TypeInfoResults))
+    }
+
+    class Data(data: TypeInfoResults) {
+        val autoIncrement: Boolean = data.autoIncrement
+        val caseSensitive: Boolean = data.caseSensitive
+        val createParams: String? = data.createParams
+        val dataType: IColumnType<*, *, *> = data.dataType
+        val fixedPrecScale: Boolean = data.fixedPrecScale
+        val literalPrefix: String? = data.literalPrefix
+        val literalSuffix: String? = data.literalSuffix
+        val localTypeName: String = data.localTypeName
+        val maximumScale: Short = data.maximumScale
+        val minimumScale: Short = data.minimumScale
+        val nullable: Nullable = data.nullable
+        val numPrecRadix: Int = data.numPrecRadix
+        val precision: Int = data.precision
+        val searchable: Searchable = data.searchable
+        val typeName: String = data.typeName
+        val unsignedAttribute: Boolean = data.unsignedAttribute
+    }
 }

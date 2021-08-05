@@ -20,11 +20,20 @@
 
 package io.github.pdvrieze.kotlinsql.metadata.impl
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.metadata.impl.TableMetaResultBase
 import java.sql.ResultSet
 
+@OptIn(UnmanagedSql::class)
 @Suppress("unused")
-abstract class TableColumnResultBase(rs: ResultSet) : TableMetaResultBase(rs) {
+abstract class TableColumnResultBase
+@UnmanagedSql
+constructor(rs: ResultSet) : TableMetaResultBase(rs) {
+
     private val idxColumnName by lazyColIdx("COLUMN_NAME")
     val columnName: String get() = resultSet.getString(idxColumnName)
+
+    open class Data(data: TableColumnResultBase): TableMetaResultBase.Data(data) {
+        val columnName: String = data.columnName
+    }
 }

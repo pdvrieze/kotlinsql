@@ -20,12 +20,28 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import java.sql.ResultSet
 
-open class SchemaResults(rs: ResultSet) : AbstractMetadataResultSet(rs) {
+@OptIn(UnmanagedSql::class)
+open class SchemaResults
+    @UnmanagedSql
+    constructor(rs: ResultSet) : AbstractMetadataResultSet(rs) {
     private val idxTableCat by lazyColIdx("TABLE_CAT")
     private val idxTableSchem by lazyColIdx("TABLE_SCHEM")
 
     val tableCatalog: String? get() = resultSet.getString(idxTableCat)
     val tableScheme: String? get() = resultSet.getString(idxTableSchem)
+
+    @OptIn(ExperimentalStdlibApi::class)
+    open fun toList(): List<Data> {
+        return buildList {
+            while (next()) { add(Data(this@SchemaResults)) }
+        }
+    }
+
+    open class Data(data: SchemaResults) {
+        val tableCatalog: String? = data.tableCatalog
+        val tableScheme: String? = data.tableScheme
+    }
 }

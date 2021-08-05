@@ -20,11 +20,15 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 
 @Suppress("unused")
-class ProcedureResults(attributes: ResultSet) : AbstractMetadataResultSet(attributes) {
+@OptIn(UnmanagedSql::class)
+class ProcedureResults
+@UnmanagedSql
+constructor(attributes: ResultSet) : AbstractMetadataResultSet(attributes) {
 
     private fun procedureType(sqlValue: Short) = ProcedureType.values().first { it.sqlValue == sqlValue }
 
@@ -46,5 +50,19 @@ class ProcedureResults(attributes: ResultSet) : AbstractMetadataResultSet(attrib
         PROCEDURE_RESULT_UNKNOWN(DatabaseMetaData.procedureResultUnknown.toShort()),
         PROCEDURE_NO_RESULT(DatabaseMetaData.procedureNoResult.toShort()),
         PROCEDURE_RETURNS_RESULT(DatabaseMetaData.procedureReturnsResult.toShort())
+    }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    fun toList(): List<Data>  = buildList {
+        while(next()) add(Data(this@ProcedureResults))
+    }
+
+    class Data(data: ProcedureResults) {
+        val procedureCatalog: String? = data.procedureCatalog
+        val procedureName: String = data.procedureName
+        val procedureScheme: String? = data.procedureScheme
+        val procedureType: ProcedureType = data.procedureType
+        val remarks: String? = data.remarks
+        val specificName: String = data.specificName
     }
 }

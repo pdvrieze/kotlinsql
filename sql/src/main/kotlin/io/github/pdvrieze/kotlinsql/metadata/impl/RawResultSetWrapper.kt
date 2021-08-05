@@ -20,8 +20,12 @@
 
 package io.github.pdvrieze.kotlinsql.metadata.impl
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.metadata.*
 import java.sql.ResultSet
 
-class RawResultSetWrapper(resultSet: ResultSet): AbstractMetadataResultSet(resultSet)
+@OptIn(UnmanagedSql::class)
+class RawResultSetWrapper
+@UnmanagedSql
+constructor(resultSet: ResultSet) : AbstractMetadataResultSet(resultSet)
 

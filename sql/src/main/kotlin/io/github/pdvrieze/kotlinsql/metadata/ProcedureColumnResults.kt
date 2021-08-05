@@ -20,10 +20,14 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import java.sql.ResultSet
 
 @Suppress("unused")
-class ProcedureColumnResults(rs: ResultSet) : DataResults(rs) {
+@OptIn(UnmanagedSql::class)
+class ProcedureColumnResults
+@UnmanagedSql
+constructor(rs: ResultSet) : DataResults(rs) {
     private val idxColumnDef by lazyColIdx("COLUMN_DEF")
     private val idxColumnName by lazyColIdx("COLUMN_NAME")
     private val idxColumnType by lazyColIdx("COLUMN_TYPE")
@@ -48,9 +52,14 @@ class ProcedureColumnResults(rs: ResultSet) : DataResults(rs) {
     val scale: Short? get() = resultSet.getShort(idxScale).let { result -> if (resultSet.wasNull()) null else result }
     val specificName: String get() = resultSet.getString(idxSpecificName)
 
-    public override fun data(): Data =  Data(this)
+    public override fun data(): Data = Data(this)
 
-    class Data(result: ProcedureColumnResults): DataResults.Data(result) {
+    @OptIn(ExperimentalStdlibApi::class)
+    fun toList(): List<Data> = buildList {
+        while(next()) add(Data(this@ProcedureColumnResults))
+    }
+
+    class Data(result: ProcedureColumnResults) : DataResults.Data(result) {
         val columnDef: String? = result.columnDef
         val columnName: String = result.columnName
         val columnType: String = result.columnType

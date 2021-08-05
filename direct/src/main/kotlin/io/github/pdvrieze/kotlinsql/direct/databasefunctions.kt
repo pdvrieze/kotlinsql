@@ -182,19 +182,16 @@ fun <DB : Database> DB.ensureTables(connection: DBConnection<DB>, retainExtraCol
     val tablesToVerify = ArrayList<Table>()
     val notUsedTables = mutableListOf<String>()
 
-    connection.apply {
-        withMetaData {
-            getTables(null, null, null, arrayOf("TABLE")).closingForEach { rs ->
-                val tableName = rs.tableName
-                val table = missingTables.remove(tableName)
-                if (table != null) {
-                    tablesToVerify.add(table)
-                } else {
-                    notUsedTables.add(tableName)
-                }
-            }
+    for (tableData in connection.getMetaData().getTables(types = arrayOf("TABLE"))) {
+        val tableName = tableData.tableName
 
+        when (val table = missingTables.remove(tableName)) {
+            null -> notUsedTables.add(tableName)
+            else -> tablesToVerify.add(table)
         }
+    }
+
+    connection.apply {
         for (table in tablesToVerify) {
             table.ensureTable(retainExtraColumns)
         }
@@ -395,7 +392,7 @@ fun <DB : Database, T : Any, R> Insert.executeSeq(
             addBatch()
         }
         when (executeUpdate()) {
-            0 -> emptySequence()
+            0    -> emptySequence()
             else -> withGeneratedKeys { rs ->
                 sequence {
                     while (rs.next()) {

@@ -87,7 +87,7 @@ class TestCreateTransitiveMonadic {
         }
 
         val c = source.lastConnection!!
-        val dc = c.unwrap(DummyConnection::class.java)
+        val dc = c.unwrap(DummyConnection::class.java)!!
         assertEquals(2, insertCount.size)
 
         val q = "INSERT INTO `users` (`user`, `fullname`, `alias`) VALUES (?, ?, ?)"
@@ -136,65 +136,47 @@ class TestCreateTransitiveMonadic {
             StringAction("""RecordingConnection(null).getMetaData() -> <metadata>"""),
             StringAction("""<metadata>.getTables(null, null, null, ["TABLE"]) -> ResultSet(getTables())"""),
             StringAction("""ResultSet(getTables()).next() -> true"""),
-            StringAction("""ResultSet(getTables()).findColumn("TABLE_NAME") -> 3"""),
-            StringAction("""ResultSet(getTables()).getString(3) -> "roles""""),
+            StringAction("""ResultSet(getTables()).getString(3 ~> TABLE_NAME) -> "roles""""),
             StringAction("""ResultSet(getTables()).next() -> false"""),
             ResultSetClose,
             StringAction("""RecordingConnection(null).getMetaData() -> <metadata>"""),
             StringAction("""<metadata>.getColumns(null, null, "roles", null) -> ResultSet(metadata.getColumns())"""),
             StringAction("""ResultSet(metadata.getColumns()).next() -> true"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("CHAR_OCTET_LENGTH") -> 16"""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(16) -> 0"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("DATA_TYPE") -> 5"""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(5) -> 12"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("IS_NULLABLE") -> 18"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(18) -> "NO""""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("NULLABLE") -> 11"""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(11) -> 1"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("ORDINAL_POSITION") -> 17"""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(17) -> 0"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("REMARKS") -> 12"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(12) -> null"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("TYPE_NAME") -> 6"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(6) -> "VARCHAR""""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("COLUMN_DEF") -> 13"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(13) -> null"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("COLUMN_NAME") -> 4"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(4) -> "role""""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("COLUMN_SIZE") -> 7"""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(7) -> 30"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("DECIMAL_DIGITS") -> 9"""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(9) -> 0"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("IS_AUTOINCREMENT") -> 23"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(23) -> "NO""""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("IS_GENERATEDCOLUMN") -> 24"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(24) -> "NO""""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("NUM_PREC_RADIX") -> 10"""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(10) -> 0"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("TABLE_CAT") -> 1"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(1) -> null"""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("TABLE_NAME") -> 3"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(3) -> "roles""""),
-            StringAction("""ResultSet(metadata.getColumns()).findColumn("TABLE_SCHEM") -> 2"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(2) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(16 ~> CHAR_OCTET_LENGTH) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(5 ~> DATA_TYPE) -> 12"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(18 ~> IS_NULLABLE) -> "NO""""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(11 ~> NULLABLE) -> 1"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(17 ~> ORDINAL_POSITION) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(12 ~> REMARKS) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(6 ~> TYPE_NAME) -> "VARCHAR""""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(13 ~> COLUMN_DEF) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(4 ~> COLUMN_NAME) -> "role""""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(7 ~> COLUMN_SIZE) -> 30"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(9 ~> DECIMAL_DIGITS) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(23 ~> IS_AUTOINCREMENT) -> "NO""""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(24 ~> IS_GENERATEDCOLUMN) -> "NO""""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(10 ~> NUM_PREC_RADIX) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(1 ~> TABLE_CAT) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(3 ~> TABLE_NAME) -> "roles""""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(2 ~> TABLE_SCHEM) -> null"""),
             StringAction("""ResultSet(metadata.getColumns()).next() -> true"""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(16) -> 0"""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(5) -> 12"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(18) -> "NO""""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(11) -> 1"""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(17) -> 0"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(12) -> null"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(6) -> "VARCHAR""""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(13) -> null"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(4) -> "description""""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(7) -> 120"""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(9) -> 0"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(23) -> "NO""""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(24) -> "NO""""),
-            StringAction("""ResultSet(metadata.getColumns()).getInt(10) -> 0"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(1) -> null"""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(3) -> "roles""""),
-            StringAction("""ResultSet(metadata.getColumns()).getString(2) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(16 ~> CHAR_OCTET_LENGTH) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(5 ~> DATA_TYPE) -> 12"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(18 ~> IS_NULLABLE) -> "NO""""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(11 ~> NULLABLE) -> 1"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(17 ~> ORDINAL_POSITION) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(12 ~> REMARKS) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(6 ~> TYPE_NAME) -> "VARCHAR""""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(13 ~> COLUMN_DEF) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(4 ~> COLUMN_NAME) -> "description""""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(7 ~> COLUMN_SIZE) -> 120"""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(9 ~> DECIMAL_DIGITS) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(23 ~> IS_AUTOINCREMENT) -> "NO""""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(24 ~> IS_GENERATEDCOLUMN) -> "NO""""),
+            StringAction("""ResultSet(metadata.getColumns()).getInt(10 ~> NUM_PREC_RADIX) -> 0"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(1 ~> TABLE_CAT) -> null"""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(3 ~> TABLE_NAME) -> "roles""""),
+            StringAction("""ResultSet(metadata.getColumns()).getString(2 ~> TABLE_SCHEM) -> null"""),
             StringAction("""ResultSet(metadata.getColumns()).next() -> false"""),
             ResultSetClose,
 
@@ -249,15 +231,21 @@ class TestCreateTransitiveMonadic {
         ): List<Action> {
             return actions.filter { action ->
                 when {
-                    action is StringAction && filterText.any { it in action.string } -> false
+                    action is StringAction && (
+                            (action.string.startsWith("ResultSet")
+                                    && ".findColumn" in action.string
+                                    ) || filterText.any { it in action.string }
+                            ) -> false
 
                     action is RecordingPreparedStatement &&
-                            action.unwrap<DummyPreparedStatement>().sql.startsWith("CREATE TABLE") -> false
+                            action.unwrap<DummyPreparedStatement>().sql.startsWith("CREATE TABLE")
+                              -> false
 
                     action is StatementClose &&
-                            action.query?.startsWith("CREATE TABLE") == true -> false
+                            action.query?.startsWith("CREATE TABLE") == true
+                              -> false
 
-                    else -> true
+                    else      -> true
                 }
             }.map {
                 when {

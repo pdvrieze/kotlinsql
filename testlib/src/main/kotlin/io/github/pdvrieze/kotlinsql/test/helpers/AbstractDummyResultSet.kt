@@ -46,8 +46,8 @@ import java.sql.Array as SqlArray
 
 abstract class AbstractDummyResultSet(
     val query: String,
-    private val columns: Array<String>,
-    private val data: List<Array<out Any?>>
+    val columns: Array<String>,
+    val data: List<Array<out Any?>>
 ) : ResultSet, Action {
     private var wasNull: Boolean? = null
 
@@ -776,9 +776,7 @@ abstract class AbstractDummyResultSet(
         TODO("not implemented")
     }
 
-    override fun getMetaData(): ResultSetMetaData {
-        TODO("not implemented")
-    }
+    abstract override fun getMetaData(): AbstractDummyResultSetMetaData
 
     override fun getBinaryStream(columnIndex: Int): InputStream {
         TODO("not implemented")

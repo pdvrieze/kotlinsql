@@ -21,6 +21,7 @@
 package io.github.pdvrieze.kotlinsql.ddl
 
 import io.github.pdvrieze.kotlinsql.ddl.columns.LengthColumn
+import io.github.pdvrieze.kotlinsql.metadata.ColumnsResults
 import java.sql.ResultSet
 
 interface Column<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>> : ColumnRef<T, S, C> {
@@ -50,7 +51,7 @@ interface Column<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>> : Colum
         notNull: Boolean?,
         autoincrement: Boolean?,
         default: String?,
-        comment: String?
+        comment: String?,
     ): Boolean =
         this.type.typeName == typeName &&
                 ((this !is LengthColumn) || length < 0 || length == size) &&
@@ -58,5 +59,13 @@ interface Column<T : Any, S : IColumnType<T, S, C>, C : Column<T, S, C>> : Colum
                         this.autoincrement == autoincrement &&
                         this.default == default &&
                         this.comment == comment
+
+    fun matches(columnData: ColumnsResults.Data): Boolean {
+        return type.typeName == columnData.typeName
+                && columnData.isNullable?.let { !it == notnull } ?: ( notnull != true)
+                && autoincrement == columnData.isAutoIncrement
+                && default == columnData.columnDefault
+                && comment == columnData.remarks
+    }
 
 }

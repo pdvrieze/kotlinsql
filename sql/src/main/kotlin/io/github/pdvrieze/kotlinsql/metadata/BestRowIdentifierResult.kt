@@ -20,17 +20,16 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.metadata.impl.AbstractRowResult
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 
 @Suppress("unused")
-class BestRowIdentifierResult(rs: ResultSet) : AbstractRowResult(rs) {
-    enum class Scope {
-        BESTROWTEMPORARY,
-        BESTROWTRANSACTION,
-        BESTROWSESSION
-    }
+@OptIn(UnmanagedSql::class)
+class BestRowIdentifierResult
+    @UnmanagedSql
+    constructor(rs: ResultSet) : AbstractRowResult(rs) {
 
     private val idxScope by lazyColIdx("SCOPE")
 
@@ -42,4 +41,19 @@ class BestRowIdentifierResult(rs: ResultSet) : AbstractRowResult(rs) {
             else                                -> throw IllegalArgumentException(
                     "Unexpected scope value ${resultSet.getShort(idxScope)}")
         }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    fun toList(): List<Data> = buildList {
+        while(next()) add(Data(this@BestRowIdentifierResult))
+    }
+
+    class Data(data: BestRowIdentifierResult) {
+        val scope: Scope = data.scope
+    }
+
+    enum class Scope {
+        BESTROWTEMPORARY,
+        BESTROWTRANSACTION,
+        BESTROWSESSION
+    }
 }

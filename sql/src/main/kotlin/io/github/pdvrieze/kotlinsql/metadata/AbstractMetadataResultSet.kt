@@ -30,13 +30,12 @@ import java.sql.ResultSetMetaData
 import java.sql.SQLException
 import java.sql.SQLWarning
 
-abstract class AbstractMetadataResultSet(
-    @UnmanagedSql protected val resultSet: ResultSet
+abstract class AbstractMetadataResultSet @UnmanagedSql constructor(
+    protected val resultSet: ResultSet,
 ) : Closeable, AutoCloseable {
     @UnmanagedSql
     fun beforeFirst() = resultSet.beforeFirst()
 
-    @UnmanagedSql
     override fun close() = resultSet.close()
 
     fun getWarnings(): Iterator<SQLWarning> = WarningIterator(resultSet.warnings)
@@ -118,7 +117,7 @@ abstract class AbstractMetadataResultSet(
 }
 
 @OptIn(UnmanagedSql::class)
-inline fun <RS: AbstractMetadataResultSet> RS.closingForEach(body: (RS) -> Unit) {
+inline fun <RS : AbstractMetadataResultSet> RS.closingForEach(body: (RS) -> Unit) {
     use { rs ->
         while (rs.next()) {
             body(rs)
@@ -127,7 +126,7 @@ inline fun <RS: AbstractMetadataResultSet> RS.closingForEach(body: (RS) -> Unit)
 }
 
 @OptIn(UnmanagedSql::class)
-inline fun <RS: AbstractMetadataResultSet, R> RS.closingMap(body: (RS) -> R): List<R> {
+inline fun <RS : AbstractMetadataResultSet, R> RS.closingMap(body: (RS) -> R): List<R> {
     return mutableListOf<R>().also { r ->
         closingForEach { rs -> r.add(body(rs)) }
     }

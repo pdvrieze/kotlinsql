@@ -364,9 +364,19 @@ class RecordingConnection(delegate: Connection, val db: Database? = null) : Wrap
         override fun recordAction(action: Action) {
             actions.add(action)
         }
+
+        override fun getMetaData(): AbstractRecordingResultsetMetaData = record {
+            RecordingResultsetMetadata(delegate.metaData)
+        }
     }
 
-    inner class RecordingMetaData(delegate: DatabaseMetaData) : AbstractRecordingMetadata(delegate) {
+    inner class RecordingResultsetMetadata(delegate: ResultSetMetaData): AbstractRecordingResultsetMetaData(delegate) {
+        override fun recordAction(action: Action) {
+            actions.add(action)
+        }
+    }
+
+    inner class RecordingMetaData(delegate: DatabaseMetaData) : AbstractRecordingDatabaseMetaData(delegate) {
         override fun recordAction(action: Action) {
             actions.add(action)
         }

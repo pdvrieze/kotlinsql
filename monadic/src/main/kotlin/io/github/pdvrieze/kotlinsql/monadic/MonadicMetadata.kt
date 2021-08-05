@@ -20,6 +20,7 @@
 
 package io.github.pdvrieze.kotlinsql.monadic
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.ddl.Database
 import io.github.pdvrieze.kotlinsql.metadata.impl.RawResultSetWrapper
 import io.github.pdvrieze.kotlinsql.metadata.*
@@ -184,33 +185,33 @@ interface MonadicMetadata<DB : Database> {
         catalog: String?,
         schemaPattern: String?,
         typeNamePattern: String?,
-        attributeNamePattern: String?
+        attributeNamePattern: String?,
     ): ResultSetMetadataAction<DB, AttributeResults>
 
     fun supportsConvert(
         fromType: Int,
-        toType: Int
+        toType: Int,
     ): ValueMetadataAction<DB, Boolean>
 
     fun supportsTransactionIsolationLevel(level: Int): ValueMetadataAction<DB, Boolean>
     fun getProcedures(
         catalog: String,
         schemaPattern: String,
-        procedureNamePattern: String
+        procedureNamePattern: String,
     ): ResultSetMetadataAction<DB, ProcedureResults>
 
     fun getProcedureColumns(
         catalog: String,
         schemaPattern: String,
         procedureNamePattern: String,
-        columnNamePattern: String
+        columnNamePattern: String,
     ): ResultSetMetadataAction<DB, ProcedureColumnResults>
 
     fun getTables(
         catalog: String? = null,
         schemaPattern: String? = null,
         tableNamePattern: String? = null,
-        types: Array<String>? = null
+        types: Array<String>? = null,
     ): ResultSetMetadataAction<DB, TableMetadataResults>
 
     val tableTypes: ValueMetadataAction<DB, List<String>>
@@ -218,20 +219,20 @@ interface MonadicMetadata<DB : Database> {
         catalog: String? = null,
         schemaPattern: String? = null,
         tableNamePattern: String?,
-        columnNamePattern: String? = null
+        columnNamePattern: String? = null,
     ): ResultSetMetadataAction<DB, ColumnsResults>
 
     fun getColumnPrivileges(
         catalog: String,
         schema: String,
         table: String,
-        columnNamePattern: String
+        columnNamePattern: String,
     ): ResultSetMetadataAction<DB, ColumnPrivilegesResult>
 
     fun getTablePrivileges(
         catalog: String,
         schemaPattern: String,
-        tableNamePattern: String
+        tableNamePattern: String,
     ): ResultSetMetadataAction<DB, TablePrivilegesResult>
 
     fun getBestRowIdentifier(
@@ -239,31 +240,31 @@ interface MonadicMetadata<DB : Database> {
         schema: String,
         table: String,
         scope: Int,
-        nullable: Boolean
+        nullable: Boolean,
     ): ResultSetMetadataAction<DB, BestRowIdentifierResult>
 
     fun getVersionColumns(
         catalog: String,
         schema: String,
-        table: String
+        table: String,
     ): ResultSetMetadataAction<DB, VersionColumnsResult>
 
     fun getPrimaryKeys(
         catalog: String,
         schema: String,
-        table: String
+        table: String,
     ): ResultSetMetadataAction<DB, PrimaryKeyResults>
 
     fun getImportedKeys(
         catalog: String,
         schema: String,
-        table: String
+        table: String,
     ): ResultSetMetadataAction<DB, KeysResult>
 
     fun getExportedKeys(
         catalog: String,
         schema: String,
-        table: String
+        table: String,
     ): ResultSetMetadataAction<DB, KeysResult>
 
     fun getCrossReference(
@@ -272,21 +273,23 @@ interface MonadicMetadata<DB : Database> {
         parentTable: String,
         foreignCatalog: String,
         foreignSchema: String,
-        foreignTable: String
+        foreignTable: String,
     ): ResultSetMetadataAction<DB, KeysResult>
 
     fun getTypeInfo(): ResultSetMetadataAction<DB, TypeInfoResults>
+
+    @UnmanagedSql
     fun getUnsafeIndexInfo(
         catalog: String,
         schema: String,
         table: String,
         unique: Boolean,
-        approximate: Boolean
+        approximate: Boolean,
     ): ResultSetMetadataAction<DB, RawResultSetWrapper>
 
     fun supportsResultSetConcurrency(
         type: Int,
-        concurrency: Int
+        concurrency: Int,
     ): ValueMetadataAction<DB, Boolean>
 
     fun ownUpdatesAreVisible(type: Int): ValueMetadataAction<DB, Boolean>
@@ -297,49 +300,59 @@ interface MonadicMetadata<DB : Database> {
     fun othersInsertsAreVisible(type: Int): ValueMetadataAction<DB, Boolean>
     fun updatesAreDetected(type: Int): ValueMetadataAction<DB, Boolean>
     fun deletesAreDetected(type: Int): ValueMetadataAction<DB, Boolean>
+
+    @UnmanagedSql
     fun getUDTs(
         catalog: String,
         schemaPattern: String,
         typeNamePattern: String,
-        types: IntArray
+        types: IntArray,
     ): ResultSetMetadataAction<DB, RawResultSetWrapper>
 
+    @UnmanagedSql
     fun getSuperTypes(
         catalog: String,
         schemaPattern: String,
-        typeNamePattern: String
+        typeNamePattern: String,
     ): ResultSetMetadataAction<DB, RawResultSetWrapper>
 
+    @UnmanagedSql
     fun getSuperTables(
         catalog: String,
         schemaPattern: String,
-        tableNamePattern: String
+        tableNamePattern: String,
     ): ResultSetMetadataAction<DB, RawResultSetWrapper>
 
     fun supportsResultSetHoldability(holdability: Int): ValueMetadataAction<DB, Boolean>
+
     fun getSchemas(
         catalog: String,
-        schemaPattern: String
-    ): ResultSetMetadataAction<DB, RawResultSetWrapper>
+        schemaPattern: String,
+    ): ResultSetMetadataAction<DB, SchemaResults>
 
+    @UnmanagedSql
     fun getClientInfoProperties(): ResultSetMetadataAction<DB, RawResultSetWrapper>
+
+    @UnmanagedSql
     fun getFunctions(
         catalog: String,
         schemaPattern: String,
-        functionNamePattern: String
+        functionNamePattern: String,
     ): ResultSetMetadataAction<DB, RawResultSetWrapper>
 
+    @UnmanagedSql
     fun getFunctionColumns(
         catalog: String,
         schemaPattern: String,
         functionNamePattern: String,
-        columnNamePattern: String
+        columnNamePattern: String,
     ): ResultSetMetadataAction<DB, RawResultSetWrapper>
 
+    @UnmanagedSql
     fun getPseudoColumns(
         catalog: String,
         schemaPattern: String,
         tableNamePattern: String,
-        columnNamePattern: String
+        columnNamePattern: String,
     ): ResultSetMetadataAction<DB, RawResultSetWrapper>
 }

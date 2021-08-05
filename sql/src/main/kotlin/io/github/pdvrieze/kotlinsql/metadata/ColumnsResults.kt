@@ -20,10 +20,14 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import java.sql.ResultSet
 
 @Suppress("unused")
-class ColumnsResults(rs: ResultSet) : DataResults(rs) {
+@OptIn(UnmanagedSql::class)
+class ColumnsResults
+@UnmanagedSql
+constructor(rs: ResultSet) : DataResults(rs) {
     public override fun data(): Data = Data(this)
 
     //TableMetaResultBase
@@ -48,6 +52,11 @@ class ColumnsResults(rs: ResultSet) : DataResults(rs) {
     val tableCatalog: String? get() = resultSet.getString(idxTableCat)
     val tableName: String get() = resultSet.getString(idxTableName)
     val tableScheme: String? get() = resultSet.getString(idxTableSchem)
+
+    @OptIn(ExperimentalStdlibApi::class)
+    fun toList(): List<Data> = buildList {
+        while(next()) add(Data(this@ColumnsResults))
+    }
 
     class Data(result: ColumnsResults): DataResults.Data(result) {
         val columnDefault: String? = result.columnDefault

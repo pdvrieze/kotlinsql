@@ -21,7 +21,18 @@
 package io.github.pdvrieze.kotlinsql.ddl.columns
 
 import io.github.pdvrieze.kotlinsql.ddl.Table
+import io.github.pdvrieze.kotlinsql.metadata.ColumnsResults
 
-interface LengthColumn<T:Any, S: LengthColumnType<T, S>>: ILengthColumn<T, S, LengthColumn<T, S>> {
-  override fun copyConfiguration(newName:String?, owner: Table): LengthColumnConfiguration<T, S>
+interface LengthColumn<T : Any, S : LengthColumnType<T, S>> : ILengthColumn<T, S, LengthColumn<T, S>> {
+    override fun copyConfiguration(newName: String?, owner: Table): LengthColumnConfiguration<T, S>
+
+    override fun matches(columnData: ColumnsResults.Data): Boolean {
+        return type.typeName == columnData.typeName
+                && (length < 0 || length == columnData.columnSize)
+                && columnData.isNullable?.let { !it == notnull } ?: (notnull != true)
+                && autoincrement == columnData.isAutoIncrement
+                && default == columnData.columnDefault
+                && comment == columnData.remarks
+    }
+
 }

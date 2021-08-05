@@ -18,24 +18,25 @@
  * under the License.
  */
 
-package uk.ac.bournemouth.kotlinsql
+package io.github.pdvrieze.kotlinsql.monadic
 
-import uk.ac.bournemouth.kotlinsql.metadata.*
-import uk.ac.bournemouth.util.kotlin.sql.use
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.metadata.*
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.RowIdLifetime
 
 /**
- * A class to handle access to connection metadata (available through jdbc.
+ * A class to handle access to connection metadata (available through jdbc).
  */
 @Suppress("unused")
-class ConnectionMetadata(private val metadata: DatabaseMetaData) {
+class SafeDatabaseMetaData(private val metadata: DatabaseMetaData) {
 
     val maxColumnsInIndex: Int get() = metadata.maxColumnsInIndex
 
     fun insertsAreDetected(type: Int): Boolean = metadata.insertsAreDetected(type)
 
+    @UnmanagedSql
     fun getAttributes(catalog: String?,
                       schemaPattern: String?,
                       typeNamePattern: String?,
@@ -303,10 +304,12 @@ class ConnectionMetadata(private val metadata: DatabaseMetaData) {
 
     val dataDefinitionIgnoredInTransactions: Boolean get() = metadata.dataDefinitionIgnoredInTransactions()
 
+    @UnmanagedSql
     fun getProcedures(catalog: String, schemaPattern: String, procedureNamePattern: String): ProcedureResults {
         return ProcedureResults(metadata.getProcedures(catalog, schemaPattern, procedureNamePattern))
     }
 
+    @UnmanagedSql
     fun getProcedureColumns(catalog: String,
                             schemaPattern: String,
                             procedureNamePattern: String,
@@ -316,6 +319,7 @@ class ConnectionMetadata(private val metadata: DatabaseMetaData) {
         )
     }
 
+    @UnmanagedSql
     fun getTables(catalog: String? = null,
                   schemaPattern: String? = null,
                   tableNamePattern: String? = null,
@@ -323,10 +327,12 @@ class ConnectionMetadata(private val metadata: DatabaseMetaData) {
         return TableMetadataResults(metadata.getTables(catalog, schemaPattern, tableNamePattern, types))
     }
 
+    @UnmanagedSql
     val schemas: SchemaResults get() = SchemaResults(metadata.schemas)
 
     val tableTypes get() = metadata.tableTypes.toStrings()
 
+    @UnmanagedSql
     fun getColumns(catalog: String? = null,
                    schemaPattern: String? = null,
                    tableNamePattern: String?,
@@ -334,6 +340,7 @@ class ConnectionMetadata(private val metadata: DatabaseMetaData) {
         return ColumnsResults(metadata.getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern))
     }
 
+    @UnmanagedSql
     fun getColumnPrivileges(catalog: String,
                             schema: String,
                             table: String,
@@ -341,10 +348,12 @@ class ConnectionMetadata(private val metadata: DatabaseMetaData) {
         return ColumnPrivilegesResult(metadata.getColumnPrivileges(catalog, schema, table, columnNamePattern))
     }
 
+    @UnmanagedSql
     fun getTablePrivileges(catalog: String, schemaPattern: String, tableNamePattern: String): TablePrivilegesResult {
         return TablePrivilegesResult(metadata.getTablePrivileges(catalog, schemaPattern, tableNamePattern))
     }
 
+    @UnmanagedSql
     fun getBestRowIdentifier(catalog: String,
                              schema: String,
                              table: String,
@@ -353,22 +362,27 @@ class ConnectionMetadata(private val metadata: DatabaseMetaData) {
         return BestRowIdentifierResult(metadata.getBestRowIdentifier(catalog, schema, table, scope, nullable))
     }
 
+    @UnmanagedSql
     fun getVersionColumns(catalog: String, schema: String, table: String): VersionColumnsResult {
         return VersionColumnsResult(metadata.getVersionColumns(catalog, schema, table))
     }
 
+    @UnmanagedSql
     fun getPrimaryKeys(catalog: String, schema: String, table: String): PrimaryKeyResults {
         return PrimaryKeyResults(metadata.getPrimaryKeys(catalog, schema, table))
     }
 
+    @UnmanagedSql
     fun getImportedKeys(catalog: String, schema: String, table: String): KeysResult {
         return KeysResult(metadata.getImportedKeys(catalog, schema, table))
     }
 
+    @UnmanagedSql
     fun getExportedKeys(catalog: String, schema: String, table: String): KeysResult {
         return KeysResult(metadata.getExportedKeys(catalog, schema, table))
     }
 
+    @UnmanagedSql
     fun getCrossReference(parentCatalog: String,
                           parentSchema: String,
                           parentTable: String,
@@ -383,6 +397,7 @@ class ConnectionMetadata(private val metadata: DatabaseMetaData) {
         )
     }
 
+    @UnmanagedSql
     fun getTypeInfo(): TypeInfoResults {
         return TypeInfoResults(metadata.typeInfo)
     }
@@ -463,8 +478,9 @@ class ConnectionMetadata(private val metadata: DatabaseMetaData) {
 
     val rowIdLifetime: RowIdLifetime get() = metadata.rowIdLifetime
 
-    fun getSchemas(catalog: String, schemaPattern: String): ResultSet {
-        return metadata.getSchemas(catalog, schemaPattern)
+    @UnmanagedSql
+    fun getSchemas(catalog: String, schemaPattern: String): SchemaResults {
+        return SchemaResults(metadata.getSchemas(catalog, schemaPattern))
     }
 
     fun getClientInfoProperties(): ResultSet {

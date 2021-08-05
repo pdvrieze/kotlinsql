@@ -124,24 +124,20 @@ internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSourc
         return metadata
             .getColumns(tableNamePattern = _name)
             .mapEach(ColumnsResults::data)
-            .flatMap { columns ->
+            .flatMap { existingColumns ->
                 val extraColumns = ArrayList<String>()
                 val missingColumns = mutableMapOf<String, Column<*, *, *>>()
-                _cols.associateByTo(missingColumns) { it.name.toLowerCase(Locale.ENGLISH) }
+                _cols.associateByTo(missingColumns) { it.name.lowercase() }
 
                 val actions = mutableListOf<DBAction<DB, Any?>>()
 
-                for (rs in columns) {
-                    val colName = rs.columnName
-                    val colType = rs.dataType
+                for (actualColumn in existingColumns) {
+                    val colName = actualColumn.columnName
+                    val colType = actualColumn.dataType
                     val col = column(colName)
-                    missingColumns.remove(colName.toLowerCase(Locale.ENGLISH))
+                    missingColumns.remove(colName.lowercase())
                     if (col != null) {
-                        val columnCorrect = col.matches(
-                            rs.typeName, rs.columnSize, rs.isNullable?.not(),
-                            rs.isAutoIncrement, rs.columnDefault, rs.remarks
-                        )
-                        if (!columnCorrect) {
+                        if (!col.matches(actualColumn)) {
                             val action = GenericAction<DB, Int> { conn ->
                                 try {
                                     conn.prepareStatement("ALTER TABLE $_name MODIFY COLUMN ${col.toDDL()}") {

@@ -115,11 +115,8 @@ abstract class WrappingActionRecorder<D : Wrapper>(val delegate: D) : ActionReco
     final override fun isWrapperFor(iface: Class<*>): Boolean =
         iface.isInstance(delegate) || delegate.isWrapperFor(iface)
 
-    @Suppress("UNCHECKED_CAST")
-    final override fun <T : Any?> unwrap(iface: Class<T>): T = when {
-        iface.isInstance(delegate) -> (delegate as T)
+    override fun <T : Any?> unwrap(iface: Class<T>): T? = when {
+        iface.isInstance(delegate) -> (delegate as T?)
         else                       -> delegate.unwrap(iface)
     }
-
-
 }

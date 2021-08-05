@@ -20,12 +20,17 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.ddl.IColumnType
 import io.github.pdvrieze.kotlinsql.metadata.values.Nullable
 import java.sql.ResultSet
 
+
 @Suppress("unused")
-abstract class DataResults(rs: ResultSet) : AbstractMetadataResultSet(rs) {
+@OptIn(UnmanagedSql::class)
+abstract class DataResults
+@UnmanagedSql
+constructor(rs: ResultSet) : AbstractMetadataResultSet(rs) {
 
     private val idxCharOctetLength by lazyColIdx("CHAR_OCTET_LENGTH")
     private val idxDataType by lazyColIdx("DATA_TYPE")

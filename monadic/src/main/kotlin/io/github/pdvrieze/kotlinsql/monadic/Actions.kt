@@ -25,7 +25,6 @@ import io.github.pdvrieze.kotlinsql.ddl.Database
 import io.github.pdvrieze.kotlinsql.ddl.IColumnType
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.metadata.AbstractMetadataResultSet
-import io.github.pdvrieze.kotlinsql.metadata.SafeDatabaseMetaData
 import io.github.pdvrieze.kotlinsql.monadic.impl.ResultSetIterator
 import io.github.pdvrieze.kotlinsql.dml.*
 import io.github.pdvrieze.kotlinsql.dml.impl._Where

@@ -20,10 +20,14 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import java.sql.ResultSet
 
 @Suppress("unused")
-class AttributeResults(attributes: ResultSet) : DataResults(attributes) {
+@OptIn(UnmanagedSql::class)
+class AttributeResults
+    @UnmanagedSql
+    constructor(attributes: ResultSet) : DataResults(attributes) {
     private val idxAttrDef by lazyColIdx("ATTR_DEF")
     private val idxAttrName by lazyColIdx("ATTR_NAME")
     private val idxAttrSize by lazyColIdx("ATTR_SIZE")

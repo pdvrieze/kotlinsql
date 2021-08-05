@@ -20,11 +20,16 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.metadata.impl.TableMetaResultBase
 import java.sql.ResultSet
 
+@OptIn(UnmanagedSql::class)
 @Suppress("unused")
-class TableMetadataResults(rs: ResultSet) : TableMetaResultBase(rs) {
+class TableMetadataResults
+@UnmanagedSql
+constructor(rs: ResultSet) : TableMetaResultBase(rs) {
+
     enum class RefGeneration {
         SYSTEM,
         USER,
@@ -46,4 +51,19 @@ class TableMetadataResults(rs: ResultSet) : TableMetaResultBase(rs) {
     val typeCatalog: String? get() = resultSet.getString(idxTypeCat)
     val typeScheme: String? get() = resultSet.getString(idxTypeSchem)
     val typeName: String? get() = resultSet.getString(idxTypeName)
+
+    @OptIn(ExperimentalStdlibApi::class)
+    override fun toList(): List<TableMetaResultBase.Data> = buildList {
+        while (next()) add (Data(this@TableMetadataResults))
+    }
+
+    class Data(data: TableMetadataResults): TableMetaResultBase.Data(data) {
+        val refGeneration: RefGeneration? = data.refGeneration
+        val remarks: String? = data.remarks
+        val selfReferencingColName: String? = data.selfReferencingColName
+        val tableType: String = data.tableType
+        val typeCatalog: String? = data.typeCatalog
+        val typeScheme: String? = data.typeScheme
+        val typeName: String? = data.typeName
+    }
 }

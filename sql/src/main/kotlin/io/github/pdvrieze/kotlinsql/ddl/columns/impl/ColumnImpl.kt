@@ -25,7 +25,9 @@ import io.github.pdvrieze.kotlinsql.ddl.ColsetRef
 import io.github.pdvrieze.kotlinsql.ddl.Column
 import io.github.pdvrieze.kotlinsql.ddl.ColumnConfiguration
 import io.github.pdvrieze.kotlinsql.ddl.TableRef
+import io.github.pdvrieze.kotlinsql.ddl.columns.LengthColumn
 import io.github.pdvrieze.kotlinsql.ddl.impl.columnListToDDL
+import io.github.pdvrieze.kotlinsql.metadata.ColumnsResults
 
 /**
  * Implementation for the database API
@@ -106,12 +108,12 @@ internal constructor(
         default: String?,
         comment: String?
     ): Boolean {
-        return this.type.typeName == typeName &&
-                (this.length < 0 || this.length == size) &&
-                this.notnull == notNull &&
-                this.autoincrement == autoincrement &&
-                this.default == default &&
-                this.comment == comment
+        return this.type.typeName == typeName
+                && (this.length < 0 || this.length == size)
+                && this.notnull == notNull
+                && this.autoincrement == autoincrement
+                && this.default == default
+                && this.comment == comment
     }
 
     override fun equals(other: Any?): Boolean {

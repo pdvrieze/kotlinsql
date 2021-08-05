@@ -20,12 +20,25 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.metadata.impl.AbstractRowResult
 import java.sql.ResultSet
 
+@OptIn(UnmanagedSql::class)
 @Suppress("unused")
-class VersionColumnsResult(rs: ResultSet) : AbstractRowResult(rs) {
+class VersionColumnsResult
+    @UnmanagedSql
+    constructor(rs: ResultSet) : AbstractRowResult(rs) {
     private val idxBufferSize by lazyColIdx("BUFFER_LENGTH")
 
     val bufferSize get() = resultSet.getInt(idxBufferSize)
+
+    @OptIn(ExperimentalStdlibApi::class)
+    fun toList(): List<Data> = buildList {
+        while (next()) add(Data(this@VersionColumnsResult))
+    }
+
+    class Data(data: VersionColumnsResult): AbstractRowResult.Data(data) {
+        val bufferSize = data.bufferSize
+    }
 }

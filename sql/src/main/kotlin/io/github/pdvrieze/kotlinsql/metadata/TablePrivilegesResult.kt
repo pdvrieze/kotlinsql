@@ -20,11 +20,15 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.metadata.impl.TableMetaResultBase
 import java.sql.ResultSet
 
+@OptIn(UnmanagedSql::class)
 @Suppress("unused")
-class TablePrivilegesResult(privileges: ResultSet) : TableMetaResultBase(privileges) {
+class TablePrivilegesResult
+@UnmanagedSql
+    constructor(privileges: ResultSet) : TableMetaResultBase(privileges) {
     private val idxGrantee: Int by lazyColIdx("GRANTEE")
     private val idxGrantor: Int by lazyColIdx("GRANTOR")
     private val idxIsGrantable: Int by lazyColIdx("IS_GRANTABLE")
@@ -34,4 +38,16 @@ class TablePrivilegesResult(privileges: ResultSet) : TableMetaResultBase(privile
     val grantee get(): String = resultSet.getString(idxGrantee)
     val isGrantable get(): Boolean = resultSet.getBoolean(idxIsGrantable)
     val privilege get():String = resultSet.getString(idxPrivilege)
+
+    @OptIn(ExperimentalStdlibApi::class)
+    override fun toList(): List<TableMetaResultBase.Data> = buildList {
+        while (next()) add(Data(this@TablePrivilegesResult))
+    }
+
+    class Data(data: TablePrivilegesResult): TableMetaResultBase.Data(data) {
+        val grantor:String? = data.grantor
+        val grantee: String = data.grantee
+        val isGrantable: Boolean = data.isGrantable
+        val privilege:String = data.privilege
+    }
 }

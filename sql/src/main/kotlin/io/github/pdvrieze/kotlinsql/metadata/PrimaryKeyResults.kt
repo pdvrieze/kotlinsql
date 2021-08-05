@@ -20,14 +20,29 @@
 
 package io.github.pdvrieze.kotlinsql.metadata
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.metadata.impl.TableColumnResultBase
+import io.github.pdvrieze.kotlinsql.metadata.impl.TableMetaResultBase
 import java.sql.ResultSet
 
+@OptIn(UnmanagedSql::class)
 @Suppress("unused")
-class PrimaryKeyResults(rs: ResultSet) : TableColumnResultBase(rs) {
+class PrimaryKeyResults
+@UnmanagedSql
+constructor(rs: ResultSet) : TableColumnResultBase(rs) {
     private val idxKeySeq by lazyColIdx("KEY_SEQ")
     private val idxPkName by lazyColIdx("PK_NAME")
 
     val keySeq: Short get() = resultSet.getShort(idxKeySeq)
     val pkName: String? get() = resultSet.getString(idxPkName)
+
+    @OptIn(ExperimentalStdlibApi::class)
+    override fun toList(): List<TableMetaResultBase.Data> = buildList {
+        while(next()) add(Data(this@PrimaryKeyResults))
+    }
+
+    class Data(data: PrimaryKeyResults): TableColumnResultBase.Data(data) {
+        val keySeq: Short = data.keySeq
+        val pkName: String? = data.pkName
+    }
 }

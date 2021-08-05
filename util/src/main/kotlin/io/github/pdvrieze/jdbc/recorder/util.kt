@@ -48,3 +48,11 @@ internal fun CharSequence.escape(): String = buildString {
         }
     }
 }
+
+
+private fun Array<String>.dataArray(vararg data: Pair<String, Any?>): Array<Any?> {
+    return Array(size) { idx ->
+        val colName = get(idx)
+        data.firstOrNull { it.first == colName }?.second
+    }
+}

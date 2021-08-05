@@ -20,12 +20,17 @@
 
 package io.github.pdvrieze.kotlinsql.metadata.impl
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.metadata.AbstractMetadataResultSet
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-abstract class AbstractRowResult(rs: ResultSet) : AbstractMetadataResultSet(rs) {
+@OptIn(UnmanagedSql::class)
+abstract class AbstractRowResult
+@UnmanagedSql
+constructor(rs: ResultSet) : AbstractMetadataResultSet(rs) {
+
     enum class PseudoColumn {
         BESTROWUNKNOWN,
         BESTROWNOTPSEUDO,
@@ -43,8 +48,10 @@ abstract class AbstractRowResult(rs: ResultSet) : AbstractMetadataResultSet(rs) 
     val dataType: String get() = resultSet.getString(idxDataType)
     val typeName: String get() = resultSet.getString(idxTypeName)
     val precision: String get() = resultSet.getString(idxColumnSize)
+
     @Deprecated("Use precision as the column name, this is an alias", ReplaceWith("precision"))
-    inline val columnSize get() = precision
+    inline val columnSize
+        get() = precision
     val decimalDigits: Short get() = resultSet.getShort(idxDecimalDigits)
 
     val pseudoColumn: PseudoColumn = when (resultSet.getShort(idxPseudoColumn).toInt()) {
@@ -52,7 +59,16 @@ abstract class AbstractRowResult(rs: ResultSet) : AbstractMetadataResultSet(rs) 
         DatabaseMetaData.bestRowPseudo    -> PseudoColumn.BESTROWPSEUDO
         DatabaseMetaData.bestRowNotPseudo -> PseudoColumn.BESTROWNOTPSEUDO
         else                              -> throw IllegalArgumentException(
-                "Unexpected pseudoColumn value ${resultSet.getShort(idxPseudoColumn)}")
+            "Unexpected pseudoColumn value ${resultSet.getShort(idxPseudoColumn)}")
+    }
+
+    open class Data(data: AbstractRowResult) {
+        val columnName: String = data.columnName
+        val dataType: String = data.dataType
+        val typeName: String = data.typeName
+        val precision: String = data.precision
+        val decimalDigits: Short = data.decimalDigits
+        val pseudoColumn: PseudoColumn = data.pseudoColumn
     }
 
 }
