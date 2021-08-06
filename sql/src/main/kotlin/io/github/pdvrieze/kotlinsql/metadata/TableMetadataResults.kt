@@ -28,7 +28,7 @@ import java.sql.ResultSet
 @Suppress("unused")
 class TableMetadataResults
 @UnmanagedSql
-constructor(rs: ResultSet) : TableMetaResultBase(rs) {
+constructor(rs: ResultSet) : TableMetaResultBase<TableMetadataResults>(rs) {
 
     enum class RefGeneration {
         SYSTEM,

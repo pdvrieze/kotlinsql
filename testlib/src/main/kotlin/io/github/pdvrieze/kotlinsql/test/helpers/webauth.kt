@@ -32,7 +32,7 @@ const val EXTRACONF = "ENGINE=InnoDB CHARSET=utf8"
 object WebAuthDB : Database(1) {
 
     object users : MutableTable(EXTRACONF) {
-        val user: LengthCharColumn<LengthCharColumnType.VARCHAR_T> by VARCHAR("user", 30) { NOT_NULL; BINARY }
+        val user by VARCHAR("user", 30) { NOT_NULL; BINARY }
         val fullname by VARCHAR("fullname", 80)
         val alias by VARCHAR("alias", 80)
         val password by VARCHAR("password", 40) { BINARY }

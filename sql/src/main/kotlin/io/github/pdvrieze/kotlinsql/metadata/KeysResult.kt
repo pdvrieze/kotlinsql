@@ -29,7 +29,7 @@ import java.sql.ResultSet
 @OptIn(UnmanagedSql::class)
 class KeysResult
 @UnmanagedSql
-constructor(resultSet: ResultSet) : AbstractMetadataResultSet(resultSet) {
+constructor(resultSet: ResultSet) : AbstractMetadataResultSet<KeysResult>(resultSet) {
     private val idxDeleterule by lazyColIdx("DELETE_RULE")
     private val idxDeferrability by lazyColIdx("DEFERRABILITY")
 

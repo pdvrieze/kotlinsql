@@ -24,9 +24,9 @@ import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import java.sql.ResultSet
 
 @OptIn(UnmanagedSql::class)
-open class SchemaResults
+open class SchemaResultsBase<R: SchemaResultsBase<R>>
     @UnmanagedSql
-    constructor(rs: ResultSet) : AbstractMetadataResultSet(rs) {
+    constructor(rs: ResultSet) : AbstractMetadataResultSet<R>(rs) {
     private val idxTableCat by lazyColIdx("TABLE_CAT")
     private val idxTableSchem by lazyColIdx("TABLE_SCHEM")
 
@@ -34,14 +34,19 @@ open class SchemaResults
     val tableScheme: String? get() = resultSet.getString(idxTableSchem)
 
     @OptIn(ExperimentalStdlibApi::class)
-    open fun toList(): List<Data> {
+    open fun toList(): List<SchemaResults.Data> {
         return buildList {
-            while (next()) { add(Data(this@SchemaResults)) }
+            while (next()) { add(SchemaResults.Data(this@SchemaResultsBase)) }
         }
     }
+}
 
-    open class Data(data: SchemaResults) {
+@OptIn(UnmanagedSql::class)
+class SchemaResults constructor(rs: ResultSet): SchemaResultsBase<SchemaResults>(rs) {
+
+    open class Data(data: SchemaResultsBase<*>) {
         val tableCatalog: String? = data.tableCatalog
         val tableScheme: String? = data.tableScheme
     }
+
 }

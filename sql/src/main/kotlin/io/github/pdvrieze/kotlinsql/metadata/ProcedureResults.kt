@@ -28,7 +28,7 @@ import java.sql.ResultSet
 @OptIn(UnmanagedSql::class)
 class ProcedureResults
 @UnmanagedSql
-constructor(attributes: ResultSet) : AbstractMetadataResultSet(attributes) {
+constructor(attributes: ResultSet) : AbstractMetadataResultSet<ProcedureResults>(attributes) {
 
     private fun procedureType(sqlValue: Short) = ProcedureType.values().first { it.sqlValue == sqlValue }
 

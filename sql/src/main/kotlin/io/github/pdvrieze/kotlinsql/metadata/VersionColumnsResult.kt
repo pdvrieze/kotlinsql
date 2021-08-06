@@ -28,7 +28,7 @@ import java.sql.ResultSet
 @Suppress("unused")
 class VersionColumnsResult
     @UnmanagedSql
-    constructor(rs: ResultSet) : AbstractRowResult(rs) {
+    constructor(rs: ResultSet) : AbstractRowResult<VersionColumnsResult>(rs) {
     private val idxBufferSize by lazyColIdx("BUFFER_LENGTH")
 
     val bufferSize get() = resultSet.getInt(idxBufferSize)

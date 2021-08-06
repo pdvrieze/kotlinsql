@@ -27,9 +27,9 @@ import java.sql.ResultSet
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 @OptIn(UnmanagedSql::class)
-abstract class AbstractRowResult
+abstract class AbstractRowResult<R: AbstractRowResult<R>>
 @UnmanagedSql
-constructor(rs: ResultSet) : AbstractMetadataResultSet(rs) {
+constructor(rs: ResultSet) : AbstractMetadataResultSet<R>(rs) {
 
     enum class PseudoColumn {
         BESTROWUNKNOWN,
@@ -62,7 +62,7 @@ constructor(rs: ResultSet) : AbstractMetadataResultSet(rs) {
             "Unexpected pseudoColumn value ${resultSet.getShort(idxPseudoColumn)}")
     }
 
-    open class Data(data: AbstractRowResult) {
+    open class Data(data: AbstractRowResult<*>) {
         val columnName: String = data.columnName
         val dataType: String = data.dataType
         val typeName: String = data.typeName

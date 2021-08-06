@@ -45,6 +45,13 @@ kotlin {
             }
         }
     }
+    sourceSets.all {
+        languageSettings.apply {
+            languageVersion = "1.5"
+            apiVersion = "1.5"
+            useExperimentalAnnotation("kotlin.RequiresOptIn")
+        }
+    }
 }
 
 val kotlin_version: String by project

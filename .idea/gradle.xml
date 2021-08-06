@@ -11,7 +11,11 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/ddl" />
+            <option value="$PROJECT_DIR$/direct" />
+            <option value="$PROJECT_DIR$/monadic" />
+            <option value="$PROJECT_DIR$/sql" />
+            <option value="$PROJECT_DIR$/testlib" />
+            <option value="$PROJECT_DIR$/util" />
           </set>
         </option>
       </GradleProjectSettings>

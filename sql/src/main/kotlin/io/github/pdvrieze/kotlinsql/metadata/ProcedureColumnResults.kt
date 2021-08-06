@@ -27,7 +27,7 @@ import java.sql.ResultSet
 @OptIn(UnmanagedSql::class)
 class ProcedureColumnResults
 @UnmanagedSql
-constructor(rs: ResultSet) : DataResults(rs) {
+constructor(rs: ResultSet) : DataResults<ProcedureColumnResults>(rs) {
     private val idxColumnDef by lazyColIdx("COLUMN_DEF")
     private val idxColumnName by lazyColIdx("COLUMN_NAME")
     private val idxColumnType by lazyColIdx("COLUMN_TYPE")

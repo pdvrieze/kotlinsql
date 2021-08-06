@@ -29,7 +29,7 @@ import java.sql.ResultSet
 @OptIn(UnmanagedSql::class)
 class BestRowIdentifierResult
     @UnmanagedSql
-    constructor(rs: ResultSet) : AbstractRowResult(rs) {
+    constructor(rs: ResultSet) : AbstractRowResult<BestRowIdentifierResult>(rs) {
 
     private val idxScope by lazyColIdx("SCOPE")
 

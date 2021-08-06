@@ -27,5 +27,5 @@ import java.sql.ResultSet
 @OptIn(UnmanagedSql::class)
 class RawResultSetWrapper
 @UnmanagedSql
-constructor(resultSet: ResultSet) : AbstractMetadataResultSet(resultSet)
+constructor(resultSet: ResultSet) : AbstractMetadataResultSet<RawResultSetWrapper>(resultSet)
 

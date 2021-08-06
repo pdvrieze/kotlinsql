@@ -26,14 +26,14 @@ import java.sql.ResultSet
 
 @OptIn(UnmanagedSql::class)
 @Suppress("unused")
-abstract class TableColumnResultBase
+abstract class TableColumnResultBase<R: TableColumnResultBase<R>>
 @UnmanagedSql
-constructor(rs: ResultSet) : TableMetaResultBase(rs) {
+constructor(rs: ResultSet) : TableMetaResultBase<R>(rs) {
 
     private val idxColumnName by lazyColIdx("COLUMN_NAME")
     val columnName: String get() = resultSet.getString(idxColumnName)
 
-    open class Data(data: TableColumnResultBase): TableMetaResultBase.Data(data) {
+    open class Data(data: TableColumnResultBase<*>): TableMetaResultBase.Data(data) {
         val columnName: String = data.columnName
     }
 }

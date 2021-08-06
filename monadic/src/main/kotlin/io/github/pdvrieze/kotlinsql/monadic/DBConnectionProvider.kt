@@ -48,7 +48,9 @@ interface ConnectionSourceBase<DB : Database> {
     }
 
     fun or(first: DBAction<DB, Boolean>, second: DBAction<DB, Boolean>): DBAction<DB, Boolean> = GenericAction { conn ->
-        first.eval(conn) { b1 -> second.eval(conn) { b2 -> b1 || b2 } }
+        val b1 = first.eval(conn)
+        val b2 = second.eval(conn)
+        b1 || b2
     }
 
 }

@@ -18,8 +18,18 @@
  * under the License.
  */
 
-package uk.ac.bournemouth.kotlinsql
+package io.github.pdvrieze.kotlinsql.dml
 
-class ColsetRef(val table: TableRef, val columns:List<ColumnRef<*, *, *>>) {
-  constructor(table: TableRef, col1: ColumnRef<*, *, *>, vararg cols: ColumnRef<*, *, *>): this(table, mutableListOf(col1).apply { addAll(cols) })
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
+
+interface ResultSetWrapper<R: ResultSetRow> {
+    @UnmanagedSql
+    fun next(): Boolean
+
+    val isFirst: Boolean
+    val isLast: Boolean
+
+    val rowData: R
+    val isBeforeFirst: Boolean
+    val isAfterLast: Boolean
 }

@@ -20,6 +20,7 @@
 
 package io.github.pdvrieze.kotlinsql.monadic
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.ddl.Database
 import io.github.pdvrieze.kotlinsql.ddl.columns.PreparedStatementHelper
 import io.github.pdvrieze.kotlinsql.metadata.TransactionIsolation
@@ -155,6 +156,10 @@ open class MonadicDBConnection<DB : Database> constructor(val rawConnection: Con
         rawConnection.prepareStatement(sql).use {
             PreparedStatementHelperImpl(it, sql).block()
         }
+
+    @UnmanagedSql
+    internal fun prepareStatement(sql: String): PreparedStatementHelperImpl =
+        PreparedStatementHelperImpl(rawConnection.prepareStatement(sql), sql)
 
     @Throws(SQLException::class)
     internal inline fun <R> prepareStatement(

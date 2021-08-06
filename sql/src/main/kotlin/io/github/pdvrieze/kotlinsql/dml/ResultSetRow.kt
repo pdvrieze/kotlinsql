@@ -18,16 +18,7 @@
  * under the License.
  */
 
-package uk.ac.bournemouth.kotlinsql.metadata.values
+package io.github.pdvrieze.kotlinsql.dml
 
-import java.sql.ResultSet
-
-enum class FetchDirection(val sqlValue: Int) {
-    FETCH_FORWARD(ResultSet.FETCH_FORWARD),
-    FETCH_REVERSE(ResultSet.FETCH_REVERSE),
-    FETCH_UNKNOWN(ResultSet.FETCH_UNKNOWN);
-
-    companion object {
-        fun fromSqlValue(sqlValue: Int) = FetchDirection.values().first { it.sqlValue == sqlValue }
-    }
+interface ResultSetRow {
 }

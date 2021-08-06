@@ -44,10 +44,8 @@ class TestCreateTransitiveMonadic {
         val source = DummyDataSource(WebAuthDB)
         val names:List<String> = WebAuthDB(source) {
             SELECT(users.fullname).transform().commit()
-        }
+        }.requireNoNulls()
         val expectedNames= arrayOf("Joe Blogs")
-
-        assertArrayEquals(expectedNames, names.toTypedArray())
 
         val c = source.lastConnection!!
         val dc = c.unwrap<DummyConnection>()
@@ -58,6 +56,7 @@ class TestCreateTransitiveMonadic {
             dc.DummyResultSet(q),
             StringAction("""ResultSet().next() -> true"""),
             StringAction("""ResultSet().getString(1) -> "Joe Blogs""""),
+            StringAction("""ResultSet().next() -> false"""),
             ResultSetClose,
             StatementClose(q),
             Commit,
@@ -72,6 +71,8 @@ class TestCreateTransitiveMonadic {
         }
         assertEquals(expectedActions.joinToString(",\n"), filteredActions.joinToString(",\n"))
         assertArrayEquals(expectedActions.toTypedArray(), filteredActions.toTypedArray())
+
+        assertArrayEquals(expectedNames, names.toTypedArray())
     }
 
     @Test

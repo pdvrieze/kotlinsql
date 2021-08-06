@@ -30,7 +30,7 @@ import java.sql.ResultSet
 @OptIn(UnmanagedSql::class)
 class TypeInfoResults
 @UnmanagedSql
-constructor(resultSet: ResultSet) : AbstractMetadataResultSet(resultSet) {
+constructor(resultSet: ResultSet) : AbstractMetadataResultSet<TypeInfoResults>(resultSet) {
     private val idxAutoIncrement by lazyColIdx("AUTO_INCREMENT")
     private val idxCaseSensitive by lazyColIdx("CASE_SENSITIVE")
     private val idxCreateParams by lazyColIdx("CREATE_PARAMS")

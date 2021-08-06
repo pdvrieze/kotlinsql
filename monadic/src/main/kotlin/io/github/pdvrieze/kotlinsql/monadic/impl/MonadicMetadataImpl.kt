@@ -26,6 +26,7 @@ import io.github.pdvrieze.kotlinsql.metadata.*
 import io.github.pdvrieze.kotlinsql.metadata.impl.RawResultSetWrapper
 import io.github.pdvrieze.kotlinsql.monadic.MonadicMetadata
 import io.github.pdvrieze.kotlinsql.monadic.ResultSetMetadataAction
+import io.github.pdvrieze.kotlinsql.monadic.ResultSetMetadataActionImpl
 import io.github.pdvrieze.kotlinsql.monadic.ValueMetadataAction
 import java.sql.RowIdLifetime
 
@@ -286,7 +287,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
 
     @OptIn(UnmanagedSql::class)
     override val schemas: ResultSetMetadataAction<DB, SchemaResults>
-        get() = ResultSetMetadataAction<DB, SchemaResults> { it.schemas }
+        get() = ResultSetMetadataActionImpl<DB, SchemaResults> { it.schemas }
     override val supportsBatchUpdates: ValueMetadataAction<DB, Boolean>
         get() = ValueMetadataAction<DB, Boolean> { it.supportsBatchUpdates }
     override val supportsSavepoints: ValueMetadataAction<DB, Boolean>
@@ -332,8 +333,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schemaPattern: String?,
         typeNamePattern: String?,
         attributeNamePattern: String?
-    ): ResultSetMetadataAction<DB, AttributeResults> {
-        return ResultSetMetadataAction<DB, AttributeResults> {
+    ): ResultSetMetadataActionImpl<DB, AttributeResults> {
+        return ResultSetMetadataActionImpl<DB, AttributeResults> {
             it.getAttributes(
                 catalog,
                 schemaPattern,
@@ -364,8 +365,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         catalog: String,
         schemaPattern: String,
         procedureNamePattern: String
-    ): ResultSetMetadataAction<DB, ProcedureResults> {
-        return ResultSetMetadataAction<DB, ProcedureResults> {
+    ): ResultSetMetadataActionImpl<DB, ProcedureResults> {
+        return ResultSetMetadataActionImpl<DB, ProcedureResults> {
             it.getProcedures(catalog,
                              schemaPattern,
                              procedureNamePattern)
@@ -378,8 +379,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schemaPattern: String,
         procedureNamePattern: String,
         columnNamePattern: String
-    ): ResultSetMetadataAction<DB, ProcedureColumnResults> {
-        return ResultSetMetadataAction<DB, ProcedureColumnResults> {
+    ): ResultSetMetadataActionImpl<DB, ProcedureColumnResults> {
+        return ResultSetMetadataActionImpl<DB, ProcedureColumnResults> {
             it.getProcedureColumns(
                 catalog,
                 schemaPattern,
@@ -395,8 +396,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schemaPattern: String?,
         tableNamePattern: String?,
         types: Array<String>?
-    ): ResultSetMetadataAction<DB, TableMetadataResults> {
-        return ResultSetMetadataAction<DB, TableMetadataResults> {
+    ): ResultSetMetadataActionImpl<DB, TableMetadataResults> {
+        return ResultSetMetadataActionImpl<DB, TableMetadataResults> {
             it.getTables(catalog,
                          schemaPattern,
                          tableNamePattern,
@@ -413,8 +414,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schemaPattern: String?,
         tableNamePattern: String?,
         columnNamePattern: String?
-    ): ResultSetMetadataAction<DB, ColumnsResults> {
-        return ResultSetMetadataAction<DB, ColumnsResults> {
+    ): ResultSetMetadataActionImpl<DB, ColumnsResults> {
+        return ResultSetMetadataActionImpl<DB, ColumnsResults> {
             it.getColumns(
                 catalog,
                 schemaPattern,
@@ -430,8 +431,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schema: String,
         table: String,
         columnNamePattern: String
-    ): ResultSetMetadataAction<DB, ColumnPrivilegesResult> {
-        return ResultSetMetadataAction<DB, ColumnPrivilegesResult> {
+    ): ResultSetMetadataActionImpl<DB, ColumnPrivilegesResult> {
+        return ResultSetMetadataActionImpl<DB, ColumnPrivilegesResult> {
             it.getColumnPrivileges(catalog,
                                    schema,
                                    table,
@@ -444,8 +445,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         catalog: String,
         schemaPattern: String,
         tableNamePattern: String
-    ): ResultSetMetadataAction<DB, TablePrivilegesResult> {
-        return ResultSetMetadataAction<DB, TablePrivilegesResult> {
+    ): ResultSetMetadataActionImpl<DB, TablePrivilegesResult> {
+        return ResultSetMetadataActionImpl<DB, TablePrivilegesResult> {
             it.getTablePrivileges(catalog,
                                   schemaPattern,
                                   tableNamePattern)
@@ -459,8 +460,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         table: String,
         scope: Int,
         nullable: Boolean
-    ): ResultSetMetadataAction<DB, BestRowIdentifierResult> {
-        return ResultSetMetadataAction<DB, BestRowIdentifierResult> {
+    ): ResultSetMetadataActionImpl<DB, BestRowIdentifierResult> {
+        return ResultSetMetadataActionImpl<DB, BestRowIdentifierResult> {
             it.getBestRowIdentifier(catalog, schema, table, scope, nullable)
         }
     }
@@ -470,8 +471,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         catalog: String,
         schema: String,
         table: String
-    ): ResultSetMetadataAction<DB, VersionColumnsResult> {
-        return ResultSetMetadataAction<DB, VersionColumnsResult> {
+    ): ResultSetMetadataActionImpl<DB, VersionColumnsResult> {
+        return ResultSetMetadataActionImpl<DB, VersionColumnsResult> {
             it.getVersionColumns(catalog, schema, table)
         }
     }
@@ -481,8 +482,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         catalog: String,
         schema: String,
         table: String
-    ): ResultSetMetadataAction<DB, PrimaryKeyResults> {
-        return ResultSetMetadataAction<DB, PrimaryKeyResults> {
+    ): ResultSetMetadataActionImpl<DB, PrimaryKeyResults> {
+        return ResultSetMetadataActionImpl<DB, PrimaryKeyResults> {
             it.getPrimaryKeys(catalog, schema, table)
         }
     }
@@ -492,8 +493,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         catalog: String,
         schema: String,
         table: String
-    ): ResultSetMetadataAction<DB, KeysResult> {
-        return ResultSetMetadataAction<DB, KeysResult> {
+    ): ResultSetMetadataActionImpl<DB, KeysResult> {
+        return ResultSetMetadataActionImpl<DB, KeysResult> {
             it.getImportedKeys(catalog, schema, table)
         }
     }
@@ -503,8 +504,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         catalog: String,
         schema: String,
         table: String
-    ): ResultSetMetadataAction<DB, KeysResult> {
-        return ResultSetMetadataAction<DB, KeysResult> {
+    ): ResultSetMetadataActionImpl<DB, KeysResult> {
+        return ResultSetMetadataActionImpl<DB, KeysResult> {
             it.getExportedKeys(catalog, schema, table)
         }
     }
@@ -517,8 +518,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         foreignCatalog: String,
         foreignSchema: String,
         foreignTable: String
-    ): ResultSetMetadataAction<DB, KeysResult> {
-        return ResultSetMetadataAction<DB, KeysResult> {
+    ): ResultSetMetadataActionImpl<DB, KeysResult> {
+        return ResultSetMetadataActionImpl<DB, KeysResult> {
             it.getCrossReference(
                 parentCatalog,
                 parentSchema,
@@ -531,8 +532,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
     }
 
     @OptIn(UnmanagedSql::class)
-    override fun getTypeInfo(): ResultSetMetadataAction<DB, TypeInfoResults> {
-        return ResultSetMetadataAction<DB, TypeInfoResults> { it.getTypeInfo() }
+    override fun getTypeInfo(): ResultSetMetadataActionImpl<DB, TypeInfoResults> {
+        return ResultSetMetadataActionImpl<DB, TypeInfoResults> { it.getTypeInfo() }
     }
 
     @UnmanagedSql
@@ -542,8 +543,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         table: String,
         unique: Boolean,
         approximate: Boolean
-    ): ResultSetMetadataAction<DB, RawResultSetWrapper> {
-        return ResultSetMetadataAction<DB, RawResultSetWrapper> {
+    ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
             RawResultSetWrapper(
                 it.getUnsafeIndexInfo(
                     catalog,
@@ -620,8 +621,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schemaPattern: String,
         typeNamePattern: String,
         types: IntArray
-    ): ResultSetMetadataAction<DB, RawResultSetWrapper> {
-        return ResultSetMetadataAction<DB, RawResultSetWrapper> {
+    ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
             RawResultSetWrapper(it.getUDTs(catalog, schemaPattern, typeNamePattern, types))
         }
     }
@@ -631,8 +632,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         catalog: String,
         schemaPattern: String,
         typeNamePattern: String
-    ): ResultSetMetadataAction<DB, RawResultSetWrapper> {
-        return ResultSetMetadataAction<DB, RawResultSetWrapper> {
+    ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
             RawResultSetWrapper(it.getSuperTypes(catalog, schemaPattern, typeNamePattern))
         }
     }
@@ -642,8 +643,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         catalog: String,
         schemaPattern: String,
         tableNamePattern: String
-    ): ResultSetMetadataAction<DB, RawResultSetWrapper> {
-        return ResultSetMetadataAction<DB, RawResultSetWrapper> {
+    ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
             RawResultSetWrapper(
                 it.getSuperTables(catalog, schemaPattern, tableNamePattern)
             )
@@ -660,15 +661,15 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
     override fun getSchemas(
         catalog: String,
         schemaPattern: String
-    ): ResultSetMetadataAction<DB, SchemaResults> {
-        return ResultSetMetadataAction<DB, SchemaResults> {
+    ): ResultSetMetadataActionImpl<DB, SchemaResults> {
+        return ResultSetMetadataActionImpl<DB, SchemaResults> {
             it.getSchemas(catalog, schemaPattern)
         }
     }
 
     @UnmanagedSql
-    override fun getClientInfoProperties(): ResultSetMetadataAction<DB, RawResultSetWrapper> {
-        return ResultSetMetadataAction<DB, RawResultSetWrapper> {
+    override fun getClientInfoProperties(): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
             RawResultSetWrapper(it.getClientInfoProperties())
         }
     }
@@ -678,8 +679,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         catalog: String,
         schemaPattern: String,
         functionNamePattern: String
-    ): ResultSetMetadataAction<DB, RawResultSetWrapper> {
-        return ResultSetMetadataAction<DB, RawResultSetWrapper> {
+    ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
             RawResultSetWrapper(
                 it.getFunctions(catalog, schemaPattern, functionNamePattern)
             )
@@ -692,8 +693,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schemaPattern: String,
         functionNamePattern: String,
         columnNamePattern: String
-    ): ResultSetMetadataAction<DB, RawResultSetWrapper> {
-        return ResultSetMetadataAction<DB, RawResultSetWrapper> {
+    ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
             RawResultSetWrapper(
                 it.getFunctionColumns(catalog, schemaPattern, functionNamePattern, columnNamePattern)
             )
@@ -706,8 +707,8 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schemaPattern: String,
         tableNamePattern: String,
         columnNamePattern: String
-    ): ResultSetMetadataAction<DB, RawResultSetWrapper> {
-        return ResultSetMetadataAction<DB, RawResultSetWrapper> {
+    ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
 
             RawResultSetWrapper(
                 it.getPseudoColumns(

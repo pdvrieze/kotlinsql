@@ -66,7 +66,7 @@ class GenerateConnectionSource {
                     generateOperationSignature(n, op)
                     appendLine(" {")
                     if (op == Operation.SELECT) {
-                        append("        return ${op.action}(${op.base}$n(")
+                        append("        return ${op.action}Impl(${op.base}$n(")
                     } else {
                         val update = if (op == Operation.INSERT_OR_UPDATE) "true" else "false"
                         append("        return ${op.action}(${op.base}$n(db[col1.table], $update, ")
@@ -84,20 +84,17 @@ class GenerateConnectionSource {
 
                         val receiver = (1..n).joinToString(prefix = "SelectAction<DB, Select$n<", postfix = ">>") { i -> "T$i, S$i, C$i" }
                         append(" ".repeat(8)).append(receiver)
-                        (1..n).joinTo(this, prefix = ".transform( transform: (", postfix = ") -> R): DBAction<DB, List<R>> {" ) { "T$it" }
+                        (1..n).joinTo(this, prefix = ".transform( transform: (", postfix = ") -> R): DBAction<DB, List<R>> {" ) { "T$it?" }
 
                         appendLine("""|
-                        |        return ResultSetTransformAction(this) {
-                        |            ResultSetIterator(it).asSequence()
-                        |                .map { 
-                        |                    transform(""".trimMargin())
+                        |        return mapEach {
+                        |            transform(""".trimMargin())
                         for (i in 1..n) {
-                            append(" ".repeat(24))
-                            appendLine("query.select.col$i.type.fromResultSet(it, $i) as T$i,")
+                            append(" ".repeat(16))
+                            appendLine("it.value(query.select.col$i, $i),")
                         }
                         appendLine("""
-                        |                    ) 
-                        |                }.toList()
+                        |            ) 
                         |        }
                         |    }
                         """.trimMargin())

@@ -27,7 +27,7 @@ import java.sql.ResultSet
 @OptIn(UnmanagedSql::class)
 class ColumnsResults
 @UnmanagedSql
-constructor(rs: ResultSet) : DataResults(rs) {
+constructor(rs: ResultSet) : DataResults<ColumnsResults>(rs) {
     public override fun data(): Data = Data(this)
 
     //TableMetaResultBase

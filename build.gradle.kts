@@ -33,11 +33,13 @@ ext {
     }
 }
 
-version = "0.8.0-SNAPSHOT"
+//version = "0.8.0-SNAPSHOT"
 group = "io.github.pdvrieze.kotlinsql"
 description = "A utility library for working with databases in kotlin"
 
 allprojects {
+    version = "0.9.0-SNAPSHOT"
+
     repositories {
         mavenLocal()
         mavenCentral()

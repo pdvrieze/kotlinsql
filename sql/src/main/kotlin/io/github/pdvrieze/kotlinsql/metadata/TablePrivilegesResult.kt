@@ -28,7 +28,7 @@ import java.sql.ResultSet
 @Suppress("unused")
 class TablePrivilegesResult
 @UnmanagedSql
-    constructor(privileges: ResultSet) : TableMetaResultBase(privileges) {
+    constructor(privileges: ResultSet) : TableMetaResultBase<TablePrivilegesResult>(privileges) {
     private val idxGrantee: Int by lazyColIdx("GRANTEE")
     private val idxGrantor: Int by lazyColIdx("GRANTOR")
     private val idxIsGrantable: Int by lazyColIdx("IS_GRANTABLE")

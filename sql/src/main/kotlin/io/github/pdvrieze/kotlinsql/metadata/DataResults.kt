@@ -28,9 +28,9 @@ import java.sql.ResultSet
 
 @Suppress("unused")
 @OptIn(UnmanagedSql::class)
-abstract class DataResults
+abstract class DataResults<R: DataResults<R>>
 @UnmanagedSql
-constructor(rs: ResultSet) : AbstractMetadataResultSet(rs) {
+constructor(rs: ResultSet) : AbstractMetadataResultSet<R>(rs) {
 
     private val idxCharOctetLength by lazyColIdx("CHAR_OCTET_LENGTH")
     private val idxDataType by lazyColIdx("DATA_TYPE")
@@ -50,7 +50,7 @@ constructor(rs: ResultSet) : AbstractMetadataResultSet(rs) {
 
     protected abstract fun data(): Data
 
-    open class Data(results: DataResults) {
+    open class Data(results: DataResults<*>) {
         val charOctetLength: Int = results.charOctetLength
         val dataType: IColumnType<*, *, *> = results.dataType
         val isNullable: Boolean? = results.isNullable

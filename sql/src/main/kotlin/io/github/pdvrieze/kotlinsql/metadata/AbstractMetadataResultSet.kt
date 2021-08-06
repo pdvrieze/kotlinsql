@@ -21,6 +21,8 @@
 package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
 import io.github.pdvrieze.kotlinsql.metadata.values.FetchDirection
 import io.github.pdvrieze.kotlinsql.metadata.values.ResultSetType
 import io.github.pdvrieze.kotlinsql.util.WarningIterator
@@ -30,9 +32,9 @@ import java.sql.ResultSetMetaData
 import java.sql.SQLException
 import java.sql.SQLWarning
 
-abstract class AbstractMetadataResultSet @UnmanagedSql constructor(
+abstract class AbstractMetadataResultSet<R: ResultSetRow> @UnmanagedSql constructor(
     protected val resultSet: ResultSet,
-) : Closeable, AutoCloseable {
+) : Closeable, AutoCloseable, ResultSetWrapper<R>, ResultSetRow {
     @UnmanagedSql
     fun beforeFirst() = resultSet.beforeFirst()
 
@@ -40,14 +42,14 @@ abstract class AbstractMetadataResultSet @UnmanagedSql constructor(
 
     fun getWarnings(): Iterator<SQLWarning> = WarningIterator(resultSet.warnings)
 
-    val isFirst: Boolean get() = resultSet.isFirst
+    override val isFirst: Boolean get() = resultSet.isFirst
 
-    val isLast: Boolean get() = resultSet.isLast
+    override val isLast: Boolean get() = resultSet.isLast
 
     @UnmanagedSql
     fun last() = resultSet.last()
 
-    val isAfterLast: Boolean get() = resultSet.isAfterLast
+    override val isAfterLast: Boolean get() = resultSet.isAfterLast
 
     @UnmanagedSql
     fun relative(rows: Int) = resultSet.relative(rows)
@@ -56,12 +58,15 @@ abstract class AbstractMetadataResultSet @UnmanagedSql constructor(
     fun absolute(row: Int) = resultSet.absolute(row)
 
     @UnmanagedSql
-    fun next() = resultSet.next()
+    override fun next() = resultSet.next()
 
     @UnmanagedSql
     fun first() = resultSet.first()
 
-    val row: Int get() = resultSet.row
+    val currentRow: Int get() = resultSet.row
+
+    override val rowData: R
+        get() = this as R
 
     val type: ResultSetType
         get() = when (resultSet.type) {
@@ -90,7 +95,7 @@ abstract class AbstractMetadataResultSet @UnmanagedSql constructor(
 
     fun getCursorName(): String = resultSet.cursorName
 
-    val isBeforeFirst: Boolean get() = resultSet.isBeforeFirst
+    override val isBeforeFirst: Boolean get() = resultSet.isBeforeFirst
 
     @UnmanagedSql
     fun refreshRow() = resultSet.refreshRow()
@@ -117,16 +122,16 @@ abstract class AbstractMetadataResultSet @UnmanagedSql constructor(
 }
 
 @OptIn(UnmanagedSql::class)
-inline fun <RS : AbstractMetadataResultSet> RS.closingForEach(body: (RS) -> Unit) {
+inline fun <RS : AbstractMetadataResultSet<Row>, Row: ResultSetRow> RS.closingForEach(body: (Row) -> Unit) {
     use { rs ->
         while (rs.next()) {
-            body(rs)
+            body(rs.rowData)
         }
     }
 }
 
 @OptIn(UnmanagedSql::class)
-inline fun <RS : AbstractMetadataResultSet, R> RS.closingMap(body: (RS) -> R): List<R> {
+inline fun <RS : AbstractMetadataResultSet<Row>, Row: ResultSetRow, R> RS.closingMap(body: (Row) -> R): List<R> {
     return mutableListOf<R>().also { r ->
         closingForEach { rs -> r.add(body(rs)) }
     }

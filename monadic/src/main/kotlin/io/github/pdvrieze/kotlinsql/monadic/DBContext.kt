@@ -20,6 +20,7 @@
 
 package io.github.pdvrieze.kotlinsql.monadic
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.ddl.Column
 import io.github.pdvrieze.kotlinsql.ddl.Database
 import io.github.pdvrieze.kotlinsql.ddl.IColumnType
@@ -31,15 +32,17 @@ import java.util.NoSuchElementException
 interface DBContext<DB : Database> {
     val db: DB
 
+    @OptIn(UnmanagedSql::class)
     fun <T1 : Any, S1 : IColumnType<T1, S1, C1>, C1 : Column<T1, S1, C1>>
             SelectAction<DB, _Statement1Base<T1, S1, C1>>.getSingleOrNull(): DBAction<DB, T1?> {
-        return ResultSetTransformAction(this) { rs ->
+        return map { rs ->
             when {
                 rs.next() -> {
                     if (!rs.isLast) throw SQLException("Multiple results found, where only one or none expected")
-                    query.col1.fromResultSet(rs, 1)
+                    rs.rowData.value(query.col1, 1)
                 }
                 else      -> null
+
             }
         }
     }
@@ -51,7 +54,9 @@ interface DBContext<DB : Database> {
         }
     }
 
+    @Deprecated("Use isNotEmpty", ReplaceWith("this.isNotEmpty()"))
     fun SelectAction<DB, *>.hasRows(): DBAction<DB, Boolean> {
-        return ResultSetTransformAction(this) { rs -> rs.next() }
+        return this.isNotEmpty()
     }
+
 }

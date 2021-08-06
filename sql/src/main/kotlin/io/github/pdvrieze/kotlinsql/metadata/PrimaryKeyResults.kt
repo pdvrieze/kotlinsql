@@ -29,7 +29,7 @@ import java.sql.ResultSet
 @Suppress("unused")
 class PrimaryKeyResults
 @UnmanagedSql
-constructor(rs: ResultSet) : TableColumnResultBase(rs) {
+constructor(rs: ResultSet) : TableColumnResultBase<PrimaryKeyResults>(rs) {
     private val idxKeySeq by lazyColIdx("KEY_SEQ")
     private val idxPkName by lazyColIdx("PK_NAME")
 
