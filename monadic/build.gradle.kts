@@ -33,7 +33,6 @@ ext {
     }
 }
 
-version = "0.8.0-SNAPSHOT"
 group = "io.github.pdvrieze.kotlinsql"
 description = "A utility library for working with databases in kotlin"
 
@@ -101,21 +100,14 @@ kotlin {
 }
 
 
-/*
 publishing {
     publications {
-        KotlinSqlPublication(MavenPublication) {
-            from components.java
-            groupId group
-            artifactId 'kotlinsql'
-
-            artifact sourceJar {
-                classifier "sources"
-            }
+        create<MavenPublication>("maven") {
+            from(components["java"])
+            artifactId="kotlinsql-monadic"
         }
     }
 }
-*/
 
 val kotlin_version: String by project
 val jupiterVersion: String by project

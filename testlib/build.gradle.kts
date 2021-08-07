@@ -29,7 +29,6 @@ ext {
     }
 }
 
-version = "0.8.0-SNAPSHOT"
 group = "io.github.pdvrieze.kotlinsql"
 description = "Support module for testing"
 
