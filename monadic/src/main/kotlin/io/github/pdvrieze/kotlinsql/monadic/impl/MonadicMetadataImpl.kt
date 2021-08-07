@@ -286,7 +286,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
 
     @OptIn(UnmanagedSql::class)
     override val schemas: ResultSetMetadataAction<DB, SchemaResults>
-        get() = ResultSetMetadataActionImpl { it.schemas }
+        get() = ResultSetMetadataActionImpl<DB, SchemaResults> { it.schemas }
     override val supportsBatchUpdates: ValueMetadataAction<DB, Boolean>
         get() = ValueMetadataActionImpl { it.supportsBatchUpdates }
     override val supportsSavepoints: ValueMetadataAction<DB, Boolean>

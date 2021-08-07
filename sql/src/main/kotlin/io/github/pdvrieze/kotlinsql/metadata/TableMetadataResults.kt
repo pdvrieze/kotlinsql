@@ -21,49 +21,45 @@
 package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
 import io.github.pdvrieze.kotlinsql.metadata.impl.TableMetaResultBase
+import io.github.pdvrieze.kotlinsql.metadata.impl.TableMetadataResultsImpl
 import java.sql.ResultSet
 
-@OptIn(UnmanagedSql::class)
-@Suppress("unused")
-class TableMetadataResults
-@UnmanagedSql
-constructor(rs: ResultSet) : TableMetaResultBase<TableMetadataResults>(rs) {
+interface TableMetadataResults: TableMetaResultBase<TableMetadataResults.Data> {
 
+    val refGeneration: RefGeneration?
+    val remarks: String?
+    val selfReferencingColName: String?
+    val tableType: String
+    val typeCatalog: String?
+    val typeScheme: String?
+    val typeName: String?
+
+    override fun data(): Data = Data(this)
+
+    @Suppress("unused")
     enum class RefGeneration {
         SYSTEM,
         USER,
         DERIVED
     }
 
-    private val idxRefGeneration by lazyColIdx("REF_GENERATION")
-    private val idxRemarks by lazyColIdx("REMARKS")
-    private val idxSelfReferencingColName by lazyColIdx("SELF_REFERENCING_COL_NAME")
-    private val idxTableType by lazyColIdx("TABLE_TYPE")
-    private val idxTypeCat by lazyColIdx("TYPE_CAT")
-    private val idxTypeSchem by lazyColIdx("TYPE_SCHEM")
-    private val idxTypeName by lazyColIdx("TYPE_NAME")
+    class Data(data: TableMetadataResults): TableMetaResultBase.Data<Data>(data), TableMetadataResults {
+        override val refGeneration: RefGeneration? = data.refGeneration
+        override val remarks: String? = data.remarks
+        override val selfReferencingColName: String? = data.selfReferencingColName
+        override val tableType: String = data.tableType
+        override val typeCatalog: String? = data.typeCatalog
+        override val typeScheme: String? = data.typeScheme
+        override val typeName: String? = data.typeName
 
-    val refGeneration: RefGeneration? get() = resultSet.getString(idxRefGeneration)?.let { RefGeneration.valueOf(it) }
-    val remarks: String? get() = resultSet.getString(idxRemarks)
-    val selfReferencingColName: String? get() = resultSet.getString(idxSelfReferencingColName)
-    val tableType: String get() = resultSet.getString(idxTableType)
-    val typeCatalog: String? get() = resultSet.getString(idxTypeCat)
-    val typeScheme: String? get() = resultSet.getString(idxTypeSchem)
-    val typeName: String? get() = resultSet.getString(idxTypeName)
-
-    @OptIn(ExperimentalStdlibApi::class)
-    override fun toList(): List<TableMetaResultBase.Data> = buildList {
-        while (next()) add (Data(this@TableMetadataResults))
+        override fun data(): Data = this
     }
 
-    class Data(data: TableMetadataResults): TableMetaResultBase.Data(data) {
-        val refGeneration: RefGeneration? = data.refGeneration
-        val remarks: String? = data.remarks
-        val selfReferencingColName: String? = data.selfReferencingColName
-        val tableType: String = data.tableType
-        val typeCatalog: String? = data.typeCatalog
-        val typeScheme: String? = data.typeScheme
-        val typeName: String? = data.typeName
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(r: ResultSet): ResultSetWrapper<TableMetadataResults, Data> = TableMetadataResultsImpl(r)
     }
+
 }

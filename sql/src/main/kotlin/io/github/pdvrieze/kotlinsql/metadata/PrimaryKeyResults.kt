@@ -21,28 +21,27 @@
 package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import io.github.pdvrieze.kotlinsql.metadata.impl.KeysResultImpl
+import io.github.pdvrieze.kotlinsql.metadata.impl.PrimaryKeyResultsImpl
 import io.github.pdvrieze.kotlinsql.metadata.impl.TableColumnResultBase
-import io.github.pdvrieze.kotlinsql.metadata.impl.TableMetaResultBase
 import java.sql.ResultSet
 
-@OptIn(UnmanagedSql::class)
-@Suppress("unused")
-class PrimaryKeyResults
-@UnmanagedSql
-constructor(rs: ResultSet) : TableColumnResultBase<PrimaryKeyResults>(rs) {
-    private val idxKeySeq by lazyColIdx("KEY_SEQ")
-    private val idxPkName by lazyColIdx("PK_NAME")
+interface PrimaryKeyResults: TableColumnResultBase<PrimaryKeyResults.Data> {
+    val keySeq: Short
+    val pkName: String?
 
-    val keySeq: Short get() = resultSet.getShort(idxKeySeq)
-    val pkName: String? get() = resultSet.getString(idxPkName)
+    override fun data(): Data = Data(this)
 
-    @OptIn(ExperimentalStdlibApi::class)
-    override fun toList(): List<TableMetaResultBase.Data> = buildList {
-        while(next()) add(Data(this@PrimaryKeyResults))
+    class Data(data: PrimaryKeyResults): TableColumnResultBase.Data<Data>(data), PrimaryKeyResults {
+        override val keySeq: Short = data.keySeq
+        override val pkName: String? = data.pkName
+
+        override fun data(): Data = this
     }
 
-    class Data(data: PrimaryKeyResults): TableColumnResultBase.Data(data) {
-        val keySeq: Short = data.keySeq
-        val pkName: String? = data.pkName
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(r: ResultSet): ResultSetWrapper<PrimaryKeyResults, Data> = PrimaryKeyResultsImpl(r)
     }
 }

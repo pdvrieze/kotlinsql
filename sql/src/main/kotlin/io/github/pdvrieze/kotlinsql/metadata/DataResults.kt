@@ -22,41 +22,29 @@ package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.ddl.IColumnType
+import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
+import io.github.pdvrieze.kotlinsql.metadata.impl.AttributeResultsImpl
+import io.github.pdvrieze.kotlinsql.metadata.impl.DataResultsImpl
 import io.github.pdvrieze.kotlinsql.metadata.values.Nullable
 import java.sql.ResultSet
 
+interface DataResults<D: DataResults.Data<D>> : ResultSetRow<D> {
+    val charOctetLength: Int
+    val dataType: IColumnType<*, *, *>
+    val isNullable: Boolean?
+    val nullable: Nullable
+    val ordinalPosition: Int
+    val remarks: String?
+    val typeName: String
 
-@Suppress("unused")
-@OptIn(UnmanagedSql::class)
-abstract class DataResults<R: DataResults<R>>
-@UnmanagedSql
-constructor(rs: ResultSet) : AbstractMetadataResultSet<R>(rs) {
-
-    private val idxCharOctetLength by lazyColIdx("CHAR_OCTET_LENGTH")
-    private val idxDataType by lazyColIdx("DATA_TYPE")
-    private val idxIsNullable by lazyColIdx("IS_NULLABLE")
-    private val idxNullable by lazyColIdx("NULLABLE")
-    private val idxOrdinalPosition by lazyColIdx("ORDINAL_POSITION")
-    private val idxRemarks by lazyColIdx("REMARKS")
-    private val idxTypeName by lazyColIdx("TYPE_NAME")
-
-    val charOctetLength: Int get() = resultSet.getInt(idxCharOctetLength)
-    val dataType: IColumnType<*, *, *> get() = IColumnType.fromSqlType(resultSet.getInt(idxDataType))
-    val isNullable: Boolean? get() = resultSet.optionalBoolean(idxIsNullable)
-    val nullable: Nullable get() = Nullable.from(resultSet.getInt(idxNullable).toShort())
-    val ordinalPosition: Int get() = resultSet.getInt(idxOrdinalPosition)
-    val remarks: String? get() = resultSet.getString(idxRemarks).let { if (it.isNullOrEmpty()) null else it }
-    val typeName: String get() = resultSet.getString(idxTypeName)
-
-    protected abstract fun data(): Data
-
-    open class Data(results: DataResults<*>) {
-        val charOctetLength: Int = results.charOctetLength
-        val dataType: IColumnType<*, *, *> = results.dataType
-        val isNullable: Boolean? = results.isNullable
-        val nullable: Nullable = results.nullable
-        val ordinalPosition: Int = results.ordinalPosition
-        val remarks: String? = results.remarks
-        val typeName: String = results.typeName
+    abstract class Data<D: Data<D>>(results: DataResults<*>): DataResults<D> {
+        override val charOctetLength: Int = results.charOctetLength
+        override val dataType: IColumnType<*, *, *> = results.dataType
+        override val isNullable: Boolean? = results.isNullable
+        override val nullable: Nullable = results.nullable
+        override val ordinalPosition: Int = results.ordinalPosition
+        override val remarks: String? = results.remarks
+        override val typeName: String = results.typeName
     }
 }
+

@@ -28,6 +28,6 @@ enum class FetchDirection(val sqlValue: Int) {
     FETCH_UNKNOWN(ResultSet.FETCH_UNKNOWN);
 
     companion object {
-        fun fromSqlValue(sqlValue: Int) = FetchDirection.values().first { it.sqlValue == sqlValue }
+        fun fromJdbc(sqlValue: Int) = FetchDirection.values().first { it.sqlValue == sqlValue }
     }
 }

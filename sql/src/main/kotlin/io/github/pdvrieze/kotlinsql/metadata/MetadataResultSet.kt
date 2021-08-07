@@ -18,10 +18,27 @@
  * under the License.
  */
 
-package io.github.pdvrieze.kotlinsql.monadic.actions
+package io.github.pdvrieze.kotlinsql.metadata
 
-import io.github.pdvrieze.kotlinsql.ddl.Database
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import java.io.Closeable
 
-interface ResultSetMetadataAction<DB : Database, Row : ResultSetRow<*>> :
-    ResultSetWrapperProducingAction<DB, Row>
+interface MetadataResultSet<R: ResultSetRow<D>, D>: ResultSetWrapper<R, D>, Closeable
+
+@OptIn(UnmanagedSql::class)
+inline fun <RS : MetadataResultSet<Row, *>, Row: ResultSetRow<*>> RS.closingForEach(body: (Row) -> Unit) {
+    use { rs ->
+        while (rs.next()) {
+            body(rs.rowData)
+        }
+    }
+}
+
+@OptIn(UnmanagedSql::class)
+inline fun <RS : MetadataResultSet<Row, *>, Row: ResultSetRow<*>, R> RS.closingMap(body: (Row) -> R): List<R> {
+    return mutableListOf<R>().also { r ->
+        closingForEach { rs -> r.add(body(rs)) }
+    }
+}

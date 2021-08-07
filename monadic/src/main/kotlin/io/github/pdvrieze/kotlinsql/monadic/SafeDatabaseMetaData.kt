@@ -21,6 +21,7 @@
 package io.github.pdvrieze.kotlinsql.monadic
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
 import io.github.pdvrieze.kotlinsql.metadata.*
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
@@ -37,10 +38,12 @@ class SafeDatabaseMetaData(private val metadata: DatabaseMetaData) {
     fun insertsAreDetected(type: Int): Boolean = metadata.insertsAreDetected(type)
 
     @UnmanagedSql
-    fun getAttributes(catalog: String?,
-                      schemaPattern: String?,
-                      typeNamePattern: String?,
-                      attributeNamePattern: String?): AttributeResults {
+    fun getAttributes(
+        catalog: String?,
+        schemaPattern: String?,
+        typeNamePattern: String?,
+        attributeNamePattern: String?,
+    ): ResultSetWrapper<AttributeResults, AttributeResults.Data> {
         return AttributeResults(metadata.getAttributes(catalog, schemaPattern, typeNamePattern, attributeNamePattern))
     }
 
@@ -140,7 +143,8 @@ class SafeDatabaseMetaData(private val metadata: DatabaseMetaData) {
     val identifierQuoteString: String get() = metadata.identifierQuoteString
 
     @Suppress("PropertyName")
-    val SQLKeywords: List<String> get() = metadata.sqlKeywords.split(',')
+    val SQLKeywords: List<String>
+        get() = metadata.sqlKeywords.split(',')
 
     val numericFunctions: List<String> get() = metadata.numericFunctions.split(',')
 
@@ -305,108 +309,141 @@ class SafeDatabaseMetaData(private val metadata: DatabaseMetaData) {
     val dataDefinitionIgnoredInTransactions: Boolean get() = metadata.dataDefinitionIgnoredInTransactions()
 
     @UnmanagedSql
-    fun getProcedures(catalog: String, schemaPattern: String, procedureNamePattern: String): ProcedureResults {
+    fun getProcedures(
+        catalog: String,
+        schemaPattern: String,
+        procedureNamePattern: String,
+    ): ResultSetWrapper<ProcedureResults, ProcedureResults.Data> {
         return ProcedureResults(metadata.getProcedures(catalog, schemaPattern, procedureNamePattern))
     }
 
     @UnmanagedSql
-    fun getProcedureColumns(catalog: String,
-                            schemaPattern: String,
-                            procedureNamePattern: String,
-                            columnNamePattern: String): ProcedureColumnResults {
+    fun getProcedureColumns(
+        catalog: String,
+        schemaPattern: String,
+        procedureNamePattern: String,
+        columnNamePattern: String,
+    ): ResultSetWrapper<ProcedureColumnResults, ProcedureColumnResults.Data> {
         return ProcedureColumnResults(
             metadata.getProcedureColumns(catalog, schemaPattern, procedureNamePattern, columnNamePattern)
         )
     }
 
     @UnmanagedSql
-    fun getTables(catalog: String? = null,
-                  schemaPattern: String? = null,
-                  tableNamePattern: String? = null,
-                  types: Array<String>? = null): TableMetadataResults {
+    fun getTables(
+        catalog: String? = null,
+        schemaPattern: String? = null,
+        tableNamePattern: String? = null,
+        types: Array<String>? = null,
+    ): ResultSetWrapper<TableMetadataResults, TableMetadataResults.Data> {
         return TableMetadataResults(metadata.getTables(catalog, schemaPattern, tableNamePattern, types))
     }
 
     @UnmanagedSql
-    val schemas: SchemaResults get() = SchemaResults(metadata.schemas)
+    val schemas: ResultSetWrapper<SchemaResults, SchemaResults.Data>
+        get() = SchemaResults(metadata.schemas)
 
     val tableTypes get() = metadata.tableTypes.toStrings()
 
     @UnmanagedSql
-    fun getColumns(catalog: String? = null,
-                   schemaPattern: String? = null,
-                   tableNamePattern: String?,
-                   columnNamePattern: String? = null): ColumnsResults {
+    fun getColumns(
+        catalog: String? = null,
+        schemaPattern: String? = null,
+        tableNamePattern: String?,
+        columnNamePattern: String? = null,
+    ): ResultSetWrapper<ColumnsResults, ColumnsResults.Data> {
         return ColumnsResults(metadata.getColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern))
     }
 
     @UnmanagedSql
-    fun getColumnPrivileges(catalog: String,
-                            schema: String,
-                            table: String,
-                            columnNamePattern: String): ColumnPrivilegesResult {
+    fun getColumnPrivileges(
+        catalog: String,
+        schema: String,
+        table: String,
+        columnNamePattern: String,
+    ): ResultSetWrapper<ColumnPrivilegesResult, ColumnPrivilegesResult.Data> {
         return ColumnPrivilegesResult(metadata.getColumnPrivileges(catalog, schema, table, columnNamePattern))
     }
 
     @UnmanagedSql
-    fun getTablePrivileges(catalog: String, schemaPattern: String, tableNamePattern: String): TablePrivilegesResult {
+    fun getTablePrivileges(
+        catalog: String,
+        schemaPattern: String,
+        tableNamePattern: String,
+    ): ResultSetWrapper<TablePrivilegesResult, TablePrivilegesResult.Data> {
         return TablePrivilegesResult(metadata.getTablePrivileges(catalog, schemaPattern, tableNamePattern))
     }
 
     @UnmanagedSql
-    fun getBestRowIdentifier(catalog: String,
-                             schema: String,
-                             table: String,
-                             scope: Int,
-                             nullable: Boolean): BestRowIdentifierResult {
+    fun getBestRowIdentifier(
+        catalog: String,
+        schema: String,
+        table: String,
+        scope: Int,
+        nullable: Boolean,
+    ): ResultSetWrapper<BestRowIdentifierResult, BestRowIdentifierResult.Data> {
         return BestRowIdentifierResult(metadata.getBestRowIdentifier(catalog, schema, table, scope, nullable))
     }
 
     @UnmanagedSql
-    fun getVersionColumns(catalog: String, schema: String, table: String): VersionColumnsResult {
+    fun getVersionColumns(
+        catalog: String,
+        schema: String,
+        table: String,
+    ): ResultSetWrapper<VersionColumnsResult, VersionColumnsResult.Data> {
         return VersionColumnsResult(metadata.getVersionColumns(catalog, schema, table))
     }
 
     @UnmanagedSql
-    fun getPrimaryKeys(catalog: String, schema: String, table: String): PrimaryKeyResults {
+    fun getPrimaryKeys(
+        catalog: String,
+        schema: String,
+        table: String,
+    ): ResultSetWrapper<PrimaryKeyResults, PrimaryKeyResults.Data> {
         return PrimaryKeyResults(metadata.getPrimaryKeys(catalog, schema, table))
     }
 
     @UnmanagedSql
-    fun getImportedKeys(catalog: String, schema: String, table: String): KeysResult {
+    fun getImportedKeys(catalog: String, schema: String, table: String): ResultSetWrapper<KeysResult, KeysResult.Data> {
         return KeysResult(metadata.getImportedKeys(catalog, schema, table))
     }
 
     @UnmanagedSql
-    fun getExportedKeys(catalog: String, schema: String, table: String): KeysResult {
+    fun getExportedKeys(catalog: String, schema: String, table: String): ResultSetWrapper<KeysResult, KeysResult.Data> {
         return KeysResult(metadata.getExportedKeys(catalog, schema, table))
     }
 
     @UnmanagedSql
-    fun getCrossReference(parentCatalog: String,
-                          parentSchema: String,
-                          parentTable: String,
-                          foreignCatalog: String,
-                          foreignSchema: String,
-                          foreignTable: String): KeysResult {
+    fun getCrossReference(
+        parentCatalog: String,
+        parentSchema: String,
+        parentTable: String,
+        foreignCatalog: String,
+        foreignSchema: String,
+        foreignTable: String,
+    ): ResultSetWrapper<KeysResult, KeysResult.Data> {
         return KeysResult(
-            metadata.getCrossReference(
-                parentCatalog, parentSchema, parentTable, foreignCatalog, foreignSchema,
-                foreignTable
-            )
+            metadata.getCrossReference(parentCatalog,
+                                       parentSchema,
+                                       parentTable,
+                                       foreignCatalog,
+                                       foreignSchema,
+                                       foreignTable)
         )
     }
 
     @UnmanagedSql
-    fun getTypeInfo(): TypeInfoResults {
+    fun getTypeInfo(): ResultSetWrapper<TypeInfoResults, TypeInfoResults.Data> {
         return TypeInfoResults(metadata.typeInfo)
     }
 
-    fun getUnsafeIndexInfo(catalog: String,
-                           schema: String,
-                           table: String,
-                           unique: Boolean,
-                           approximate: Boolean): ResultSet {
+    fun getUnsafeIndexInfo(
+        catalog: String,
+        schema: String,
+        table: String,
+        unique: Boolean,
+        approximate: Boolean,
+    ): ResultSet {
         // TODO wrap
         return metadata.getIndexInfo(catalog, schema, table, unique, approximate)
     }
@@ -464,13 +501,16 @@ class SafeDatabaseMetaData(private val metadata: DatabaseMetaData) {
     val databaseMinorVersion: Int get() = metadata.databaseMinorVersion
 
     @Suppress("PropertyName")
-    val JDBCMajorVersion: Int get() = metadata.jdbcMajorVersion
+    val JDBCMajorVersion: Int
+        get() = metadata.jdbcMajorVersion
 
     @Suppress("PropertyName")
-    val JDBCMinorVersion: Int get() = metadata.jdbcMinorVersion
+    val JDBCMinorVersion: Int
+        get() = metadata.jdbcMinorVersion
 
     @Suppress("PropertyName")
-    val SQLStateType: Int get() = metadata.sqlStateType
+    val SQLStateType: Int
+        get() = metadata.sqlStateType
 
     val locatorsUpdateCopy: Boolean get() = metadata.locatorsUpdateCopy()
 
@@ -479,7 +519,7 @@ class SafeDatabaseMetaData(private val metadata: DatabaseMetaData) {
     val rowIdLifetime: RowIdLifetime get() = metadata.rowIdLifetime
 
     @UnmanagedSql
-    fun getSchemas(catalog: String, schemaPattern: String): SchemaResults {
+    fun getSchemas(catalog: String, schemaPattern: String): ResultSetWrapper<SchemaResults, SchemaResults.Data> {
         return SchemaResults(metadata.getSchemas(catalog, schemaPattern))
     }
 
@@ -492,18 +532,22 @@ class SafeDatabaseMetaData(private val metadata: DatabaseMetaData) {
         return metadata.getFunctions(catalog, schemaPattern, functionNamePattern)
     }
 
-    fun getFunctionColumns(catalog: String,
-                           schemaPattern: String,
-                           functionNamePattern: String,
-                           columnNamePattern: String): ResultSet {
+    fun getFunctionColumns(
+        catalog: String,
+        schemaPattern: String,
+        functionNamePattern: String,
+        columnNamePattern: String,
+    ): ResultSet {
         // TODO wrap
         return metadata.getFunctionColumns(catalog, schemaPattern, functionNamePattern, columnNamePattern)
     }
 
-    fun getPseudoColumns(catalog: String,
-                         schemaPattern: String,
-                         tableNamePattern: String,
-                         columnNamePattern: String): ResultSet {
+    fun getPseudoColumns(
+        catalog: String,
+        schemaPattern: String,
+        tableNamePattern: String,
+        columnNamePattern: String,
+    ): ResultSet {
         return metadata.getPseudoColumns(catalog, schemaPattern, tableNamePattern, columnNamePattern)
     }
 

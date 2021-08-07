@@ -18,36 +18,37 @@
  * under the License.
  */
 
-package io.github.pdvrieze.kotlinsql.metadata
+package io.github.pdvrieze.kotlinsql.metadata.impl
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
-import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import io.github.pdvrieze.kotlinsql.metadata.MetadataResultSet
+import io.github.pdvrieze.kotlinsql.metadata.WrappedResultSetMetaData
 import io.github.pdvrieze.kotlinsql.metadata.values.FetchDirection
 import io.github.pdvrieze.kotlinsql.metadata.values.ResultSetType
+import io.github.pdvrieze.kotlinsql.util.Holdability
 import io.github.pdvrieze.kotlinsql.util.WarningIterator
-import java.io.Closeable
 import java.sql.ResultSet
-import java.sql.ResultSetMetaData
 import java.sql.SQLException
 import java.sql.SQLWarning
 
-abstract class AbstractMetadataResultSet<R: ResultSetRow> @UnmanagedSql constructor(
-    protected val resultSet: ResultSet,
-) : Closeable, AutoCloseable, ResultSetWrapper<R>, ResultSetRow {
+internal abstract class AbstractMetadataResultSet<R : ResultSetRow<D>, D>
+@UnmanagedSql constructor(protected val resultSet: ResultSet) :
+    MetadataResultSet<R, D>, ResultSetRow<D> {
+
     @UnmanagedSql
-    fun beforeFirst() = resultSet.beforeFirst()
+    override fun beforeFirst() = resultSet.beforeFirst()
 
     override fun close() = resultSet.close()
 
-    fun getWarnings(): Iterator<SQLWarning> = WarningIterator(resultSet.warnings)
+    override fun getWarnings(): List<SQLWarning> = WarningIterator(resultSet.warnings).asSequence().toList()
 
     override val isFirst: Boolean get() = resultSet.isFirst
 
     override val isLast: Boolean get() = resultSet.isLast
 
     @UnmanagedSql
-    fun last() = resultSet.last()
+    override fun last() = resultSet.last()
 
     override val isAfterLast: Boolean get() = resultSet.isAfterLast
 
@@ -61,10 +62,11 @@ abstract class AbstractMetadataResultSet<R: ResultSetRow> @UnmanagedSql construc
     override fun next() = resultSet.next()
 
     @UnmanagedSql
-    fun first() = resultSet.first()
+    override fun first() = resultSet.first()
 
-    val currentRow: Int get() = resultSet.row
+    override val currentRow: Int get() = resultSet.row
 
+    @Suppress("UNCHECKED_CAST")
     override val rowData: R
         get() = this as R
 
@@ -80,16 +82,16 @@ abstract class AbstractMetadataResultSet<R: ResultSetRow> @UnmanagedSql construc
     fun afterLast() = resultSet.afterLast()
 
     @set:UnmanagedSql
-    var fetchSize: Int
+    override var fetchSize: Int
         get() = resultSet.fetchSize
         set(rows) {
             resultSet.fetchSize = rows
         }
 
-    val holdability: Int get() = resultSet.holdability
+    override val holdability: Holdability get() = Holdability.fromJdbc(resultSet.holdability)
 
     @UnmanagedSql
-    fun previous() = resultSet.previous()
+    override fun previous() = resultSet.previous()
 
     val isClosed: Boolean get() = resultSet.isClosed
 
@@ -100,7 +102,7 @@ abstract class AbstractMetadataResultSet<R: ResultSetRow> @UnmanagedSql construc
     @UnmanagedSql
     fun refreshRow() = resultSet.refreshRow()
 
-    val concurrency: Int get() = resultSet.concurrency
+    override val concurrency: Int get() = resultSet.concurrency
 
     @UnmanagedSql
     fun moveToCurrentRow() = resultSet.moveToCurrentRow()
@@ -108,31 +110,26 @@ abstract class AbstractMetadataResultSet<R: ResultSetRow> @UnmanagedSql construc
     @UnmanagedSql
     fun clearWarnings() = resultSet.clearWarnings()
 
-    val metaData: ResultSetMetaData get() = resultSet.metaData
+    override val metaData: WrappedResultSetMetaData get() = WrappedResultSetMetaData(resultSet.metaData)
 
     @set:UnmanagedSql
-    var fetchDirection: FetchDirection
-        get() = FetchDirection.fromSqlValue(resultSet.fetchDirection)
+    override var fetchDirection: FetchDirection
+        get() = FetchDirection.fromJdbc(resultSet.fetchDirection)
         set(value) {
             resultSet.fetchDirection = value.sqlValue
         }
 
     @Suppress("NOTHING_TO_INLINE")
     protected inline fun lazyColIdx(name: String) = lazy { resultSet.findColumn(name) }
-}
 
-@OptIn(UnmanagedSql::class)
-inline fun <RS : AbstractMetadataResultSet<Row>, Row: ResultSetRow> RS.closingForEach(body: (Row) -> Unit) {
-    use { rs ->
-        while (rs.next()) {
-            body(rs.rowData)
-        }
+    override fun toList(): List<D> {
+        return toListImpl { it.data() }
     }
-}
 
-@OptIn(UnmanagedSql::class)
-inline fun <RS : AbstractMetadataResultSet<Row>, Row: ResultSetRow, R> RS.closingMap(body: (Row) -> R): List<R> {
-    return mutableListOf<R>().also { r ->
-        closingForEach { rs -> r.add(body(rs)) }
+    @OptIn(ExperimentalStdlibApi::class, UnmanagedSql::class)
+    internal inline fun toListImpl(createElem: (R) -> D): List<D> = buildList {
+        while (next()) {
+            add(createElem(rowData))
+        }
     }
 }

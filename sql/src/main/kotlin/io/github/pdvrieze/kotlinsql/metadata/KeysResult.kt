@@ -21,72 +21,53 @@
 package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import io.github.pdvrieze.kotlinsql.metadata.impl.AttributeResultsImpl
+import io.github.pdvrieze.kotlinsql.metadata.impl.KeysResultImpl
 import io.github.pdvrieze.kotlinsql.metadata.values.KeyDeferrability
 import io.github.pdvrieze.kotlinsql.metadata.values.KeyRule
 import java.sql.ResultSet
 
-@Suppress("unused")
-@OptIn(UnmanagedSql::class)
-class KeysResult
-@UnmanagedSql
-constructor(resultSet: ResultSet) : AbstractMetadataResultSet<KeysResult>(resultSet) {
-    private val idxDeleterule by lazyColIdx("DELETE_RULE")
-    private val idxDeferrability by lazyColIdx("DEFERRABILITY")
+interface KeysResult : ResultSetRow<KeysResult.Data> {
+    val deferrability: KeyDeferrability
+    val deleteRule: KeyRule
+    val fkColumnName: String
+    val fkName: String
+    val fkTableCat: String?
+    val fkTableName: String
+    val fkTableSchema: String?
+    val keySeq: Short
+    val pkColumnName: String
+    val pkName: String
+    val pkTableCat: String?
+    val pkTableName: String
+    val pkTableSchema: String?
+    val updateRule: KeyRule
 
-    private val idxFkColName by lazyColIdx("FKCOLUMN_NAME")
-    private val idxFkName by lazyColIdx("FK_NAME")
-    private val idxFkTableCat by lazyColIdx("FKTABLE_CAT")
-    private val idxFkTableName by lazyColIdx("FKTABLE_NAME")
-    private val idxFkTableSchem by lazyColIdx("FKTABLE_SCHEM")
+    override fun data(): Data = Data(this)
 
-    private val idxKeySeq by lazyColIdx("KEY_SEQ")
+    class Data(data: KeysResult) : KeysResult {
+        override val deferrability: KeyDeferrability = data.deferrability
+        override val deleteRule: KeyRule = data.deleteRule
+        override val fkColumnName: String = data.fkColumnName
+        override val fkName: String = data.fkName
+        override val fkTableCat: String? = data.fkTableCat
+        override val fkTableName: String = data.fkTableName
+        override val fkTableSchema: String? = data.fkTableSchema
+        override val keySeq: Short = data.keySeq
+        override val pkColumnName: String = data.pkColumnName
+        override val pkName: String = data.pkName
+        override val pkTableCat: String? = data.pkTableCat
+        override val pkTableName: String = data.pkTableName
+        override val pkTableSchema: String? = data.pkTableSchema
+        override val updateRule: KeyRule = data.updateRule
 
-    private val idxPkColName by lazyColIdx("PKCOLUMN_NAME")
-    private val idxPkName by lazyColIdx("PK_NAME")
-    private val idxPkTableCat by lazyColIdx("PKTABLE_CAT")
-    private val idxPkTableName by lazyColIdx("PKTABLE_NAME")
-    private val idxPkTableSchem by lazyColIdx("PKTABLE_SCHEM")
-
-    private val idxUpdateRule by lazyColIdx("UPDATE_RULE")
-
-    val deferrability: KeyDeferrability get() = KeyDeferrability.from(resultSet.getShort(idxDeferrability))
-    val deleteRule: KeyRule get() = KeyRule.from(resultSet.getShort(idxDeleterule))
-
-    val fkColumnName: String get() = resultSet.getString(idxFkColName)
-    val fkName: String get() = resultSet.getString(idxFkName)
-    val fkTableCat: String? get() = resultSet.getString(idxFkTableName)
-    val fkTableName: String get() = resultSet.getString(idxFkTableName)
-    val fkTableSchema: String? get() = resultSet.getString(idxFkTableSchem)
-
-    val keySeq: Short get() = resultSet.getShort(idxKeySeq)
-
-    val pkColumnName: String get() = resultSet.getString(idxPkColName)
-    val pkName: String get() = resultSet.getString(idxPkName)
-    val pkTableCat: String? get() = resultSet.getString(idxPkTableName)
-    val pkTableName: String get() = resultSet.getString(idxPkTableName)
-    val pkTableSchema: String? get() = resultSet.getString(idxPkTableSchem)
-
-    val updateRule: KeyRule get() = KeyRule.from(resultSet.getShort(idxUpdateRule))
-
-    @OptIn(ExperimentalStdlibApi::class)
-    fun toList(): List<Data> = buildList {
-        while(next()) add(Data(this@KeysResult))
+        override fun data(): Data = this
     }
 
-    class Data(data: KeysResult) {
-        val deferrability: KeyDeferrability = data.deferrability
-        val deleteRule: KeyRule = data.deleteRule
-        val fkColumnName: String = data.fkColumnName
-        val fkName: String = data.fkName
-        val fkTableCat: String? = data.fkTableCat
-        val fkTableName: String = data.fkTableName
-        val fkTableSchema: String? = data.fkTableSchema
-        val keySeq: Short = data.keySeq
-        val pkColumnName: String = data.pkColumnName
-        val pkName: String = data.pkName
-        val pkTableCat: String? = data.pkTableCat
-        val pkTableName: String = data.pkTableName
-        val pkTableSchema: String? = data.pkTableSchema
-        val updateRule: KeyRule = data.updateRule
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(r: ResultSet): ResultSetWrapper<KeysResult, Data> = KeysResultImpl(r)
     }
 }

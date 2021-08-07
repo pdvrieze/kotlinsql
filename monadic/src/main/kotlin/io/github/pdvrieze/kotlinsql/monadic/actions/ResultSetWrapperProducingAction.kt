@@ -25,10 +25,10 @@ import io.github.pdvrieze.kotlinsql.ddl.Database
 import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
 import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
 
-interface ResultSetWrapperProducingAction<DB : Database, R : ResultSetRow> {
-    @OptIn(UnmanagedSql::class, kotlin.ExperimentalStdlibApi::class)
+interface ResultSetWrapperProducingAction<DB : Database, R : ResultSetRow<*>> {
+    @OptIn(UnmanagedSql::class, ExperimentalStdlibApi::class)
     fun <T> mapEach(transform: (R) -> T): DBAction<DB, List<T>>
-    fun <T> map(transform: (ResultSetWrapper<R>) -> T): DBAction<DB, T>
+    fun <T> map(transform: (ResultSetWrapper<R, *>) -> T): DBAction<DB, T>
 
     @OptIn(UnmanagedSql::class)
     fun isEmpty(): DBAction<DB, Boolean>

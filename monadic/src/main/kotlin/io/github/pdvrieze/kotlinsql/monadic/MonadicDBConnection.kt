@@ -25,6 +25,7 @@ import io.github.pdvrieze.kotlinsql.ddl.Database
 import io.github.pdvrieze.kotlinsql.ddl.columns.PreparedStatementHelper
 import io.github.pdvrieze.kotlinsql.metadata.TransactionIsolation
 import io.github.pdvrieze.kotlinsql.direct.use
+import io.github.pdvrieze.kotlinsql.util.Holdability
 import io.github.pdvrieze.util.kotlin.sql.PreparedStatementHelperImpl
 import java.sql.*
 import java.util.*
@@ -91,11 +92,6 @@ open class MonadicDBConnection<DB : Database> constructor(val rawConnection: Con
 
     fun holdability(jdbc: Int): Holdability {
         return Holdability.values().first { it.jdbc == jdbc }
-    }
-
-    enum class Holdability(val jdbc: Int, @Suppress("UNUSED_PARAMETER") dummy: Unit) {
-        HOLD_CURSORS_OVER_COMMIT(ResultSet.HOLD_CURSORS_OVER_COMMIT, Unit),
-        CLOSE_CURSORS_AT_COMMIT(ResultSet.CLOSE_CURSORS_AT_COMMIT, Unit);
     }
 
     /**

@@ -56,7 +56,7 @@ internal class SelectActionImpl<DB : Database, S : SelectStatement>(override val
     }
 
     override fun wrapResultSet(initResult: Pair<PreparedStatementHelperImpl, ResultSet>):
-            ResultSetWrapper<SelectResultsetRow<S>> {
+            ResultSetWrapper<SelectResultsetRow<S>, Nothing> {
         return SelectResultsetRow(initResult.second, query)
     }
 }

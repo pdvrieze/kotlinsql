@@ -21,24 +21,25 @@
 package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
-import io.github.pdvrieze.kotlinsql.metadata.impl.AbstractRowResult
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import io.github.pdvrieze.kotlinsql.metadata.impl.BaseRowResult
+import io.github.pdvrieze.kotlinsql.metadata.impl.VersionColumnsResultImpl
 import java.sql.ResultSet
 
-@OptIn(UnmanagedSql::class)
-@Suppress("unused")
-class VersionColumnsResult
-    @UnmanagedSql
-    constructor(rs: ResultSet) : AbstractRowResult<VersionColumnsResult>(rs) {
-    private val idxBufferSize by lazyColIdx("BUFFER_LENGTH")
+interface VersionColumnsResult : BaseRowResult<VersionColumnsResult.Data> {
+    val bufferSize: Int
 
-    val bufferSize get() = resultSet.getInt(idxBufferSize)
+    override fun data(): Data = Data(this)
 
-    @OptIn(ExperimentalStdlibApi::class)
-    fun toList(): List<Data> = buildList {
-        while (next()) add(Data(this@VersionColumnsResult))
+    class Data(data: VersionColumnsResult) : BaseRowResult.Data<Data>(data),
+                                             VersionColumnsResult {
+        override val bufferSize = data.bufferSize
+
+        override fun data(): Data = this
     }
 
-    class Data(data: VersionColumnsResult): AbstractRowResult.Data(data) {
-        val bufferSize = data.bufferSize
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(r: ResultSet): ResultSetWrapper<VersionColumnsResult, Data> = VersionColumnsResultImpl(r)
     }
 }

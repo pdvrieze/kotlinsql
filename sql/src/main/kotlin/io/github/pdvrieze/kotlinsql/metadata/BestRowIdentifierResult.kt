@@ -21,34 +21,21 @@
 package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
-import io.github.pdvrieze.kotlinsql.metadata.impl.AbstractRowResult
-import java.sql.DatabaseMetaData
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import io.github.pdvrieze.kotlinsql.metadata.impl.AttributeResultsImpl
+import io.github.pdvrieze.kotlinsql.metadata.impl.BaseRowResult
+import io.github.pdvrieze.kotlinsql.metadata.impl.BestRowIdentifierResultImpl
 import java.sql.ResultSet
 
-@Suppress("unused")
-@OptIn(UnmanagedSql::class)
-class BestRowIdentifierResult
-    @UnmanagedSql
-    constructor(rs: ResultSet) : AbstractRowResult<BestRowIdentifierResult>(rs) {
-
-    private val idxScope by lazyColIdx("SCOPE")
-
+interface BestRowIdentifierResult: BaseRowResult<BestRowIdentifierResult.Data> {
     val scope: Scope
-        get() = when (resultSet.getShort(idxScope).toInt()) {
-            DatabaseMetaData.bestRowTemporary   -> Scope.BESTROWTEMPORARY
-            DatabaseMetaData.bestRowTransaction -> Scope.BESTROWTRANSACTION
-            DatabaseMetaData.bestRowSession     -> Scope.BESTROWSESSION
-            else                                -> throw IllegalArgumentException(
-                    "Unexpected scope value ${resultSet.getShort(idxScope)}")
-        }
 
-    @OptIn(ExperimentalStdlibApi::class)
-    fun toList(): List<Data> = buildList {
-        while(next()) add(Data(this@BestRowIdentifierResult))
-    }
+    override fun data(): Data = Data(this)
 
-    class Data(data: BestRowIdentifierResult) {
-        val scope: Scope = data.scope
+    class Data(data: BestRowIdentifierResult): BaseRowResult.Data<Data>(data), BestRowIdentifierResult {
+        override val scope: Scope = data.scope
+
+        override fun data(): Data = this
     }
 
     enum class Scope {
@@ -56,4 +43,10 @@ class BestRowIdentifierResult
         BESTROWTRANSACTION,
         BESTROWSESSION
     }
+
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(r: ResultSet): ResultSetWrapper<BestRowIdentifierResult, Data> = BestRowIdentifierResultImpl(r)
+    }
 }
+

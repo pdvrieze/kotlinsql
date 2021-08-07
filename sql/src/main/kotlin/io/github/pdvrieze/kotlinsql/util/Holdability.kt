@@ -18,10 +18,15 @@
  * under the License.
  */
 
-package io.github.pdvrieze.kotlinsql.monadic.actions
+package io.github.pdvrieze.kotlinsql.util
 
-import io.github.pdvrieze.kotlinsql.ddl.Database
-import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
+import java.sql.ResultSet
 
-interface ResultSetMetadataAction<DB : Database, Row : ResultSetRow<*>> :
-    ResultSetWrapperProducingAction<DB, Row>
+enum class Holdability(val jdbc: Int) {
+    HOLD_CURSORS_OVER_COMMIT(ResultSet.HOLD_CURSORS_OVER_COMMIT),
+    CLOSE_CURSORS_AT_COMMIT(ResultSet.CLOSE_CURSORS_AT_COMMIT);
+    companion object {
+        @JvmStatic
+        fun fromJdbc(jdbc: Int) = values().first { it.jdbc == jdbc }
+    }
+}

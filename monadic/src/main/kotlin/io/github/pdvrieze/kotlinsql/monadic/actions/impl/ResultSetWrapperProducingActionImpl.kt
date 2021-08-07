@@ -29,11 +29,11 @@ import io.github.pdvrieze.kotlinsql.monadic.actions.DBAction
 import io.github.pdvrieze.kotlinsql.monadic.actions.ResultSetWrapperProducingAction
 
 // TODO change this to take a "save variant of the resultset rather than the raw one"
-internal abstract class ResultSetWrapperProducingActionImpl<DB : Database, M, R : ResultSetRow>(
+internal abstract class ResultSetWrapperProducingActionImpl<DB : Database, M, R : ResultSetRow<*>>(
     private val close: M.() -> Unit,
 ) : ResultSetWrapperProducingAction<DB, R> {
 
-    abstract fun wrapResultSet(initResult: M): ResultSetWrapper<R>
+    abstract fun wrapResultSet(initResult: M): ResultSetWrapper<R, *>
 
     abstract fun getCloseableResource(connection: MonadicDBConnection<DB>): M
 
@@ -46,7 +46,7 @@ internal abstract class ResultSetWrapperProducingActionImpl<DB : Database, M, R 
         }
     }
 
-    override fun <T> map(transform: (ResultSetWrapper<R>) -> T): DBAction<DB, T> {
+    override fun <T> map(transform: (ResultSetWrapper<R, *>) -> T): DBAction<DB, T> {
         return ResultSetWrapperConsumingAction(this, close) { transform(it) }
     }
 

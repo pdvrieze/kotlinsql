@@ -20,22 +20,15 @@
 
 package io.github.pdvrieze.kotlinsql.metadata.impl
 
-import io.github.pdvrieze.kotlinsql.UnmanagedSql
-import io.github.pdvrieze.kotlinsql.metadata.SchemaResults
 import io.github.pdvrieze.kotlinsql.metadata.SchemaResultsBase
-import java.sql.ResultSet
 
-@OptIn(UnmanagedSql::class)
-abstract class TableMetaResultBase<R: TableMetaResultBase<R>>
-    @UnmanagedSql
-    constructor(rs: ResultSet) : SchemaResultsBase<R>(rs) {
+interface TableMetaResultBase<D: TableMetaResultBase.Data<D>>: SchemaResultsBase<D> {
 
-    private val idxTableName by lazyColIdx("TABLE_NAME")
-    val tableName: String get() = resultSet.getString(idxTableName)
+    val tableName: String
 
-    abstract override fun toList(): List<Data>
-
-    open class Data(data: TableMetaResultBase<*>): SchemaResults.Data(data) {
-        val tableName: String = data.tableName
+    abstract class Data<D: Data<D>>(data: TableMetaResultBase<*>): SchemaResultsBase.Data<D>(data), TableMetaResultBase<D> {
+        override val tableName: String = data.tableName
     }
+
 }
+

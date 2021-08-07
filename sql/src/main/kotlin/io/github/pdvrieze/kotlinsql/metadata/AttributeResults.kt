@@ -21,41 +21,38 @@
 package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import io.github.pdvrieze.kotlinsql.metadata.impl.AttributeResultsImpl
 import java.sql.ResultSet
 
-@Suppress("unused")
-@OptIn(UnmanagedSql::class)
-class AttributeResults
-    @UnmanagedSql
-    constructor(attributes: ResultSet) : DataResults<AttributeResults>(attributes) {
-    private val idxAttrDef by lazyColIdx("ATTR_DEF")
-    private val idxAttrName by lazyColIdx("ATTR_NAME")
-    private val idxAttrSize by lazyColIdx("ATTR_SIZE")
-    private val idxAttrTypeName by lazyColIdx("ATTR_TYPE_NAME")
-    private val idxDecimalDigits by lazyColIdx("DECIMAL_DIGITS")
-    private val idxNumPrecRadix by lazyColIdx("NUM_REC_RADIX")
-    private val idxTypeCat by lazyColIdx("TYPE_CAT")
-    private val idxTypeSchem by lazyColIdx("TYPE_SCHEM")
+interface AttributeResults : DataResults<AttributeResults.Data> {
+    val attrDefault: String?
+    val attrName: String
+    val attrSize: Int
+    val attrTypeName: String?
+    val decimalDigits: Int
+    val numPrecRadix: Int
+    val typeCatalog: String?
+    val typeScheme: String?
 
-    val attrDefault: String? get() = resultSet.getString(idxAttrDef)
-    val attrName: String get() = resultSet.getString(idxAttrName)
-    val attrSize: Int get() = resultSet.getInt(idxAttrSize)
-    val attrTypeName: String? get() = resultSet.getString(idxAttrTypeName)
-    val decimalDigits: Int get() = resultSet.getInt(idxDecimalDigits)
-    val numPrecRadix: Int get() = resultSet.getInt(idxNumPrecRadix)
-    val typeCatalog: String? get() = resultSet.getString(idxTypeCat)
-    val typeScheme: String? get() = resultSet.getString(idxTypeSchem)
+    override fun data(): Data = Data(this)
 
-    public override fun data(): Data = Data(this)
+    class Data(result: AttributeResults): DataResults.Data<Data>(result), AttributeResults {
+        override val attrDefault: String? = result.attrDefault
+        override val attrName: String = result.attrName
+        override val attrSize: Int = result.attrSize
+        override val attrTypeName: String? = result.attrTypeName
+        override val decimalDigits: Int = result.decimalDigits
+        override val numPrecRadix: Int = result.numPrecRadix
+        override val typeCatalog: String? = result.typeCatalog
+        override val typeScheme: String? = result.typeScheme
 
-    class Data(result: AttributeResults): DataResults.Data(result) {
-        val attrDefault: String? = result.attrDefault
-        val attrName: String = result.attrName
-        val attrSize: Int = result.attrSize
-        val attrTypeName: String? = result.attrTypeName
-        val decimalDigits: Int = result.decimalDigits
-        val numPrecRadix: Int = result.numPrecRadix
-        val typeCatalog: String? = result.typeCatalog
-        val typeScheme: String? = result.typeScheme
+        override fun data(): Data = Data(this)
+    }
+
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(r: ResultSet): ResultSetWrapper<AttributeResults, Data> = AttributeResultsImpl(r)
     }
 }
+

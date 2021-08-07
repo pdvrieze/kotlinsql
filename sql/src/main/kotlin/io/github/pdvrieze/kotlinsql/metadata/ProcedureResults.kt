@@ -21,48 +21,42 @@
 package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import io.github.pdvrieze.kotlinsql.metadata.impl.ProcedureResultsImpl
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 
-@Suppress("unused")
-@OptIn(UnmanagedSql::class)
-class ProcedureResults
-@UnmanagedSql
-constructor(attributes: ResultSet) : AbstractMetadataResultSet<ProcedureResults>(attributes) {
+interface ProcedureResults: ResultSetRow<ProcedureResults.Data> {
+    val procedureCatalog: String?
+    val procedureName: String
+    val procedureScheme: String?
+    val procedureType: ProcedureType
+    val remarks: String?
+    val specificName: String
 
-    private fun procedureType(sqlValue: Short) = ProcedureType.values().first { it.sqlValue == sqlValue }
+    override fun data(): Data = Data(this)
 
-    private val idxProcedureCat by lazyColIdx("PROCEDURE_CAT")
-    private val idxProcedureSchem by lazyColIdx("PROCEDURE_SCHEM")
-    private val idxProcedureName by lazyColIdx("PROCEDURE_NAME")
-    private val idxProcedureType by lazyColIdx("PROCEDURE_TYPE")
-    private val idxRemarks by lazyColIdx("REMARKS")
-    private val idxSpecificName by lazyColIdx("SPECIFIC_NAME")
-
-    val procedureCatalog: String? get() = resultSet.getString(idxProcedureCat)
-    val procedureName: String get() = resultSet.getString(idxProcedureName)
-    val procedureScheme: String? get() = resultSet.getString(idxProcedureSchem)
-    val procedureType: ProcedureType get() = procedureType(resultSet.getShort(idxProcedureType))
-    val remarks: String? get() = resultSet.getString(idxRemarks)
-    val specificName: String get() = resultSet.getString(idxSpecificName)
-
+    @Suppress("unused")
     enum class ProcedureType(val sqlValue: Short) {
         PROCEDURE_RESULT_UNKNOWN(DatabaseMetaData.procedureResultUnknown.toShort()),
         PROCEDURE_NO_RESULT(DatabaseMetaData.procedureNoResult.toShort()),
         PROCEDURE_RETURNS_RESULT(DatabaseMetaData.procedureReturnsResult.toShort())
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
-    fun toList(): List<Data>  = buildList {
-        while(next()) add(Data(this@ProcedureResults))
+    class Data(data: ProcedureResults): ProcedureResults {
+        override val procedureCatalog: String? = data.procedureCatalog
+        override val procedureName: String = data.procedureName
+        override val procedureScheme: String? = data.procedureScheme
+        override val procedureType: ProcedureType = data.procedureType
+        override val remarks: String? = data.remarks
+        override val specificName: String = data.specificName
+
+        override fun data(): Data = this
     }
 
-    class Data(data: ProcedureResults) {
-        val procedureCatalog: String? = data.procedureCatalog
-        val procedureName: String = data.procedureName
-        val procedureScheme: String? = data.procedureScheme
-        val procedureType: ProcedureType = data.procedureType
-        val remarks: String? = data.remarks
-        val specificName: String = data.specificName
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(r: ResultSet): ResultSetWrapper<ProcedureResults, Data> = ProcedureResultsImpl(r)
     }
 }

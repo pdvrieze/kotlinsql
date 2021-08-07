@@ -21,21 +21,14 @@
 package io.github.pdvrieze.kotlinsql.metadata.impl
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
-import io.github.pdvrieze.kotlinsql.metadata.AbstractMetadataResultSet
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 @OptIn(UnmanagedSql::class)
-abstract class AbstractRowResult<R: AbstractRowResult<R>>
+internal abstract class BaseRowResultImpl<R: BaseRowResult<D>, D:BaseRowResult.Data<D>>
 @UnmanagedSql
-constructor(rs: ResultSet) : AbstractMetadataResultSet<R>(rs) {
-
-    enum class PseudoColumn {
-        BESTROWUNKNOWN,
-        BESTROWNOTPSEUDO,
-        BESTROWPSEUDO
-    }
+constructor(rs: ResultSet) : AbstractMetadataResultSet<R, D>(rs), BaseRowResult<D> {
 
     private val idxColumnName by lazyColIdx("COLUMN_NAME")
     private val idxDataType by lazyColIdx("DATA_TYPE")
@@ -44,31 +37,19 @@ constructor(rs: ResultSet) : AbstractMetadataResultSet<R>(rs) {
     private val idxDecimalDigits by lazyColIdx("DECIMAL_DIGITS")
     private val idxPseudoColumn by lazyColIdx("PSEUDO_COLUMN")
 
-    val columnName: String get() = resultSet.getString(idxColumnName)
-    val dataType: String get() = resultSet.getString(idxDataType)
-    val typeName: String get() = resultSet.getString(idxTypeName)
-    val precision: String get() = resultSet.getString(idxColumnSize)
+    override val columnName: String get() = resultSet.getString(idxColumnName)
+    override val dataType: String get() = resultSet.getString(idxDataType)
+    override val typeName: String get() = resultSet.getString(idxTypeName)
+    override val precision: String get() = resultSet.getString(idxColumnSize)
 
-    @Deprecated("Use precision as the column name, this is an alias", ReplaceWith("precision"))
-    inline val columnSize
-        get() = precision
-    val decimalDigits: Short get() = resultSet.getShort(idxDecimalDigits)
+    override val decimalDigits: Short get() = resultSet.getShort(idxDecimalDigits)
 
-    val pseudoColumn: PseudoColumn = when (resultSet.getShort(idxPseudoColumn).toInt()) {
-        DatabaseMetaData.bestRowUnknown   -> PseudoColumn.BESTROWUNKNOWN
-        DatabaseMetaData.bestRowPseudo    -> PseudoColumn.BESTROWPSEUDO
-        DatabaseMetaData.bestRowNotPseudo -> PseudoColumn.BESTROWNOTPSEUDO
+    override val pseudoColumn: BaseRowResult.PseudoColumn = when (resultSet.getShort(idxPseudoColumn).toInt()) {
+        DatabaseMetaData.bestRowUnknown   -> BaseRowResult.PseudoColumn.BESTROWUNKNOWN
+        DatabaseMetaData.bestRowPseudo    -> BaseRowResult.PseudoColumn.BESTROWPSEUDO
+        DatabaseMetaData.bestRowNotPseudo -> BaseRowResult.PseudoColumn.BESTROWNOTPSEUDO
         else                              -> throw IllegalArgumentException(
             "Unexpected pseudoColumn value ${resultSet.getShort(idxPseudoColumn)}")
-    }
-
-    open class Data(data: AbstractRowResult<*>) {
-        val columnName: String = data.columnName
-        val dataType: String = data.dataType
-        val typeName: String = data.typeName
-        val precision: String = data.precision
-        val decimalDigits: Short = data.decimalDigits
-        val pseudoColumn: PseudoColumn = data.pseudoColumn
     }
 
 }

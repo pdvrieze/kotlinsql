@@ -22,70 +22,56 @@ package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.ddl.IColumnType
+import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import io.github.pdvrieze.kotlinsql.metadata.impl.TypeInfoResultsImpl
 import io.github.pdvrieze.kotlinsql.metadata.values.Nullable
 import io.github.pdvrieze.kotlinsql.metadata.values.Searchable
 import java.sql.ResultSet
 
-@Suppress("unused")
-@OptIn(UnmanagedSql::class)
-class TypeInfoResults
-@UnmanagedSql
-constructor(resultSet: ResultSet) : AbstractMetadataResultSet<TypeInfoResults>(resultSet) {
-    private val idxAutoIncrement by lazyColIdx("AUTO_INCREMENT")
-    private val idxCaseSensitive by lazyColIdx("CASE_SENSITIVE")
-    private val idxCreateParams by lazyColIdx("CREATE_PARAMS")
-    private val idxDataType by lazyColIdx("DATA_TYPE")
-    private val idxFixedPrecScale by lazyColIdx("FIXED_PREC_SCALE")
-    private val idxLiteralPrefix by lazyColIdx("LITERAL_PREFIX")
-    private val idxLiteralSuffix by lazyColIdx("LITERAL_SUFFIX")
-    private val idxLocalTypeName by lazyColIdx("LOCAL_TYPE_NAME")
-    private val idxMaximumScale by lazyColIdx("MAXIMUM_SCALE")
-    private val idxMinimumScale by lazyColIdx("MINIMUM_SCALE")
-    private val idxNumPrecRadix by lazyColIdx("NUM_PREC_RADIX")
-    private val idxNullable by lazyColIdx("NULLABLE")
-    private val idxPrecision by lazyColIdx("PRECISION")
-    private val idxTypeName by lazyColIdx("TYPE_NAME")
-    private val idxSearchable by lazyColIdx("SEARCHABLE")
-    private val idxUnsignedAttribute by lazyColIdx("UNSIGNED_ATTRIBUTE")
+interface TypeInfoResults: ResultSetRow<TypeInfoResults.Data> {
+    val autoIncrement: Boolean
+    val caseSensitive: Boolean
+    val createParams: String?
+    val dataType: IColumnType<*, *, *>
+    val fixedPrecScale: Boolean
+    val literalPrefix: String?
+    val literalSuffix: String?
+    val localTypeName: String
+    val maximumScale: Short
+    val minimumScale: Short
+    val nullable: Nullable
+    val numPrecRadix: Int
+    val precision: Int
+    val searchable: Searchable
+    val typeName: String
+    val unsignedAttribute: Boolean
 
-    val autoIncrement: Boolean get() = resultSet.getBoolean(idxAutoIncrement)
-    val caseSensitive: Boolean get() = resultSet.getBoolean(idxCaseSensitive)
-    val createParams: String? get() = resultSet.getString(idxCreateParams)
-    val dataType: IColumnType<*, *, *> get() = IColumnType.fromSqlType(resultSet.getInt(idxDataType))
-    val fixedPrecScale: Boolean get() = resultSet.getBoolean(idxFixedPrecScale)
-    val literalPrefix: String? get() = resultSet.getString(idxLiteralPrefix)
-    val literalSuffix: String? get() = resultSet.getString(idxLiteralSuffix)
-    val localTypeName: String get() = resultSet.getString(idxLocalTypeName)
-    val maximumScale: Short get() = resultSet.getShort(idxMaximumScale)
-    val minimumScale: Short get() = resultSet.getShort(idxMinimumScale)
-    val nullable: Nullable get() = Nullable.from(resultSet.getShort(idxNullable))
-    val numPrecRadix: Int get() = resultSet.getInt(idxNumPrecRadix)
-    val precision: Int get() = resultSet.getInt(idxPrecision)
-    val searchable: Searchable get() = Searchable.from(resultSet.getShort(idxSearchable))
-    val typeName: String get() = resultSet.getString(idxTypeName)
-    val unsignedAttribute: Boolean get() = resultSet.getBoolean(idxUnsignedAttribute)
+    override fun data(): Data = Data(this)
 
-    @OptIn(ExperimentalStdlibApi::class)
-    fun toList(): List<Data> = buildList {
-        while (next()) add(Data(this@TypeInfoResults))
+    class Data(data: TypeInfoResults): TypeInfoResults {
+        override val autoIncrement: Boolean = data.autoIncrement
+        override val caseSensitive: Boolean = data.caseSensitive
+        override val createParams: String? = data.createParams
+        override val dataType: IColumnType<*, *, *> = data.dataType
+        override val fixedPrecScale: Boolean = data.fixedPrecScale
+        override val literalPrefix: String? = data.literalPrefix
+        override val literalSuffix: String? = data.literalSuffix
+        override val localTypeName: String = data.localTypeName
+        override val maximumScale: Short = data.maximumScale
+        override val minimumScale: Short = data.minimumScale
+        override val nullable: Nullable = data.nullable
+        override val numPrecRadix: Int = data.numPrecRadix
+        override val precision: Int = data.precision
+        override val searchable: Searchable = data.searchable
+        override val typeName: String = data.typeName
+        override val unsignedAttribute: Boolean = data.unsignedAttribute
+
+        override fun data(): Data = this
     }
 
-    class Data(data: TypeInfoResults) {
-        val autoIncrement: Boolean = data.autoIncrement
-        val caseSensitive: Boolean = data.caseSensitive
-        val createParams: String? = data.createParams
-        val dataType: IColumnType<*, *, *> = data.dataType
-        val fixedPrecScale: Boolean = data.fixedPrecScale
-        val literalPrefix: String? = data.literalPrefix
-        val literalSuffix: String? = data.literalSuffix
-        val localTypeName: String = data.localTypeName
-        val maximumScale: Short = data.maximumScale
-        val minimumScale: Short = data.minimumScale
-        val nullable: Nullable = data.nullable
-        val numPrecRadix: Int = data.numPrecRadix
-        val precision: Int = data.precision
-        val searchable: Searchable = data.searchable
-        val typeName: String = data.typeName
-        val unsignedAttribute: Boolean = data.unsignedAttribute
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(r: ResultSet): ResultSetWrapper<TypeInfoResults, Data> = TypeInfoResultsImpl(r)
     }
 }

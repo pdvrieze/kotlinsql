@@ -18,10 +18,22 @@
  * under the License.
  */
 
-package io.github.pdvrieze.kotlinsql.monadic.actions
+package io.github.pdvrieze.kotlinsql.metadata.impl
 
-import io.github.pdvrieze.kotlinsql.ddl.Database
-import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.metadata.VersionColumnsResult
+import java.sql.ResultSet
 
-interface ResultSetMetadataAction<DB : Database, Row : ResultSetRow<*>> :
-    ResultSetWrapperProducingAction<DB, Row>
+@OptIn(UnmanagedSql::class)
+@Suppress("unused")
+internal class VersionColumnsResultImpl @UnmanagedSql constructor(rs: ResultSet) :
+    BaseRowResultImpl<VersionColumnsResult, VersionColumnsResult.Data>(rs),
+    VersionColumnsResult {
+
+    private val idxBufferSize by lazyColIdx("BUFFER_LENGTH")
+
+    override val bufferSize: Int get() = resultSet.getInt(idxBufferSize)
+
+    @OptIn(ExperimentalStdlibApi::class)
+    override fun toList(): List<VersionColumnsResult.Data> = toListImpl { VersionColumnsResult.Data(it) }
+}

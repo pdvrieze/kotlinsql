@@ -21,15 +21,48 @@
 package io.github.pdvrieze.kotlinsql.dml
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.metadata.WrappedResultSetMetaData
+import io.github.pdvrieze.kotlinsql.metadata.values.FetchDirection
+import io.github.pdvrieze.kotlinsql.util.Holdability
+import java.io.Closeable
+import java.sql.ResultSetMetaData
+import java.sql.SQLWarning
 
-interface ResultSetWrapper<R: ResultSetRow> {
-    @UnmanagedSql
-    fun next(): Boolean
+interface ResultSetWrapper<R: ResultSetRow<D>, D>: Closeable {
 
+    val currentRow: Int
+
+    val fetchSize: Int
+    val holdability: Holdability
+
+    val isAfterLast: Boolean
+    val isBeforeFirst: Boolean
     val isFirst: Boolean
     val isLast: Boolean
 
     val rowData: R
-    val isBeforeFirst: Boolean
-    val isAfterLast: Boolean
+    val concurrency: Int
+    val metaData: WrappedResultSetMetaData
+
+    val fetchDirection: FetchDirection
+
+    @UnmanagedSql
+    fun beforeFirst()
+
+    @UnmanagedSql
+    fun first(): Boolean
+
+    @UnmanagedSql
+    fun last(): Boolean
+
+    @UnmanagedSql
+    fun next(): Boolean
+
+    @UnmanagedSql
+    fun previous(): Boolean
+
+    fun getWarnings(): List<SQLWarning>
+
+    fun toList(): List<D>
+
 }

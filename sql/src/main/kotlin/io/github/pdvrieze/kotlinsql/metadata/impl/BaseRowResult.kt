@@ -20,10 +20,33 @@
 
 package io.github.pdvrieze.kotlinsql.metadata.impl
 
-interface TableColumnResultBase<D: TableColumnResultBase.Data<D>>: TableMetaResultBase<D> {
-    val columnName: String
+import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
 
-    abstract class Data<D: Data<D>>(data: TableColumnResultBase<*>): TableMetaResultBase.Data<D>(data), TableColumnResultBase<D> {
-        override val columnName: String = data.columnName
+interface BaseRowResult<D: BaseRowResult.Data<D>>: ResultSetRow<D> {
+
+    val columnName: String
+    val dataType: String
+    val typeName: String
+    val precision: String
+
+    @Deprecated("Use precision as the column name, this is an alias", ReplaceWith("precision"))
+    val columnSize: String get() = precision
+    val decimalDigits: Short
+    val pseudoColumn: PseudoColumn
+
+    enum class PseudoColumn {
+        BESTROWUNKNOWN,
+        BESTROWNOTPSEUDO,
+        BESTROWPSEUDO
     }
+
+    abstract class Data<D: Data<D>>(data: BaseRowResult<*>): BaseRowResult<D> {
+        override val columnName: String = data.columnName
+        override val dataType: String = data.dataType
+        override val typeName: String = data.typeName
+        override val precision: String = data.precision
+        override val decimalDigits: Short = data.decimalDigits
+        override val pseudoColumn: PseudoColumn = data.pseudoColumn
+    }
+
 }

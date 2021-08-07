@@ -21,32 +21,32 @@
 package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import io.github.pdvrieze.kotlinsql.metadata.impl.SchemaResultsImpl
 import java.sql.ResultSet
 
-@OptIn(UnmanagedSql::class)
-open class SchemaResultsBase<R: SchemaResultsBase<R>>
-    @UnmanagedSql
-    constructor(rs: ResultSet) : AbstractMetadataResultSet<R>(rs) {
-    private val idxTableCat by lazyColIdx("TABLE_CAT")
-    private val idxTableSchem by lazyColIdx("TABLE_SCHEM")
+interface SchemaResults: SchemaResultsBase<SchemaResults.Data> {
 
-    val tableCatalog: String? get() = resultSet.getString(idxTableCat)
-    val tableScheme: String? get() = resultSet.getString(idxTableSchem)
+    override fun data(): Data = Data(this)
 
-    @OptIn(ExperimentalStdlibApi::class)
-    open fun toList(): List<SchemaResults.Data> {
-        return buildList {
-            while (next()) { add(SchemaResults.Data(this@SchemaResultsBase)) }
-        }
+    class Data(data: SchemaResultsBase<*>): SchemaResultsBase.Data<Data>(data), SchemaResults {
+        override fun data(): Data = this
     }
+
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(r: ResultSet): ResultSetWrapper<SchemaResults, Data> = SchemaResultsImpl(r)
+    }
+
 }
 
-@OptIn(UnmanagedSql::class)
-class SchemaResults constructor(rs: ResultSet): SchemaResultsBase<SchemaResults>(rs) {
+interface SchemaResultsBase<D: SchemaResultsBase.Data<D>>: ResultSetRow<D> {
+    val tableCatalog: String?
+    val tableScheme: String?
 
-    open class Data(data: SchemaResultsBase<*>) {
-        val tableCatalog: String? = data.tableCatalog
-        val tableScheme: String? = data.tableScheme
+    abstract class Data<D: Data<D>>(data: SchemaResultsBase<*>): SchemaResultsBase<D> {
+        override val tableCatalog: String? = data.tableCatalog
+        override val tableScheme: String? = data.tableScheme
     }
-
 }

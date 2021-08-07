@@ -21,38 +21,32 @@
 package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import io.github.pdvrieze.kotlinsql.metadata.impl.AttributeResultsImpl
+import io.github.pdvrieze.kotlinsql.metadata.impl.ColumnPrivilegesResultImpl
 import io.github.pdvrieze.kotlinsql.metadata.impl.TableColumnResultBase
+import io.github.pdvrieze.kotlinsql.metadata.impl.TableColumnResultBaseImpl
 import java.sql.ResultSet
 
-@OptIn(UnmanagedSql::class)
-@Suppress("unused")
-class ColumnPrivilegesResult
-@UnmanagedSql
-constructor(privileges: ResultSet) : TableColumnResultBase<ColumnPrivilegesResult>(privileges) {
+interface ColumnPrivilegesResult: TableColumnResultBase<ColumnPrivilegesResult.Data> {
+    val grantor: String?
+    val grantee: String
+    val privilege: String
+    val isGrantable: Boolean?
 
-    private val idxGrantee: Int by lazyColIdx("GRANTEE")
-    private val idxGrantor: Int by lazyColIdx("GRANTOR")
-    private val idxPrivilege: Int by lazyColIdx("PRIVILEGE")
+    override fun data(): Data = Data(this)
 
-    val grantor:String? get() = resultSet.getString(idxGrantor)
-    val grantee: String get() = resultSet.getString(idxGrantee)
-    val privilege:String get() = resultSet.getString(idxPrivilege)
+    class Data(data: ColumnPrivilegesResult): TableColumnResultBase.Data<Data>(data), ColumnPrivilegesResult {
+        override val grantor: String? = data.grantor
+        override val grantee: String = data.grantee
+        override val privilege: String = data.privilege
+        override val isGrantable:Boolean? = data.isGrantable
 
-    private val idxIsGrantable: Int by lazyColIdx("IS_GRANTABLE")
-
-    val isGrantable
-        get():Boolean? = resultSet.getString(
-            idxIsGrantable)?.let { if (it == "YES") true else if (it == "NO") false else null }
-
-    @OptIn(ExperimentalStdlibApi::class)
-    override fun toList(): List<Data> = buildList {
-        while(next()) add(Data(this@ColumnPrivilegesResult))
+        override fun data(): Data = this
     }
 
-    class Data(data: ColumnPrivilegesResult): TableColumnResultBase.Data(data) {
-        val grantor:String? = data.grantor
-        val grantee: String = data.grantee
-        val privilege:String = data.privilege
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(r: ResultSet): ResultSetWrapper<ColumnPrivilegesResult, Data> = ColumnPrivilegesResultImpl(r)
     }
-
 }

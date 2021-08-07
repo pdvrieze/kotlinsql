@@ -21,9 +21,7 @@
 package io.github.pdvrieze.kotlinsql.direct
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
-import io.github.pdvrieze.kotlinsql.direct.use
 import io.github.pdvrieze.kotlinsql.metadata.*
-import io.github.pdvrieze.kotlinsql.metadata.impl.TableMetaResultBase
 import java.sql.DatabaseMetaData
 import java.sql.ResultSet
 import java.sql.RowIdLifetime
@@ -45,8 +43,8 @@ constructor(private val metadata: DatabaseMetaData) {
         schemaPattern: String?,
         typeNamePattern: String?,
         attributeNamePattern: String?,
-    ): AttributeResults {
-        return AttributeResults(metadata.getAttributes(catalog, schemaPattern, typeNamePattern, attributeNamePattern))
+    ): List<AttributeResults.Data> {
+        return AttributeResults(metadata.getAttributes(catalog, schemaPattern, typeNamePattern, attributeNamePattern)).toList()
     }
 
     val supportsSubqueriesInQuantifieds: Boolean get() = metadata.supportsSubqueriesInQuantifieds()
@@ -337,7 +335,7 @@ constructor(private val metadata: DatabaseMetaData) {
         schemaPattern: String? = null,
         tableNamePattern: String? = null,
         types: Array<String>? = null,
-    ): List<TableMetaResultBase.Data> {
+    ): List<TableMetadataResults.Data> {
         @OptIn(UnmanagedSql::class)
         return metadata.getTables(catalog, schemaPattern, tableNamePattern, types)
             .use { rs -> TableMetadataResults(rs).toList() }
@@ -376,7 +374,7 @@ constructor(private val metadata: DatabaseMetaData) {
         catalog: String,
         schemaPattern: String,
         tableNamePattern: String,
-    ): List<TableMetaResultBase.Data> {
+    ): List<TablePrivilegesResult.Data> {
         @OptIn(UnmanagedSql::class)
         return metadata.getTablePrivileges(catalog, schemaPattern, tableNamePattern)
             .use { rs -> TablePrivilegesResult(rs).toList() }
@@ -400,7 +398,7 @@ constructor(private val metadata: DatabaseMetaData) {
             .use { rs -> VersionColumnsResult(rs).toList() }
     }
 
-    fun getPrimaryKeys(catalog: String, schema: String, table: String): List<TableMetaResultBase.Data> {
+    fun getPrimaryKeys(catalog: String, schema: String, table: String): List<PrimaryKeyResults.Data> {
         @OptIn(UnmanagedSql::class)
         return metadata.getPrimaryKeys(catalog, schema, table)
             .use { rs -> PrimaryKeyResults(rs).toList() }

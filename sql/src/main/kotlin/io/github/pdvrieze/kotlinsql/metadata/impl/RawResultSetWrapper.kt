@@ -21,11 +21,29 @@
 package io.github.pdvrieze.kotlinsql.metadata.impl
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
-import io.github.pdvrieze.kotlinsql.metadata.*
+import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import java.lang.UnsupportedOperationException
 import java.sql.ResultSet
 
+interface RawResultSetWrapper: ResultSetRow<Nothing> {
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(resultSet: ResultSet): ResultSetWrapper<RawResultSetWrapper, Nothing> {
+            return RawResultSetWrapperImpl(resultSet)
+        }
+    }
+}
+
 @OptIn(UnmanagedSql::class)
-class RawResultSetWrapper
-@UnmanagedSql
-constructor(resultSet: ResultSet) : AbstractMetadataResultSet<RawResultSetWrapper>(resultSet)
+internal class RawResultSetWrapperImpl @UnmanagedSql constructor(resultSet: ResultSet) :
+    AbstractMetadataResultSet<RawResultSetWrapper, Nothing>(resultSet),
+    RawResultSetWrapper {
+
+    override fun data(): Nothing = throw UnsupportedOperationException("Raw result sets are not saved as data")
+
+    override fun toList(): Nothing {
+        throw UnsupportedOperationException("Raw result sets are not saved as data")
+    }
+}
 

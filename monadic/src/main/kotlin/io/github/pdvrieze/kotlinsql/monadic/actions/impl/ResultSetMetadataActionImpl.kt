@@ -23,34 +23,20 @@ package io.github.pdvrieze.kotlinsql.monadic.actions.impl
 import io.github.pdvrieze.kotlinsql.ddl.Database
 import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
 import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
-import io.github.pdvrieze.kotlinsql.metadata.AbstractMetadataResultSet
 import io.github.pdvrieze.kotlinsql.monadic.MonadicDBConnection
 import io.github.pdvrieze.kotlinsql.monadic.SafeDatabaseMetaData
 import io.github.pdvrieze.kotlinsql.monadic.actions.ResultSetMetadataAction
 
-internal class ResultSetMetadataActionImpl<DB : Database, Row : ResultSetRow>
-internal constructor(private val provider: (SafeDatabaseMetaData) -> AbstractMetadataResultSet<Row>) :
-    ResultSetWrapperProducingActionImpl<DB, AbstractMetadataResultSet<Row>, Row>({ close() }),
+internal class ResultSetMetadataActionImpl<DB : Database, Row : ResultSetRow<*>>
+internal constructor(private val provider: (SafeDatabaseMetaData) -> ResultSetWrapper<Row, *>) :
+    ResultSetWrapperProducingActionImpl<DB, ResultSetWrapper<Row, *>, Row>({ close() }),
     ResultSetMetadataAction<DB, Row> {
 
-    override fun getCloseableResource(connection: MonadicDBConnection<DB>): AbstractMetadataResultSet<Row> {
+    override fun getCloseableResource(connection: MonadicDBConnection<DB>): ResultSetWrapper<Row, *> {
         return provider(SafeDatabaseMetaData(connection.rawConnection.metaData))
     }
 
-    override fun wrapResultSet(initResult: AbstractMetadataResultSet<Row>): ResultSetWrapper<Row> {
+    override fun wrapResultSet(initResult: ResultSetWrapper<Row, *>): ResultSetWrapper<Row, *> {
         return initResult
     }
-
-/*
-    @OptIn(UnmanagedSql::class)
-    fun eval(connection: MonadicDBConnection<DB>): RS {
-        val metadata = SafeDatabaseMetaData(connection.rawConnection.metaData)
-        val resultSetWrapper = provider(metadata)
-        try {
-            return block(resultSetWrapper)
-        } finally {
-            resultSetWrapper.close()
-        }
-    }
-*/
 }

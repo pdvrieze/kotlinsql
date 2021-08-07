@@ -21,55 +21,42 @@
 package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import io.github.pdvrieze.kotlinsql.metadata.impl.ColumnsResultsImpl
 import java.sql.ResultSet
 
-@Suppress("unused")
-@OptIn(UnmanagedSql::class)
-class ColumnsResults
-@UnmanagedSql
-constructor(rs: ResultSet) : DataResults<ColumnsResults>(rs) {
-    public override fun data(): Data = Data(this)
+interface ColumnsResults: DataResults<ColumnsResults.Data> {
+    val columnDefault: String?
+    val columnName: String
+    val columnSize: Int
+    val decimalDigits: Int
+    val isAutoIncrement: Boolean?
+    val isGeneratedColumn: Boolean?
+    val numPrecRadix: Int
+    val tableCatalog: String?
+    val tableName: String
+    val tableScheme: String?
 
-    //TableMetaResultBase
-    private val idxColumnDef by lazyColIdx("COLUMN_DEF")
-    private val idxColumnName by lazyColIdx("COLUMN_NAME")
-    private val idxColumnSize by lazyColIdx("COLUMN_SIZE")
-    private val idxDecimalDigits by lazyColIdx("DECIMAL_DIGITS")
-    private val idxIsAutoIncrement by lazyColIdx("IS_AUTOINCREMENT")
-    private val idxIsGeneratedColumn by lazyColIdx("IS_GENERATEDCOLUMN")
-    private val idxNumPrecRadix by lazyColIdx("NUM_PREC_RADIX")
-    private val idxTableCat by lazyColIdx("TABLE_CAT")
-    private val idxTableName by lazyColIdx("TABLE_NAME")
-    private val idxTableSchem by lazyColIdx("TABLE_SCHEM")
+    override fun data(): Data = Data(this)
 
-    val columnDefault: String? get() = resultSet.getString(idxColumnDef)
-    val columnName: String get() = resultSet.getString(idxColumnName)
-    val columnSize: Int get() = resultSet.getInt(idxColumnSize)
-    val decimalDigits: Int get() = resultSet.getInt(idxDecimalDigits)
-    val isAutoIncrement: Boolean? get() = resultSet.optionalBoolean(idxIsAutoIncrement)
-    val isGeneratedColumn: Boolean? get() = resultSet.optionalBoolean(idxIsGeneratedColumn)
-    val numPrecRadix: Int get() = resultSet.getInt(idxNumPrecRadix)
-    val tableCatalog: String? get() = resultSet.getString(idxTableCat)
-    val tableName: String get() = resultSet.getString(idxTableName)
-    val tableScheme: String? get() = resultSet.getString(idxTableSchem)
+    class Data(result: ColumnsResults): DataResults.Data<Data>(result), ColumnsResults {
+        override val columnDefault: String? = result.columnDefault
+        override val columnName: String = result.columnName
+        override val columnSize: Int = result.columnSize
+        override val decimalDigits: Int = result.decimalDigits
+        override val isAutoIncrement: Boolean? = result.isAutoIncrement
+        override val isGeneratedColumn: Boolean? = result.isGeneratedColumn
+        override val numPrecRadix: Int = result.numPrecRadix
+        override val tableCatalog: String? = result.tableCatalog
+        override val tableName: String = result.tableName
+        override val tableScheme: String? = result.tableScheme
 
-    @OptIn(ExperimentalStdlibApi::class)
-    fun toList(): List<Data> = buildList {
-        while(next()) add(Data(this@ColumnsResults))
+        override fun data(): Data = this
     }
 
-    class Data(result: ColumnsResults): DataResults.Data(result) {
-        val columnDefault: String? = result.columnDefault
-        val columnName: String = result.columnName
-        val columnSize: Int = result.columnSize
-        val decimalDigits: Int = result.decimalDigits
-        val isAutoIncrement: Boolean? = result.isAutoIncrement
-        val isGeneratedColumn: Boolean? = result.isGeneratedColumn
-        val numPrecRadix: Int = result.numPrecRadix
-        val tableCatalog: String? = result.tableCatalog
-        val tableName: String = result.tableName
-        val tableScheme: String? = result.tableScheme
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(r: ResultSet): ResultSetWrapper<ColumnsResults, Data> = ColumnsResultsImpl(r)
     }
-
-
 }
+

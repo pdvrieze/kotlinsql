@@ -20,5 +20,6 @@
 
 package io.github.pdvrieze.kotlinsql.dml
 
-interface ResultSetRow {
+interface ResultSetRow<out D> {
+    fun data(): D
 }

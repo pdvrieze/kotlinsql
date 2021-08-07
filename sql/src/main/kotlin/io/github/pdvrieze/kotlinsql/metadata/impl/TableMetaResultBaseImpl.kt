@@ -18,10 +18,17 @@
  * under the License.
  */
 
-package io.github.pdvrieze.kotlinsql.monadic.actions
+package io.github.pdvrieze.kotlinsql.metadata.impl
 
-import io.github.pdvrieze.kotlinsql.ddl.Database
-import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import java.sql.ResultSet
 
-interface ResultSetMetadataAction<DB : Database, Row : ResultSetRow<*>> :
-    ResultSetWrapperProducingAction<DB, Row>
+@OptIn(UnmanagedSql::class)
+internal abstract class TableMetaResultBaseImpl<R: TableMetaResultBase<D>, D: TableMetaResultBase.Data<D>>
+    @UnmanagedSql
+    constructor(rs: ResultSet) : SchemaResultsBaseImpl<R, D>(rs), TableMetaResultBase<D> {
+
+    private val idxTableName by lazyColIdx("TABLE_NAME")
+
+    override val tableName: String get() = resultSet.getString(idxTableName)
+}

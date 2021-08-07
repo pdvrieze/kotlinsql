@@ -18,10 +18,16 @@
  * under the License.
  */
 
-package io.github.pdvrieze.kotlinsql.monadic.actions
+package io.github.pdvrieze.kotlinsql.metadata.impl
 
-import io.github.pdvrieze.kotlinsql.ddl.Database
-import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.metadata.SchemaResults
+import java.sql.ResultSet
 
-interface ResultSetMetadataAction<DB : Database, Row : ResultSetRow<*>> :
-    ResultSetWrapperProducingAction<DB, Row>
+@OptIn(UnmanagedSql::class)
+internal class SchemaResultsImpl constructor(rs: ResultSet):
+    SchemaResultsBaseImpl<SchemaResults, SchemaResults.Data>(rs),
+    SchemaResults {
+
+    override fun toList(): List<SchemaResults.Data> = toListImpl { SchemaResults.Data(it) }
+}

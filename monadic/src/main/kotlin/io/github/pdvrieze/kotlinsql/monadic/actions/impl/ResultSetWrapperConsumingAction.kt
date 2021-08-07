@@ -25,13 +25,14 @@ import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
 import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
 import io.github.pdvrieze.kotlinsql.monadic.MonadicDBConnection
 
-internal class ResultSetWrapperConsumingAction<DB : Database, M, RS : ResultSetRow, O>(
+internal class ResultSetWrapperConsumingAction<DB : Database, M, RS : ResultSetRow<D>, D, O>(
     val input: ResultSetWrapperProducingActionImpl<DB, M, RS>,
     val close: M.() -> Unit,
-    val transform: (ResultSetWrapper<RS>) -> O,
+    val transform: (ResultSetWrapper<RS, D>) -> O,
 ) : DBActionImpl<DB, M, O>() {
     override fun doEval(connection: MonadicDBConnection<DB>, initResult: M): O {
-        val wrapper = input.wrapResultSet(initResult)
+        @Suppress("UNCHECKED_CAST")
+        val wrapper = input.wrapResultSet(initResult) as ResultSetWrapper<RS, D>
         return transform(wrapper)
     }
 

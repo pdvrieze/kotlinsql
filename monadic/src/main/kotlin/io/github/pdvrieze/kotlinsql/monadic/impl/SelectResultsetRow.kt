@@ -26,9 +26,24 @@ import io.github.pdvrieze.kotlinsql.ddl.IColumnType
 import io.github.pdvrieze.kotlinsql.dml.ResultSetRow
 import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
 import io.github.pdvrieze.kotlinsql.dml.SelectStatement
+import io.github.pdvrieze.kotlinsql.metadata.WrappedResultSetMetaData
+import io.github.pdvrieze.kotlinsql.metadata.values.FetchDirection
+import io.github.pdvrieze.kotlinsql.util.Holdability
+import io.github.pdvrieze.kotlinsql.util.WarningIterator
 import java.sql.ResultSet
+import java.sql.SQLWarning
 
-class SelectResultsetRow<S: SelectStatement>(val rawResultSet: ResultSet, val select: S): ResultSetWrapper<SelectResultsetRow<S>>, ResultSetRow {
+class SelectResultsetRow<S: SelectStatement>(val rawResultSet: ResultSet, val select: S):
+    ResultSetWrapper<SelectResultsetRow<S>, Nothing>,
+    ResultSetRow<Nothing> {
+
+    override val currentRow: Int get() = rawResultSet.row
+    override val concurrency: Int get() = rawResultSet.concurrency
+    override val fetchSize: Int get() = rawResultSet.fetchSize
+    override val holdability: Holdability get() = Holdability.fromJdbc(rawResultSet.holdability)
+    override val metaData: WrappedResultSetMetaData get() = WrappedResultSetMetaData(rawResultSet.metaData)
+    override val fetchDirection: FetchDirection get() = FetchDirection.fromJdbc(rawResultSet.fetchDirection)
+
     override val rowData: SelectResultsetRow<S> get() = this
 
     override val isBeforeFirst: Boolean get() = rawResultSet.isBeforeFirst
@@ -36,10 +51,38 @@ class SelectResultsetRow<S: SelectStatement>(val rawResultSet: ResultSet, val se
     override val isLast: Boolean get() = rawResultSet.isLast
     override val isAfterLast: Boolean get() = rawResultSet.isAfterLast
 
-    fun <T: Any, S: IColumnType<T, S, C>, C: Column<T, S, C>> value(column: C, pos: Int): T? {
-        return column.type.fromResultSet(rawResultSet, pos)
+    @UnmanagedSql
+    override fun beforeFirst() = rawResultSet.beforeFirst()
+
+    override fun close() {
+        rawResultSet.close()
+    }
+
+    override fun data(): Nothing {
+        throw UnsupportedOperationException("Select resultsets have no row data")
     }
 
     @UnmanagedSql
+    override fun first(): Boolean = rawResultSet.first()
+
+    override fun getWarnings(): List<SQLWarning> {
+        return WarningIterator(rawResultSet.warnings).asSequence().toList()
+    }
+
+    @UnmanagedSql
+    override fun last(): Boolean = rawResultSet.last()
+
+    @UnmanagedSql
     override fun next(): Boolean = rawResultSet.next()
+
+    @UnmanagedSql
+    override fun previous(): Boolean = rawResultSet.previous()
+
+    override fun toList(): Nothing {
+        throw UnsupportedOperationException("")
+    }
+
+    fun <T: Any, S: IColumnType<T, S, C>, C: Column<T, S, C>> value(column: C, pos: Int): T? {
+        return column.type.fromResultSet(rawResultSet, pos)
+    }
 }

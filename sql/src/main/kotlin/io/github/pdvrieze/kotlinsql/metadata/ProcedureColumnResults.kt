@@ -21,55 +21,45 @@
 package io.github.pdvrieze.kotlinsql.metadata
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
+import io.github.pdvrieze.kotlinsql.dml.ResultSetWrapper
+import io.github.pdvrieze.kotlinsql.metadata.impl.KeysResultImpl
+import io.github.pdvrieze.kotlinsql.metadata.impl.ProcedureColumnResultsImpl
 import java.sql.ResultSet
 
-@Suppress("unused")
-@OptIn(UnmanagedSql::class)
-class ProcedureColumnResults
-@UnmanagedSql
-constructor(rs: ResultSet) : DataResults<ProcedureColumnResults>(rs) {
-    private val idxColumnDef by lazyColIdx("COLUMN_DEF")
-    private val idxColumnName by lazyColIdx("COLUMN_NAME")
-    private val idxColumnType by lazyColIdx("COLUMN_TYPE")
-    private val idxLength by lazyColIdx("LENGTH")
-    private val idxPrecision by lazyColIdx("PRECISION")
-    private val idxProcedureCat by lazyColIdx("PROCEDURE_CAT")
-    private val idxProcedureName by lazyColIdx("PROCEDURE_NAME")
-    private val idxProcedureSchem by lazyColIdx("PROCEDURE_SCHEM")
-    private val idxRadix by lazyColIdx("RADIX")
-    private val idxScale by lazyColIdx("SCALE")
-    private val idxSpecificName by lazyColIdx("SPECIFIC_NAME")
+interface ProcedureColumnResults: DataResults<ProcedureColumnResults.Data> {
+    val columnDef: String?
+    val columnName: String
+    val columnType: String
+    val length: Int
+    val precision: Int
+    val procedureCatalog: String?
+    val procedureName: String
+    val procedureScheme: String?
+    val radix: Short
+    val scale: Short?
+    val specificName: String
 
-    val columnDef: String? get() = resultSet.getString(idxColumnDef)
-    val columnName: String get() = resultSet.getString(idxColumnName)
-    val columnType: String get() = resultSet.getString(idxColumnType)
-    val length: Int get() = resultSet.getInt(idxLength)
-    val precision: Int get() = resultSet.getInt(idxPrecision)
-    val procedureCatalog: String? get() = resultSet.getString(idxProcedureCat)
-    val procedureName: String get() = resultSet.getString(idxProcedureName)
-    val procedureScheme: String? get() = resultSet.getString(idxProcedureSchem)
-    val radix: Short get() = resultSet.getShort(idxRadix)
-    val scale: Short? get() = resultSet.getShort(idxScale).let { result -> if (resultSet.wasNull()) null else result }
-    val specificName: String get() = resultSet.getString(idxSpecificName)
+    override fun data(): Data = Data(this)
 
-    public override fun data(): Data = Data(this)
+    class Data(result: ProcedureColumnResults) : DataResults.Data<Data>(result), ProcedureColumnResults {
+        override val columnDef: String? = result.columnDef
+        override val columnName: String = result.columnName
+        override val columnType: String = result.columnType
+        override val length: Int = result.length
+        override val precision: Int = result.precision
+        override val procedureCatalog: String? = result.procedureCatalog
+        override val procedureName: String = result.procedureName
+        override val procedureScheme: String? = result.procedureScheme
+        override val radix: Short = result.radix
+        override val scale: Short? = result.scale
+        override val specificName: String = result.specificName
 
-    @OptIn(ExperimentalStdlibApi::class)
-    fun toList(): List<Data> = buildList {
-        while(next()) add(Data(this@ProcedureColumnResults))
+        override fun data(): Data = this
     }
 
-    class Data(result: ProcedureColumnResults) : DataResults.Data(result) {
-        val columnDef: String? = result.columnDef
-        val columnName: String = result.columnName
-        val columnType: String = result.columnType
-        val length: Int = result.length
-        val precision: Int = result.precision
-        val procedureCatalog: String? = result.procedureCatalog
-        val procedureName: String = result.procedureName
-        val procedureScheme: String? = result.procedureScheme
-        val radix: Short = result.radix
-        val scale: Short? = result.scale
-        val specificName: String = result.specificName
+    companion object {
+        @UnmanagedSql
+        operator fun invoke(r: ResultSet): ResultSetWrapper<ProcedureColumnResults, Data> = ProcedureColumnResultsImpl(r)
     }
+
 }
