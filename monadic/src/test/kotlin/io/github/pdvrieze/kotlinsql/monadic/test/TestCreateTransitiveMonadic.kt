@@ -25,6 +25,7 @@ import io.github.pdvrieze.jdbc.recorder.RecordingConnection.RecordingPreparedSta
 import io.github.pdvrieze.jdbc.recorder.actions.*
 import io.github.pdvrieze.kotlinsql.direct.test.users
 import io.github.pdvrieze.kotlinsql.monadic.*
+import io.github.pdvrieze.kotlinsql.monadic.actions.transform
 import io.github.pdvrieze.kotlinsql.monadic.invoke
 import io.github.pdvrieze.kotlinsql.test.helpers.DummyConnection
 import io.github.pdvrieze.kotlinsql.test.helpers.DummyConnection.DummyPreparedStatement

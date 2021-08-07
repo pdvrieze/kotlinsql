@@ -25,304 +25,303 @@ import io.github.pdvrieze.kotlinsql.ddl.Database
 import io.github.pdvrieze.kotlinsql.metadata.*
 import io.github.pdvrieze.kotlinsql.metadata.impl.RawResultSetWrapper
 import io.github.pdvrieze.kotlinsql.monadic.MonadicMetadata
-import io.github.pdvrieze.kotlinsql.monadic.ResultSetMetadataAction
-import io.github.pdvrieze.kotlinsql.monadic.ResultSetMetadataActionImpl
-import io.github.pdvrieze.kotlinsql.monadic.ValueMetadataAction
+import io.github.pdvrieze.kotlinsql.monadic.actions.*
+import io.github.pdvrieze.kotlinsql.monadic.actions.impl.*
 import java.sql.RowIdLifetime
 
 internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
 
     override val maxColumnsInIndex: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxColumnsInIndex }
+        get() = ValueMetadataActionImpl { it.maxColumnsInIndex }
     override val supportsSubqueriesInQuantifieds: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsSubqueriesInQuantifieds }
+        get() = ValueMetadataActionImpl { it.supportsSubqueriesInQuantifieds }
     override val supportsIntegrityEnhancementFacility: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsIntegrityEnhancementFacility }
+        get() = ValueMetadataActionImpl { it.supportsIntegrityEnhancementFacility }
     override val supportsGetGeneratedKeys: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsGetGeneratedKeys }
+        get() = ValueMetadataActionImpl { it.supportsGetGeneratedKeys }
     override val supportsCoreSQLGrammar: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsCoreSQLGrammar }
+        get() = ValueMetadataActionImpl { it.supportsCoreSQLGrammar }
     override val supportsDataDefinitionAndDataManipulationTransactions: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsDataDefinitionAndDataManipulationTransactions }
+        get() = ValueMetadataActionImpl { it.supportsDataDefinitionAndDataManipulationTransactions }
     override val supportsCatalogsInTableDefinitions: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsCatalogsInTableDefinitions }
+        get() = ValueMetadataActionImpl { it.supportsCatalogsInTableDefinitions }
     override val supportsOpenStatementsAcrossRollback: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsOpenStatementsAcrossRollback }
+        get() = ValueMetadataActionImpl { it.supportsOpenStatementsAcrossRollback }
     override val supportsStoredFunctionsUsingCallSyntax: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsStoredFunctionsUsingCallSyntax }
+        get() = ValueMetadataActionImpl { it.supportsStoredFunctionsUsingCallSyntax }
     override val databaseProductName: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.databaseProductName }
+        get() = ValueMetadataActionImpl { it.databaseProductName }
     override val databaseProductVersion: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.databaseProductVersion }
+        get() = ValueMetadataActionImpl { it.databaseProductVersion }
     override val getJDBCMajorVersion: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.getJDBCMajorVersion }
+        get() = ValueMetadataActionImpl { it.getJDBCMajorVersion }
     override val maxProcedureNameLength: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxProcedureNameLength }
+        get() = ValueMetadataActionImpl { it.maxProcedureNameLength }
     override val getCatalogTerm: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.getCatalogTerm }
+        get() = ValueMetadataActionImpl { it.getCatalogTerm }
     override val supportsCatalogsInDataManipulation: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsCatalogsInDataManipulation }
+        get() = ValueMetadataActionImpl { it.supportsCatalogsInDataManipulation }
     override val getMaxUserNameLength: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.getMaxUserNameLength }
+        get() = ValueMetadataActionImpl { it.getMaxUserNameLength }
     override val timeDateFunctions: ValueMetadataAction<DB, List<String>>
-        get() = ValueMetadataAction<DB, List<String>> { it.timeDateFunctions }
+        get() = ValueMetadataActionImpl { it.timeDateFunctions }
     override val autoCommitFailureClosesAllResultSets: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.autoCommitFailureClosesAllResultSets }
+        get() = ValueMetadataActionImpl { it.autoCommitFailureClosesAllResultSets }
     override val getMaxColumnsInSelect: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.getMaxColumnsInSelect }
+        get() = ValueMetadataActionImpl { it.getMaxColumnsInSelect }
     override val catalogs: ValueMetadataAction<DB, List<String>>
-        get() = ValueMetadataAction<DB, List<String>> { it.catalogs }
+        get() = ValueMetadataActionImpl { it.catalogs }
     override val storesLowerCaseQuotedIdentifiers: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.storesLowerCaseQuotedIdentifiers }
+        get() = ValueMetadataActionImpl { it.storesLowerCaseQuotedIdentifiers }
     override val getMaxColumnsInOrderBy: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.getMaxColumnsInOrderBy }
+        get() = ValueMetadataActionImpl { it.getMaxColumnsInOrderBy }
     override val getDriverMinorVersion: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.getDriverMinorVersion }
+        get() = ValueMetadataActionImpl { it.getDriverMinorVersion }
     override val allProceduresAreCallable: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.allProceduresAreCallable }
+        get() = ValueMetadataActionImpl { it.allProceduresAreCallable }
     override val allTablesAreSelectable: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.allTablesAreSelectable }
+        get() = ValueMetadataActionImpl { it.allTablesAreSelectable }
     override val URL: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.URL }
+        get() = ValueMetadataActionImpl { it.URL }
     override val userName: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.userName }
+        get() = ValueMetadataActionImpl { it.userName }
     override val isReadOnly: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.isReadOnly }
+        get() = ValueMetadataActionImpl { it.isReadOnly }
     override val nullsAreSortedHigh: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.nullsAreSortedHigh }
+        get() = ValueMetadataActionImpl { it.nullsAreSortedHigh }
     override val nullsAreSortedLow: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.nullsAreSortedLow }
+        get() = ValueMetadataActionImpl { it.nullsAreSortedLow }
     override val nullsAreSortedAtStart: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.nullsAreSortedAtStart }
+        get() = ValueMetadataActionImpl { it.nullsAreSortedAtStart }
     override val nullsAreSortedAtEnd: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.nullsAreSortedAtEnd }
+        get() = ValueMetadataActionImpl { it.nullsAreSortedAtEnd }
     override val driverName: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.driverName }
+        get() = ValueMetadataActionImpl { it.driverName }
     override val driverVersion: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.driverVersion }
+        get() = ValueMetadataActionImpl { it.driverVersion }
     override val driverMajorVersion: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.driverMajorVersion }
+        get() = ValueMetadataActionImpl { it.driverMajorVersion }
     override val driverMinorVersion: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.driverMinorVersion }
+        get() = ValueMetadataActionImpl { it.driverMinorVersion }
     override val usesLocalFiles: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.usesLocalFiles }
+        get() = ValueMetadataActionImpl { it.usesLocalFiles }
     override val usesLocalFilePerTable: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.usesLocalFilePerTable }
+        get() = ValueMetadataActionImpl { it.usesLocalFilePerTable }
     override val supportsMixedCaseIdentifiers: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsMixedCaseIdentifiers }
+        get() = ValueMetadataActionImpl { it.supportsMixedCaseIdentifiers }
     override val storesUpperCaseIdentifiers: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.storesUpperCaseIdentifiers }
+        get() = ValueMetadataActionImpl { it.storesUpperCaseIdentifiers }
     override val storesLowerCaseIdentifiers: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.storesLowerCaseIdentifiers }
+        get() = ValueMetadataActionImpl { it.storesLowerCaseIdentifiers }
     override val storesMixedCaseIdentifiers: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.storesMixedCaseIdentifiers }
+        get() = ValueMetadataActionImpl { it.storesMixedCaseIdentifiers }
     override val supportsMixedCaseQuotedIdentifiers: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsMixedCaseQuotedIdentifiers }
+        get() = ValueMetadataActionImpl { it.supportsMixedCaseQuotedIdentifiers }
     override val storesUpperCaseQuotedIdentifiers: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.storesUpperCaseQuotedIdentifiers }
+        get() = ValueMetadataActionImpl { it.storesUpperCaseQuotedIdentifiers }
     override val storesMixedCaseQuotedIdentifiers: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.storesMixedCaseQuotedIdentifiers }
+        get() = ValueMetadataActionImpl { it.storesMixedCaseQuotedIdentifiers }
     override val identifierQuoteString: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.identifierQuoteString }
+        get() = ValueMetadataActionImpl { it.identifierQuoteString }
     override val SQLKeywords: ValueMetadataAction<DB, List<String>>
-        get() = ValueMetadataAction<DB, List<String>> { it.SQLKeywords }
+        get() = ValueMetadataActionImpl { it.SQLKeywords }
     override val numericFunctions: ValueMetadataAction<DB, List<String>>
-        get() = ValueMetadataAction<DB, List<String>> { it.numericFunctions }
+        get() = ValueMetadataActionImpl { it.numericFunctions }
     override val stringFunctions: ValueMetadataAction<DB, List<String>>
-        get() = ValueMetadataAction<DB, List<String>> { it.stringFunctions }
+        get() = ValueMetadataActionImpl { it.stringFunctions }
     override val systemFunctions: ValueMetadataAction<DB, List<String>>
-        get() = ValueMetadataAction<DB, List<String>> { it.systemFunctions }
+        get() = ValueMetadataActionImpl { it.systemFunctions }
     override val searchStringEscape: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.searchStringEscape }
+        get() = ValueMetadataActionImpl { it.searchStringEscape }
     override val extraNameCharacters: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.extraNameCharacters }
+        get() = ValueMetadataActionImpl { it.extraNameCharacters }
     override val supportsAlterTableWithAddColumn: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsAlterTableWithAddColumn }
+        get() = ValueMetadataActionImpl { it.supportsAlterTableWithAddColumn }
     override val supportsAlterTableWithDropColumn: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsAlterTableWithDropColumn }
+        get() = ValueMetadataActionImpl { it.supportsAlterTableWithDropColumn }
     override val supportsColumnAliasing: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsColumnAliasing }
+        get() = ValueMetadataActionImpl { it.supportsColumnAliasing }
     override val nullPlusNonNullIsNull: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.nullPlusNonNullIsNull }
+        get() = ValueMetadataActionImpl { it.nullPlusNonNullIsNull }
     override val supportsConvert: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsConvert }
+        get() = ValueMetadataActionImpl { it.supportsConvert }
     override val supportsTableCorrelationNames: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsTableCorrelationNames }
+        get() = ValueMetadataActionImpl { it.supportsTableCorrelationNames }
     override val supportsDifferentTableCorrelationNames: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsDifferentTableCorrelationNames }
+        get() = ValueMetadataActionImpl { it.supportsDifferentTableCorrelationNames }
     override val supportsExpressionsInOrderBy: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsExpressionsInOrderBy }
+        get() = ValueMetadataActionImpl { it.supportsExpressionsInOrderBy }
     override val supportsOrderByUnrelated: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsOrderByUnrelated }
+        get() = ValueMetadataActionImpl { it.supportsOrderByUnrelated }
     override val supportsGroupBy: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsGroupBy }
+        get() = ValueMetadataActionImpl { it.supportsGroupBy }
     override val supportsGroupByUnrelated: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsGroupByUnrelated }
+        get() = ValueMetadataActionImpl { it.supportsGroupByUnrelated }
     override val supportsGroupByBeyondSelect: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsGroupByBeyondSelect }
+        get() = ValueMetadataActionImpl { it.supportsGroupByBeyondSelect }
     override val supportsLikeEscapeClause: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsLikeEscapeClause }
+        get() = ValueMetadataActionImpl { it.supportsLikeEscapeClause }
     override val supportsMultipleResultSets: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsMultipleResultSets }
+        get() = ValueMetadataActionImpl { it.supportsMultipleResultSets }
     override val supportsMultipleTransactions: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsMultipleTransactions }
+        get() = ValueMetadataActionImpl { it.supportsMultipleTransactions }
     override val supportsNonNullableColumns: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsNonNullableColumns }
+        get() = ValueMetadataActionImpl { it.supportsNonNullableColumns }
     override val supportsMinimumSQLGrammar: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsMinimumSQLGrammar }
+        get() = ValueMetadataActionImpl { it.supportsMinimumSQLGrammar }
     override val supportsExtendedSQLGrammar: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsExtendedSQLGrammar }
+        get() = ValueMetadataActionImpl { it.supportsExtendedSQLGrammar }
     override val supportsANSI92EntryLevelSQL: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsANSI92EntryLevelSQL }
+        get() = ValueMetadataActionImpl { it.supportsANSI92EntryLevelSQL }
     override val supportsANSI92IntermediateSQL: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsANSI92IntermediateSQL }
+        get() = ValueMetadataActionImpl { it.supportsANSI92IntermediateSQL }
     override val supportsANSI92FullSQL: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsANSI92FullSQL }
+        get() = ValueMetadataActionImpl { it.supportsANSI92FullSQL }
     override val supportsOuterJoins: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsOuterJoins }
+        get() = ValueMetadataActionImpl { it.supportsOuterJoins }
     override val supportsFullOuterJoins: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsFullOuterJoins }
+        get() = ValueMetadataActionImpl { it.supportsFullOuterJoins }
     override val supportsLimitedOuterJoins: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsLimitedOuterJoins }
+        get() = ValueMetadataActionImpl { it.supportsLimitedOuterJoins }
     override val schemaTerm: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.schemaTerm }
+        get() = ValueMetadataActionImpl { it.schemaTerm }
     override val procedureTerm: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.procedureTerm }
+        get() = ValueMetadataActionImpl { it.procedureTerm }
     override val catalogTerm: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.catalogTerm }
+        get() = ValueMetadataActionImpl { it.catalogTerm }
     override val isCatalogAtStart: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.isCatalogAtStart }
+        get() = ValueMetadataActionImpl { it.isCatalogAtStart }
     override val catalogSeparator: ValueMetadataAction<DB, String>
-        get() = ValueMetadataAction<DB, String> { it.catalogSeparator }
+        get() = ValueMetadataActionImpl { it.catalogSeparator }
     override val supportsSchemasInDataManipulation: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsSchemasInDataManipulation }
+        get() = ValueMetadataActionImpl { it.supportsSchemasInDataManipulation }
     override val supportsSchemasInProcedureCalls: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsSchemasInProcedureCalls }
+        get() = ValueMetadataActionImpl { it.supportsSchemasInProcedureCalls }
     override val supportsSchemasInTableDefinitions: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsSchemasInTableDefinitions }
+        get() = ValueMetadataActionImpl { it.supportsSchemasInTableDefinitions }
     override val supportsSchemasInIndexDefinitions: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsSchemasInIndexDefinitions }
+        get() = ValueMetadataActionImpl { it.supportsSchemasInIndexDefinitions }
     override val supportsSchemasInPrivilegeDefinitions: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsSchemasInPrivilegeDefinitions }
+        get() = ValueMetadataActionImpl { it.supportsSchemasInPrivilegeDefinitions }
     override val supportsCatalogsInProcedureCalls: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsCatalogsInProcedureCalls }
+        get() = ValueMetadataActionImpl { it.supportsCatalogsInProcedureCalls }
     override val supportsCatalogsInIndexDefinitions: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsCatalogsInIndexDefinitions }
+        get() = ValueMetadataActionImpl { it.supportsCatalogsInIndexDefinitions }
     override val supportsCatalogsInPrivilegeDefinitions: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsCatalogsInPrivilegeDefinitions }
+        get() = ValueMetadataActionImpl { it.supportsCatalogsInPrivilegeDefinitions }
     override val supportsPositionedDelete: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsPositionedDelete }
+        get() = ValueMetadataActionImpl { it.supportsPositionedDelete }
     override val supportsPositionedUpdate: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsPositionedUpdate }
+        get() = ValueMetadataActionImpl { it.supportsPositionedUpdate }
     override val supportsSelectForUpdate: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsSelectForUpdate }
+        get() = ValueMetadataActionImpl { it.supportsSelectForUpdate }
     override val supportsStoredProcedures: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsStoredProcedures }
+        get() = ValueMetadataActionImpl { it.supportsStoredProcedures }
     override val supportsSubqueriesInComparisons: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsSubqueriesInComparisons }
+        get() = ValueMetadataActionImpl { it.supportsSubqueriesInComparisons }
     override val supportsSubqueriesInExists: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsSubqueriesInExists }
+        get() = ValueMetadataActionImpl { it.supportsSubqueriesInExists }
     override val supportsSubqueriesInIns: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsSubqueriesInIns }
+        get() = ValueMetadataActionImpl { it.supportsSubqueriesInIns }
     override val supportsCorrelatedSubqueries: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsCorrelatedSubqueries }
+        get() = ValueMetadataActionImpl { it.supportsCorrelatedSubqueries }
     override val supportsUnion: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsUnion }
+        get() = ValueMetadataActionImpl { it.supportsUnion }
     override val supportsUnionAll: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsUnionAll }
+        get() = ValueMetadataActionImpl { it.supportsUnionAll }
     override val supportsOpenCursorsAcrossCommit: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsOpenCursorsAcrossCommit }
+        get() = ValueMetadataActionImpl { it.supportsOpenCursorsAcrossCommit }
     override val supportsOpenCursorsAcrossRollback: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsOpenCursorsAcrossRollback }
+        get() = ValueMetadataActionImpl { it.supportsOpenCursorsAcrossRollback }
     override val supportsOpenStatementsAcrossCommit: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsOpenStatementsAcrossCommit }
+        get() = ValueMetadataActionImpl { it.supportsOpenStatementsAcrossCommit }
     override val maxBinaryLiteralLength: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxBinaryLiteralLength }
+        get() = ValueMetadataActionImpl { it.maxBinaryLiteralLength }
     override val maxCharLiteralLength: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxCharLiteralLength }
+        get() = ValueMetadataActionImpl { it.maxCharLiteralLength }
     override val maxColumnNameLength: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxColumnNameLength }
+        get() = ValueMetadataActionImpl { it.maxColumnNameLength }
     override val maxColumnsInGroupBy: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxColumnsInGroupBy }
+        get() = ValueMetadataActionImpl { it.maxColumnsInGroupBy }
     override val maxColumnsInOrderBy: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxColumnsInOrderBy }
+        get() = ValueMetadataActionImpl { it.maxColumnsInOrderBy }
     override val maxColumnsInSelect: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxColumnsInSelect }
+        get() = ValueMetadataActionImpl { it.maxColumnsInSelect }
     override val maxColumnsInTable: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxColumnsInTable }
+        get() = ValueMetadataActionImpl { it.maxColumnsInTable }
     override val maxConnections: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxConnections }
+        get() = ValueMetadataActionImpl { it.maxConnections }
     override val maxCursorNameLength: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxCursorNameLength }
+        get() = ValueMetadataActionImpl { it.maxCursorNameLength }
     override val maxIndexLength: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxIndexLength }
+        get() = ValueMetadataActionImpl { it.maxIndexLength }
     override val maxSchemaNameLength: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxSchemaNameLength }
+        get() = ValueMetadataActionImpl { it.maxSchemaNameLength }
     override val maxCatalogNameLength: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxCatalogNameLength }
+        get() = ValueMetadataActionImpl { it.maxCatalogNameLength }
     override val maxRowSize: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxRowSize }
+        get() = ValueMetadataActionImpl { it.maxRowSize }
     override val doesMaxRowSizeIncludeBlobs: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.doesMaxRowSizeIncludeBlobs }
+        get() = ValueMetadataActionImpl { it.doesMaxRowSizeIncludeBlobs }
     override val maxStatementLength: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxStatementLength }
+        get() = ValueMetadataActionImpl { it.maxStatementLength }
     override val maxStatements: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxStatements }
+        get() = ValueMetadataActionImpl { it.maxStatements }
     override val maxTableNameLength: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxTableNameLength }
+        get() = ValueMetadataActionImpl { it.maxTableNameLength }
     override val maxTablesInSelect: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxTablesInSelect }
+        get() = ValueMetadataActionImpl { it.maxTablesInSelect }
     override val maxUserNameLength: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.maxUserNameLength }
+        get() = ValueMetadataActionImpl { it.maxUserNameLength }
     override val defaultTransactionIsolation: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.defaultTransactionIsolation }
+        get() = ValueMetadataActionImpl { it.defaultTransactionIsolation }
     override val supportsTransactions: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsTransactions }
+        get() = ValueMetadataActionImpl { it.supportsTransactions }
     override val supportsDataManipulationTransactionsOnly: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsDataManipulationTransactionsOnly }
+        get() = ValueMetadataActionImpl { it.supportsDataManipulationTransactionsOnly }
     override val dataDefinitionCausesTransactionCommit: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.dataDefinitionCausesTransactionCommit }
+        get() = ValueMetadataActionImpl { it.dataDefinitionCausesTransactionCommit }
     override val dataDefinitionIgnoredInTransactions: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.dataDefinitionIgnoredInTransactions }
+        get() = ValueMetadataActionImpl { it.dataDefinitionIgnoredInTransactions }
 
     @OptIn(UnmanagedSql::class)
     override val schemas: ResultSetMetadataAction<DB, SchemaResults>
-        get() = ResultSetMetadataActionImpl<DB, SchemaResults> { it.schemas }
+        get() = ResultSetMetadataActionImpl { it.schemas }
     override val supportsBatchUpdates: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsBatchUpdates }
+        get() = ValueMetadataActionImpl { it.supportsBatchUpdates }
     override val supportsSavepoints: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsSavepoints }
+        get() = ValueMetadataActionImpl { it.supportsSavepoints }
     override val supportsNamedParameters: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsNamedParameters }
+        get() = ValueMetadataActionImpl { it.supportsNamedParameters }
     override val supportsMultipleOpenResults: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsMultipleOpenResults }
+        get() = ValueMetadataActionImpl { it.supportsMultipleOpenResults }
     override val resultSetHoldability: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.resultSetHoldability }
+        get() = ValueMetadataActionImpl { it.resultSetHoldability }
     override val databaseMajorVersion: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.databaseMajorVersion }
+        get() = ValueMetadataActionImpl { it.databaseMajorVersion }
     override val databaseMinorVersion: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.databaseMinorVersion }
+        get() = ValueMetadataActionImpl { it.databaseMinorVersion }
     override val JDBCMajorVersion: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.JDBCMajorVersion }
+        get() = ValueMetadataActionImpl { it.JDBCMajorVersion }
     override val JDBCMinorVersion: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.JDBCMinorVersion }
+        get() = ValueMetadataActionImpl { it.JDBCMinorVersion }
     override val SQLStateType: ValueMetadataAction<DB, Int>
-        get() = ValueMetadataAction<DB, Int> { it.SQLStateType }
+        get() = ValueMetadataActionImpl { it.SQLStateType }
     override val locatorsUpdateCopy: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.locatorsUpdateCopy }
+        get() = ValueMetadataActionImpl { it.locatorsUpdateCopy }
     override val supportsStatementPooling: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsStatementPooling }
+        get() = ValueMetadataActionImpl { it.supportsStatementPooling }
     override val rowIdLifetime: ValueMetadataAction<DB, RowIdLifetime>
-        get() = ValueMetadataAction<DB, RowIdLifetime> { it.rowIdLifetime }
+        get() = ValueMetadataActionImpl { it.rowIdLifetime }
     override val generatedKeyAlwaysReturned: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.generatedKeyAlwaysReturned }
+        get() = ValueMetadataActionImpl { it.generatedKeyAlwaysReturned }
     override val maxLogicalLobSize: ValueMetadataAction<DB, Long>
-        get() = ValueMetadataAction<DB, Long> { it.maxLogicalLobSize }
+        get() = ValueMetadataActionImpl { it.maxLogicalLobSize }
     override val supportsRefCursors: ValueMetadataAction<DB, Boolean>
-        get() = ValueMetadataAction<DB, Boolean> { it.supportsRefCursors }
+        get() = ValueMetadataActionImpl { it.supportsRefCursors }
 
     override fun insertsAreDetected(type: Int): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
+        return ValueMetadataActionImpl {
             it.insertsAreDetected(type)
         }
     }
@@ -334,7 +333,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         typeNamePattern: String?,
         attributeNamePattern: String?
     ): ResultSetMetadataActionImpl<DB, AttributeResults> {
-        return ResultSetMetadataActionImpl<DB, AttributeResults> {
+        return ResultSetMetadataActionImpl {
             it.getAttributes(
                 catalog,
                 schemaPattern,
@@ -348,14 +347,13 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         fromType: Int,
         toType: Int
     ): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
-            it.supportsConvert(fromType,
-                               toType)
+        return ValueMetadataActionImpl {
+            it.supportsConvert(fromType, toType)
         }
     }
 
     override fun supportsTransactionIsolationLevel(level: Int): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
+        return ValueMetadataActionImpl {
             it.supportsTransactionIsolationLevel(level)
         }
     }
@@ -366,7 +364,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schemaPattern: String,
         procedureNamePattern: String
     ): ResultSetMetadataActionImpl<DB, ProcedureResults> {
-        return ResultSetMetadataActionImpl<DB, ProcedureResults> {
+        return ResultSetMetadataActionImpl {
             it.getProcedures(catalog,
                              schemaPattern,
                              procedureNamePattern)
@@ -380,7 +378,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         procedureNamePattern: String,
         columnNamePattern: String
     ): ResultSetMetadataActionImpl<DB, ProcedureColumnResults> {
-        return ResultSetMetadataActionImpl<DB, ProcedureColumnResults> {
+        return ResultSetMetadataActionImpl {
             it.getProcedureColumns(
                 catalog,
                 schemaPattern,
@@ -397,7 +395,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         tableNamePattern: String?,
         types: Array<String>?
     ): ResultSetMetadataActionImpl<DB, TableMetadataResults> {
-        return ResultSetMetadataActionImpl<DB, TableMetadataResults> {
+        return ResultSetMetadataActionImpl {
             it.getTables(catalog,
                          schemaPattern,
                          tableNamePattern,
@@ -406,7 +404,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
     }
 
     override val tableTypes: ValueMetadataAction<DB, List<String>>
-        get() = ValueMetadataAction<DB, List<String>> { it.tableTypes }
+        get() = ValueMetadataActionImpl { it.tableTypes }
 
     @OptIn(UnmanagedSql::class)
     override fun getColumns(
@@ -415,7 +413,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         tableNamePattern: String?,
         columnNamePattern: String?
     ): ResultSetMetadataActionImpl<DB, ColumnsResults> {
-        return ResultSetMetadataActionImpl<DB, ColumnsResults> {
+        return ResultSetMetadataActionImpl {
             it.getColumns(
                 catalog,
                 schemaPattern,
@@ -432,7 +430,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         table: String,
         columnNamePattern: String
     ): ResultSetMetadataActionImpl<DB, ColumnPrivilegesResult> {
-        return ResultSetMetadataActionImpl<DB, ColumnPrivilegesResult> {
+        return ResultSetMetadataActionImpl {
             it.getColumnPrivileges(catalog,
                                    schema,
                                    table,
@@ -446,7 +444,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schemaPattern: String,
         tableNamePattern: String
     ): ResultSetMetadataActionImpl<DB, TablePrivilegesResult> {
-        return ResultSetMetadataActionImpl<DB, TablePrivilegesResult> {
+        return ResultSetMetadataActionImpl {
             it.getTablePrivileges(catalog,
                                   schemaPattern,
                                   tableNamePattern)
@@ -461,7 +459,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         scope: Int,
         nullable: Boolean
     ): ResultSetMetadataActionImpl<DB, BestRowIdentifierResult> {
-        return ResultSetMetadataActionImpl<DB, BestRowIdentifierResult> {
+        return ResultSetMetadataActionImpl {
             it.getBestRowIdentifier(catalog, schema, table, scope, nullable)
         }
     }
@@ -472,7 +470,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schema: String,
         table: String
     ): ResultSetMetadataActionImpl<DB, VersionColumnsResult> {
-        return ResultSetMetadataActionImpl<DB, VersionColumnsResult> {
+        return ResultSetMetadataActionImpl {
             it.getVersionColumns(catalog, schema, table)
         }
     }
@@ -483,7 +481,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schema: String,
         table: String
     ): ResultSetMetadataActionImpl<DB, PrimaryKeyResults> {
-        return ResultSetMetadataActionImpl<DB, PrimaryKeyResults> {
+        return ResultSetMetadataActionImpl {
             it.getPrimaryKeys(catalog, schema, table)
         }
     }
@@ -494,7 +492,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schema: String,
         table: String
     ): ResultSetMetadataActionImpl<DB, KeysResult> {
-        return ResultSetMetadataActionImpl<DB, KeysResult> {
+        return ResultSetMetadataActionImpl {
             it.getImportedKeys(catalog, schema, table)
         }
     }
@@ -505,7 +503,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schema: String,
         table: String
     ): ResultSetMetadataActionImpl<DB, KeysResult> {
-        return ResultSetMetadataActionImpl<DB, KeysResult> {
+        return ResultSetMetadataActionImpl {
             it.getExportedKeys(catalog, schema, table)
         }
     }
@@ -519,7 +517,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         foreignSchema: String,
         foreignTable: String
     ): ResultSetMetadataActionImpl<DB, KeysResult> {
-        return ResultSetMetadataActionImpl<DB, KeysResult> {
+        return ResultSetMetadataActionImpl {
             it.getCrossReference(
                 parentCatalog,
                 parentSchema,
@@ -533,7 +531,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
 
     @OptIn(UnmanagedSql::class)
     override fun getTypeInfo(): ResultSetMetadataActionImpl<DB, TypeInfoResults> {
-        return ResultSetMetadataActionImpl<DB, TypeInfoResults> { it.getTypeInfo() }
+        return ResultSetMetadataActionImpl { it.getTypeInfo() }
     }
 
     @UnmanagedSql
@@ -544,7 +542,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         unique: Boolean,
         approximate: Boolean
     ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
-        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl {
             RawResultSetWrapper(
                 it.getUnsafeIndexInfo(
                     catalog,
@@ -561,56 +559,56 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         type: Int,
         concurrency: Int
     ): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
+        return ValueMetadataActionImpl {
             it.supportsResultSetConcurrency(type,
                                             concurrency)
         }
     }
 
     override fun ownUpdatesAreVisible(type: Int): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
+        return ValueMetadataActionImpl {
             it.ownUpdatesAreVisible(type)
         }
     }
 
     override fun ownDeletesAreVisible(type: Int): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
+        return ValueMetadataActionImpl {
             it.ownDeletesAreVisible(type)
         }
     }
 
     override fun ownInsertsAreVisible(type: Int): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
+        return ValueMetadataActionImpl {
             it.othersInsertsAreVisible(type)
         }
     }
 
     override fun othersUpdatesAreVisible(type: Int): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
+        return ValueMetadataActionImpl {
             it.othersUpdatesAreVisible(type)
         }
     }
 
     override fun othersDeletesAreVisible(type: Int): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
+        return ValueMetadataActionImpl {
             it.othersDeletesAreVisible(type)
         }
     }
 
     override fun othersInsertsAreVisible(type: Int): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
+        return ValueMetadataActionImpl {
             it.othersInsertsAreVisible(type)
         }
     }
 
     override fun updatesAreDetected(type: Int): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
+        return ValueMetadataActionImpl {
             it.updatesAreDetected(type)
         }
     }
 
     override fun deletesAreDetected(type: Int): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
+        return ValueMetadataActionImpl {
             it.deletesAreDetected(type)
         }
     }
@@ -622,7 +620,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         typeNamePattern: String,
         types: IntArray
     ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
-        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl {
             RawResultSetWrapper(it.getUDTs(catalog, schemaPattern, typeNamePattern, types))
         }
     }
@@ -633,7 +631,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schemaPattern: String,
         typeNamePattern: String
     ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
-        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl {
             RawResultSetWrapper(it.getSuperTypes(catalog, schemaPattern, typeNamePattern))
         }
     }
@@ -644,7 +642,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schemaPattern: String,
         tableNamePattern: String
     ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
-        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl {
             RawResultSetWrapper(
                 it.getSuperTables(catalog, schemaPattern, tableNamePattern)
             )
@@ -652,7 +650,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
     }
 
     override fun supportsResultSetHoldability(holdability: Int): ValueMetadataAction<DB, Boolean> {
-        return ValueMetadataAction<DB, Boolean> {
+        return ValueMetadataActionImpl {
             it.supportsResultSetHoldability(holdability)
         }
     }
@@ -662,14 +660,14 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         catalog: String,
         schemaPattern: String
     ): ResultSetMetadataActionImpl<DB, SchemaResults> {
-        return ResultSetMetadataActionImpl<DB, SchemaResults> {
+        return ResultSetMetadataActionImpl {
             it.getSchemas(catalog, schemaPattern)
         }
     }
 
     @UnmanagedSql
     override fun getClientInfoProperties(): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
-        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl {
             RawResultSetWrapper(it.getClientInfoProperties())
         }
     }
@@ -680,7 +678,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         schemaPattern: String,
         functionNamePattern: String
     ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
-        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl {
             RawResultSetWrapper(
                 it.getFunctions(catalog, schemaPattern, functionNamePattern)
             )
@@ -694,7 +692,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         functionNamePattern: String,
         columnNamePattern: String
     ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
-        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl {
             RawResultSetWrapper(
                 it.getFunctionColumns(catalog, schemaPattern, functionNamePattern, columnNamePattern)
             )
@@ -708,7 +706,7 @@ internal class MonadicMetadataImpl<DB: Database> : MonadicMetadata<DB> {
         tableNamePattern: String,
         columnNamePattern: String
     ): ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
-        return ResultSetMetadataActionImpl<DB, RawResultSetWrapper> {
+        return ResultSetMetadataActionImpl {
 
             RawResultSetWrapper(
                 it.getPseudoColumns(

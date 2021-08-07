@@ -25,10 +25,11 @@ import io.github.pdvrieze.kotlinsql.ddl.Column
 import io.github.pdvrieze.kotlinsql.ddl.Database
 import io.github.pdvrieze.kotlinsql.ddl.IColumnType
 import io.github.pdvrieze.kotlinsql.dml.impl._Statement1Base
+import io.github.pdvrieze.kotlinsql.monadic.actions.DBAction
+import io.github.pdvrieze.kotlinsql.monadic.actions.SelectAction
 import java.sql.SQLException
 import java.util.NoSuchElementException
 
-@DbActionDSL
 interface DBContext<DB : Database> {
     val db: DB
 

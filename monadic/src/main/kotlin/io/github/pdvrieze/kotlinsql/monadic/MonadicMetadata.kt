@@ -22,8 +22,10 @@ package io.github.pdvrieze.kotlinsql.monadic
 
 import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.ddl.Database
-import io.github.pdvrieze.kotlinsql.metadata.impl.RawResultSetWrapper
 import io.github.pdvrieze.kotlinsql.metadata.*
+import io.github.pdvrieze.kotlinsql.metadata.impl.RawResultSetWrapper
+import io.github.pdvrieze.kotlinsql.monadic.actions.ResultSetMetadataAction
+import io.github.pdvrieze.kotlinsql.monadic.actions.ValueMetadataAction
 import java.sql.RowIdLifetime
 
 interface MonadicMetadata<DB : Database> {

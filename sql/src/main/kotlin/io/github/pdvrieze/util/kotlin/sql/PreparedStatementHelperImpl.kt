@@ -20,6 +20,7 @@
 
 package io.github.pdvrieze.util.kotlin.sql
 
+import io.github.pdvrieze.kotlinsql.UnmanagedSql
 import io.github.pdvrieze.kotlinsql.ddl.columns.PreparedStatementHelper
 import java.io.InputStream
 import java.math.BigDecimal
@@ -201,6 +202,11 @@ class PreparedStatementHelperImpl constructor(val statement: PreparedStatement, 
     inline fun <R> withResultSet(block: (ResultSet) -> R) = statement.resultSet.use(block)
 
     inline fun <R> withGeneratedKeys(block: (ResultSet) -> R) = statement.generatedKeys.use(block)
+
+    @UnmanagedSql
+    fun close() {
+        statement.close()
+    }
 
 
     inline val Int.i get() = this

@@ -41,11 +41,12 @@ class GenerateConnectionSource {
             appendLine("import io.github.pdvrieze.kotlinsql.dml.*")
             appendLine("import io.github.pdvrieze.kotlinsql.dml.impl.*")
             appendLine("import io.github.pdvrieze.kotlinsql.ddl.IColumnType")
+            appendLine("import io.github.pdvrieze.kotlinsql.monadic.actions.*")
+            appendLine("import io.github.pdvrieze.kotlinsql.monadic.actions.impl.*")
             appendLine("import io.github.pdvrieze.kotlinsql.monadic.impl.ResultSetIterator")
             appendLine("import java.sql.SQLException")
             appendLine("import javax.sql.DataSource")
             appendLine()
-            appendLine("@DbActionDSL")
             appendLine("interface ConnectionSource<DB : Database> : ConnectionSourceBase<DB>, DBActionReceiver<DB> {")
             appendLine()
             appendLine("    override val datasource: DataSource")
@@ -55,7 +56,6 @@ class GenerateConnectionSource {
             appendLine("    }")
             appendLine("}")
             appendLine()
-            appendLine("@DbActionDSL")
             appendLine("interface DBActionReceiver<DB: Database>: DBContext<DB> {")
             appendLine()
             appendLine("    val metadata: MonadicMetadata<DB>")
@@ -69,7 +69,7 @@ class GenerateConnectionSource {
                         append("        return ${op.action}Impl(${op.base}$n(")
                     } else {
                         val update = if (op == Operation.INSERT_OR_UPDATE) "true" else "false"
-                        append("        return ${op.action}(${op.base}$n(db[col1.table], $update, ")
+                        append("        return ${op.action}Impl(${op.base}$n(db[col1.table], $update, ")
                     }
                     (1..n).joinTo(this) { m -> "col$m" }
                     appendLine("))")
@@ -135,7 +135,7 @@ class GenerateConnectionSource {
                         genericPrefix = "DB: Database, "
                     )
                     appendLine("{")
-                    append("    return InsertAction(insert.VALUES(")
+                    append("    return InsertActionImpl(insert.VALUES(")
                     (1..n).joinTo(this) { "col$it" }
                     appendLine("))")
                     appendLine("}")

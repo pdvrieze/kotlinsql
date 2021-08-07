@@ -22,6 +22,11 @@ package io.github.pdvrieze.kotlinsql.monadic
 
 import io.github.pdvrieze.kotlinsql.ddl.*
 import io.github.pdvrieze.kotlinsql.metadata.ColumnsResults
+import io.github.pdvrieze.kotlinsql.monadic.actions.DBAction
+import io.github.pdvrieze.kotlinsql.monadic.actions.ConstantAction
+import io.github.pdvrieze.kotlinsql.monadic.actions.impl.ConstantActionImpl
+import io.github.pdvrieze.kotlinsql.monadic.actions.impl.GenericActionImpl
+import io.github.pdvrieze.kotlinsql.monadic.actions.impl.TransactionActionImpl
 import io.github.pdvrieze.kotlinsql.monadic.impl.MonadicMetadataImpl
 import java.sql.SQLException
 import java.util.*
@@ -43,11 +48,11 @@ interface ConnectionSourceBase<DB : Database> {
     fun Table.dropTransitive(ifExists: Boolean): DBAction<DB, Unit>
 
     fun or(first: Boolean, second: DBAction<DB, Boolean>): DBAction<DB, Boolean> = when {
-        first -> ConstantAction(true)
+        first -> ConstantActionImpl(true)
         else -> second
     }
 
-    fun or(first: DBAction<DB, Boolean>, second: DBAction<DB, Boolean>): DBAction<DB, Boolean> = GenericAction { conn ->
+    fun or(first: DBAction<DB, Boolean>, second: DBAction<DB, Boolean>): DBAction<DB, Boolean> = GenericActionImpl { conn ->
         val b1 = first.eval(conn)
         val b2 = second.eval(conn)
         b1 || b2
@@ -57,10 +62,9 @@ interface ConnectionSourceBase<DB : Database> {
 
 
 fun <DB: Database, R> ConnectionSource<DB>.transaction(body: TransactionBuilder<DB>.() -> R): R {
-    return TransactionAction(body).commit(this)
+    return TransactionActionImpl(body).commit(this)
 }
 
-@DbActionDSL
 class TransactionBuilder<DB: Database>(val connection: MonadicDBConnection<DB>): DBActionReceiver<DB> {
 
     override val db: DB get() = connection.db
@@ -70,6 +74,7 @@ class TransactionBuilder<DB: Database>(val connection: MonadicDBConnection<DB>):
         get() = metadataInstance as MonadicMetadata<DB>
 
     private var commitPending = false
+
     fun commit() {
         commitPending = true
     }
@@ -140,7 +145,7 @@ internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSourc
                     missingColumns.remove(colName.lowercase())
                     if (col != null) {
                         if (!col.matches(actualColumn)) {
-                            val action = GenericAction<DB, Int> { conn ->
+                            val action = GenericActionImpl<DB, Int> { conn ->
                                 try {
                                     conn.prepareStatement("ALTER TABLE $_name MODIFY COLUMN ${col.toDDL()}") {
                                         statement.executeUpdate()
@@ -160,7 +165,7 @@ internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSourc
 
                 if (!retainExtraColumns) {
                     for (extraColumn in extraColumns) {
-                        actions.add(GenericAction { conn ->
+                        actions.add(GenericActionImpl { conn -> // TODO replace with DBRawSqlActionImpl
                             conn.prepareStatement("ALTER TABLE $_name DROP COLUMN `$extraColumn`") {
                                 statement.executeUpdate()
                             }
@@ -168,7 +173,7 @@ internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSourc
                     }
                 }
                 for (missingColumn in missingColumns.values) {
-                    actions.add(GenericAction{ conn ->
+                    actions.add(GenericActionImpl{ conn -> // TODO replace with DBRawSqlActionImpl
                         conn.prepareStatement("ALTER TABLE $_name ADD COLUMN ${missingColumn.toDDL()}") {
                             statement.executeUpdate()
                         }
@@ -219,7 +224,7 @@ internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSourc
                     actions.add(it.dropTransitive(true))
                 }
 
-            actions.add(GenericAction { conn ->
+            actions.add(GenericActionImpl { conn ->// TODO replace with DBRawSqlActionImpl
                 conn.prepareStatement("DROP TABLE $_name") { statement.execute() }
             })
 
@@ -234,7 +239,7 @@ internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSourc
 
     @Suppress("UNCHECKED_CAST")
     private val Table.CREATE_TABLE: DBAction<DB, Boolean>
-        get() = GenericAction { conn -> // TODO use better action
+        get() = GenericActionImpl { conn -> // TODO replace with DBRawSqlActionImpl
             conn.prepareStatement(buildString { appendDDL(this) }) { statement.execute() }
         }
 
@@ -244,7 +249,7 @@ internal abstract class ConnectionSourceImplBase<DB : Database>: ConnectionSourc
         get() {
             return hasTable(this).flatMap { hasTable ->
                 when (hasTable) {
-                    false -> listOf(GenericAction<DB, Boolean> { conn -> // TODO use better action
+                    false -> listOf(GenericActionImpl<DB, Boolean> { conn -> // TODO replace with DBRawSqlActionImpl
                         conn.prepareStatement(buildString { appendDDL(this) }) { statement.execute() }
                     })
                     else -> emptyList<DBAction<DB, Boolean>>()
